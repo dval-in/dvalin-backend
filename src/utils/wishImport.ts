@@ -1,149 +1,108 @@
 import axios from "axios";
+import { GachaItem, HoyoConfigResponse, GachaTypeList, HoyoWishResponse, GachaTypeName } from "../types/wish";
 
 /**
+ * Fetches wish history from the Genshin Impact API.
  *
- * @param authkey
- * @param gachaTypeList
- * @param latestTimeSaved date format is "YYYY-MM-DD HH:mm:ss"
- * @returns
+ * @param authkey Authentication key for the API.
+ * @param gachaTypeList List of gacha types to query.
+ * @param latestTimeSaved The latest saved wish time in "YYYY-MM-DD HH:mm:ss" format.
+ * @returns A Promise with the wish history.
  */
-const getWishes = async (
+async function getWishes(
 	authkey: string,
-	gachaTypeList: gachaTypeList,
+	gachaTypeList: GachaTypeList,
 	latestTimeSaved: string
 ): Promise<
 	{
 		banner: "Permanent Wish" | "Character Event Wish" | "Novice Wishes" | "Weapon Event Wish";
 		history: GachaItem[];
 	}[]
-> => {
+> {
 	const url = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog";
-	const wishHistory = [];
-	const params = {
-		authkey: authkey,
-		authkey_ver: 1,
-		lang: "en-us",
-		page: 1,
-		size: 20,
-		end_id: 0,
-		gacha_type: 0,
-	};
-	const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+	const wishHistory: Array<{ banner: GachaTypeName; history: GachaItem[] }> = [];
 
 	for (const gachaType of gachaTypeList) {
-		const bannerHistory = [];
-		params.gacha_type = Number(gachaType.key);
 		let currentPage = 1;
-		let queryCount = 0;
+		let endId = 0;
+		let hasMore = true;
+		const bannerHistory: GachaItem[] = [];
 
-		while (true) {
-			params.page = currentPage;
+		while (hasMore) {
 			try {
-				const response = (await axios.get(url, { params })).data as hoyoWishResponse;
-				const data = response.data;
-				if (data && response.retcode === 0 && data.list) {
-					const gachaList = data.list;
-					let foundLatestWish = false;
+				const response = await axios.get<HoyoWishResponse>(url, {
+					params: {
+						authkey: authkey,
+						authkey_ver: 1,
+						lang: "en-us",
+						page: currentPage,
+						size: 20,
+						end_id: endId,
+						gacha_type: gachaType.key,
+					},
+				});
 
-					for (const wish of gachaList) {
+				const { data } = response;
+				if (data.retcode === 0 && data.data && data.data.list.length > 0) {
+					for (const wish of data.data.list) {
 						if (wish.time > latestTimeSaved) {
 							bannerHistory.push(wish);
 						} else {
-							foundLatestWish = true;
+							hasMore = false;
 							break;
 						}
 					}
-					if (foundLatestWish) {
-						break;
-					}
-					if (gachaList.length === 0) {
-						break;
-					}
+
 					currentPage++;
-					queryCount++;
-					if (queryCount % 5 === 0) {
-						await delay(1000);
-					}
+					if (currentPage % 5 === 0) await randomDelay(100, 1000);
 				} else {
-					break;
+					hasMore = false;
 				}
 			} catch (error) {
-				console.error(error);
+				console.error("Failed to fetch gacha history:", error);
 				break;
 			}
 		}
-
 		wishHistory.push({ banner: gachaType.name, history: bannerHistory });
 	}
 
 	return wishHistory;
-};
+}
 
-const getGatchaConfigList = async (authkey: string): Promise<hoyoConfigResponse> => {
+/**
+ * Fetches the Gacha configuration list.
+ *
+ * @param authkey Authentication key for the API.
+ * @returns The Gacha configuration list.
+ */
+async function getGachaConfigList(authkey: string): Promise<HoyoConfigResponse> {
 	const url = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getConfigList";
-	const params = {
-		authkey: authkey,
-		lang: "en-us",
-		authkey_ver: 1,
-	};
+
 	try {
-		const response = await axios.get(url, { params });
+		const response = await axios.get<HoyoConfigResponse>(url, {
+			params: {
+				authkey: authkey,
+				lang: "en-us",
+				authkey_ver: 1,
+			},
+		});
+
 		return response.data;
 	} catch (error) {
-		console.error(error);
+		console.error("Failed to fetch gacha configuration list:", error);
 		throw error;
 	}
+}
+
+/**
+ * Generates a random delay between min and max milliseconds.
+ *
+ * @param min Minimum delay in milliseconds.
+ * @param max Maximum delay in milliseconds.
+ */
+const randomDelay = (min: number, max: number) => {
+	const duration = Math.floor(Math.random() * (max - min + 1) + min);
+	return new Promise((resolve) => setTimeout(resolve, duration));
 };
 
-export { getWishes, getGatchaConfigList };
-
-export type hoyoConfigResponse = {
-	retcode: number;
-	message: string;
-	data: configListResponse | null;
-};
-
-export type hoyoWishResponse = {
-	retcode: number;
-	message: string;
-	data: GachaResponse | null;
-};
-
-type configListResponse = {
-	gacha_type_list: gachaTypeList;
-	region: string;
-};
-
-type gachaTypeList = [
-	{
-		id: string;
-		key: string;
-		name: "Permanent Wish";
-	},
-	{ id: string; key: string; name: "Character Event Wish" },
-	{ id: string; key: string; name: "Novice Wishes" },
-	{ id: string; key: string; name: "Weapon Event Wish" }
-];
-
-type GachaItem = {
-	uid: string;
-	gacha_type: string;
-	item_id: string;
-	count: string;
-	time: string; // "YYYY-MM-DD HH:mm:ss"
-	name: string;
-	lang: string;
-	item_type: string;
-	rank_type: string;
-	id: string;
-};
-
-type GachaList = GachaItem[];
-
-type GachaResponse = {
-	page: string;
-	size: string;
-	total: string;
-	list: GachaList;
-	region: string;
-};
+export { getWishes, getGachaConfigList };
