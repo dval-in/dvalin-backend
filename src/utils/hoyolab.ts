@@ -9,7 +9,7 @@ import { GachaItem, HoyoConfigResponse, GachaTypeList, HoyoWishResponse, GachaTy
  * @param latestTimeSaved The latest saved wish time in "YYYY-MM-DD HH:mm:ss" format.
  * @returns A Promise with the wish history.
  */
-async function getWishes(
+const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	latestTimeSaved: string
@@ -18,7 +18,7 @@ async function getWishes(
 		banner: "Permanent Wish" | "Character Event Wish" | "Novice Wishes" | "Weapon Event Wish";
 		history: GachaItem[];
 	}[]
-> {
+> => {
 	const url = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog";
 	const wishHistory: Array<{ banner: GachaTypeName; history: GachaItem[] }> = [];
 
@@ -67,7 +67,7 @@ async function getWishes(
 	}
 
 	return wishHistory;
-}
+};
 
 /**
  * Fetches the Gacha configuration list.
@@ -75,7 +75,7 @@ async function getWishes(
  * @param authkey Authentication key for the API.
  * @returns The Gacha configuration list.
  */
-async function getGachaConfigList(authkey: string): Promise<HoyoConfigResponse> {
+const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse> => {
 	const url = "https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getConfigList";
 
 	try {
@@ -92,7 +92,7 @@ async function getGachaConfigList(authkey: string): Promise<HoyoConfigResponse> 
 		console.error("Failed to fetch gacha configuration list:", error);
 		throw error;
 	}
-}
+};
 
 /**
  * Generates a random delay between min and max milliseconds.
