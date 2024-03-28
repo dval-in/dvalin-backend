@@ -6,7 +6,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: dvalin-backend
-  TAG_NAME: ${{ github.repository_owner }}/${{env.IMAGE_NAME}}:latest
+  TAG_NAME: ${{ github.repository_owner }}/dvalin-backend:latest
 
 jobs:
   build-and-push-image:
