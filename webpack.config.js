@@ -1,11 +1,9 @@
-const path = require('path');
-
 module.exports = {
-    entry: './src/index.ts',
+    entry: './src/main.ts',
     mode: process.env.NODE_ENV || 'production',
     target: 'node',
     output: {
-        filename: 'index.js'
+        filename: 'main.js'
     },
 
     resolve: {
