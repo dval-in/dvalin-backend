@@ -12,4 +12,4 @@ COPY --from=builder dist /
 WORKDIR /
 
 EXPOSE 3000
-CMD ["index.js"]
+CMD ["main.js"]
