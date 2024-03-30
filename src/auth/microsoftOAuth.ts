@@ -2,9 +2,9 @@ import { Strategy as MicrosoftStrategy } from 'passport-microsoft'
 import { createUser, getUserFromProvider } from '../db/utils'
 import { type Express } from 'express'
 import passport from 'passport'
+import { config } from '../utils/envManager'
 
 const setupMicrosoftOAuth = (app: Express): void => {
-  const config = app.get('config')
   app.get('/auth/microsoft', passport.authenticate('microsoft'))
 
   app.get('/auth/microsoft/callback', passport.authenticate('microsoft', { failureRedirect: '/login' }), (req, res) => {

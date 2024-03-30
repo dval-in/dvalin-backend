@@ -3,13 +3,12 @@ import { DynamicDataRoute } from './data/routes'
 import { WishHistoryRoute } from './wish/routes'
 import { OAuthRoute } from './auth/routes'
 import bodyParser from 'body-parser'
-import { ConfigManager } from './utils/configManager'
-
-const config = new ConfigManager()
+import { config } from './utils/envManager'
 
 const app = express()
-app.set('config', config)
 app.use(bodyParser.urlencoded({ extended: true }))
+
+app.set('config', config)
 
 const oAuthRoute = new OAuthRoute(app)
 oAuthRoute.setupRoutes()
@@ -20,7 +19,7 @@ dynamicDataRoute.setupRoutes()
 const wishHistoryRoute = new WishHistoryRoute(app)
 wishHistoryRoute.setupRoutes()
 
-const port = config.PORT || 3000
+const port = config.PORT
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`)
 })

@@ -2,9 +2,9 @@ import { Strategy as GitHubStrategy } from 'passport-github'
 import { createUser, getUserFromProvider } from '../db/utils'
 import { type Express } from 'express'
 import passport from 'passport'
+import { config } from '../utils/envManager'
 
 const setupGitHubOAuth = (app: Express): void => {
-  const config = app.get('config')
   app.get('/auth/github', passport.authenticate('github'))
 
   app.get('/auth/github/callback', passport.authenticate('github', { failureRedirect: '/login' }), (req, res) => {

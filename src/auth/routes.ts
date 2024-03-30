@@ -37,10 +37,8 @@ export class OAuthRoute {
     setupGitHubOAuth(this.app)
     setupGoogleOAuth(this.app)
     setupMicrosoftOAuth(this.app)
-
     passport.serializeUser((user: any, cb) => {
       process.nextTick(() => {
-        console.log('serializing user:', user)
         cb(null, { providerId: user.providerId, name: user.name })
       })
     })

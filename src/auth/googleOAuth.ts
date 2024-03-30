@@ -2,9 +2,9 @@ import { createUser, getUserFromProvider } from '../db/utils'
 import { type Express } from 'express'
 import passport from 'passport'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
+import { config } from '../utils/envManager'
 
 const setupGoogleOAuth = (app: Express): void => {
-  const config = app.get('config')
   app.get('/auth/google', passport.authenticate('google'))
 
   app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), (req, res) => {

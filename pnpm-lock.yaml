@@ -50,6 +50,9 @@ dependencies:
   passport-microsoft:
     specifier: ^2.0.0
     version: 2.0.0
+  zod:
+    specifier: ^3.22.4
+    version: 3.22.4
 
 devDependencies:
   '@types/express':
@@ -59,7 +62,7 @@ devDependencies:
     specifier: ^1.18.0
     version: 1.18.0
   '@types/node':
-   specifier: ^20.12.2
+    specifier: ^20.12.2
     version: 20.12.2
   '@types/passport':
     specifier: ^1.0.16
@@ -343,13 +346,11 @@ packages:
     dependencies:
       '@types/connect': 3.4.38
       '@types/node': 20.12.2
-    dev: true
 
   /@types/connect@3.4.38:
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
     dependencies:
       '@types/node': 20.12.2
-    dev: true
 
   /@types/eslint-scope@3.7.7:
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -416,7 +417,7 @@ packages:
   /@types/oauth@0.9.4:
     resolution: {integrity: sha512-qk9orhti499fq5XxKCCEbd0OzdPZuancneyse3KtR+vgMiHRbh+mn8M4G6t64ob/Fg+GZGpa565MF/2dKWY32A==}
     dependencies:
-      '@types/node': 20.11.30
+      '@types/node': 20.12.2
 
   /@types/passport-apple@2.0.3:
     resolution: {integrity: sha512-XncceSuR57+/tz3PmjDG3Tm6+mW7qTYxbILnNRo6Wu5wIZ60Yvlp/LYR6GAMWhWcGtdkXDSAzAYmuBD+duve2Q==}
@@ -481,7 +482,6 @@ packages:
     dependencies:
       '@types/mime': 1.3.5
       '@types/node': 20.12.2
-    dev: true
 
   /@types/serve-static@1.15.5:
     resolution: {integrity: sha512-PDRk21MnK70hja/YF8AHfC7yIsiQHn1rcXx7ijCFBX/k+XQJhQT/gw3xekXKJvx+5SXaMMS8oqQy09Mzvz2TuQ==}
@@ -489,7 +489,6 @@ packages:
       '@types/http-errors': 2.0.4
       '@types/mime': 3.0.4
       '@types/node': 20.12.2
-    dev: true
 
   /@typescript-eslint/eslint-plugin@6.21.0(@typescript-eslint/parser@6.21.0)(eslint@8.57.0)(typescript@5.4.3):
     resolution: {integrity: sha512-oy9+hTPCUFpngkEZUSzbf9MxI65wbKFoQYsgPdILTfbUldp5ovUuphZVe4i30emU9M/kP+T64Di0mxl7dSw3MA==}
@@ -3622,3 +3621,7 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+  /zod@3.22.4:
+    resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
+    dev: false
