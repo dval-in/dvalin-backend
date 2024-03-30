@@ -1,5 +1,12 @@
+.DS_Store
+.github/
+.husky/
 dist/
+node_modules/
+.env
+.env.*
 !.env.example
+webpack.config.js
 
 # Ignore files for PNPM, NPM and YARN
 pnpm-lock.yaml
