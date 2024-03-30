@@ -1,16 +1,25 @@
-import express, { Express } from "express";
-import dotenv from "dotenv";
-import { DynamicDataRoute } from "./data/routes";
-import { WishHistoryRoute } from "./wish/routes";
+import express from 'express'
+import { DynamicDataRoute } from './data/routes'
+import { WishHistoryRoute } from './wish/routes'
+import { OAuthRoute } from './auth/routes'
+import bodyParser from 'body-parser'
+import { config } from './utils/envManager'
 
-dotenv.config();
+const app = express()
+app.use(bodyParser.urlencoded({ extended: true }))
 
-const app: Express = express();
-const port = process.env.PORT || 3000;
+app.set('config', config)
 
-new DynamicDataRoute(app);
-new WishHistoryRoute(app);
+const oAuthRoute = new OAuthRoute(app)
+oAuthRoute.setupRoutes()
 
+const dynamicDataRoute = new DynamicDataRoute(app)
+dynamicDataRoute.setupRoutes()
+
+const wishHistoryRoute = new WishHistoryRoute(app)
+wishHistoryRoute.setupRoutes()
+
+const port = config.PORT
 app.listen(port, () => {
-	console.log(`[server]: Server is running on port ${port}`);
-});
+  console.log(`Server listening on port ${port}`)
+})
