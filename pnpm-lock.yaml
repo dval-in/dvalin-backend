@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@node-oauth/express-oauth-server':
+    specifier: ^4.0.0
+    version: 4.0.0(express@4.19.2)
   axios:
     specifier: ^1.6.8
     version: 1.6.8
@@ -181,6 +184,29 @@ packages:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
+
+  /@node-oauth/express-oauth-server@4.0.0(express@4.19.2):
+    resolution: {integrity: sha512-IfVfk0Biypw5NNvVW5Nkz8h0FiieFcOiJLZZXipU8cX8Es+fc9Gbt/zbKgA6HPicL+vCvoUwT5ztSmh/iAxW+Q==}
+    engines: {node: '>=16'}
+    peerDependencies:
+      express: '*'
+    dependencies:
+      '@node-oauth/oauth2-server': 5.1.0
+      express: 4.19.2
+    dev: false
+
+  /@node-oauth/formats@1.0.0:
+    resolution: {integrity: sha512-DwSbLtdC8zC5B5gTJkFzJj5s9vr9SGzOgQvV9nH7tUVuMSScg0EswAczhjIapOmH3Y8AyP7C4Jv7b8+QJObWZA==}
+    dev: false
+
+  /@node-oauth/oauth2-server@5.1.0:
+    resolution: {integrity: sha512-sYvqL1GeZLRSwgl++/oOzxJj/ZBe2yXnp6E5LGNQ5qjpn0+t/dwquXILUe3Sk2Y8/wU7XeRxToOtBVeSVkuJag==}
+    engines: {node: '>=16.0.0'}
+    dependencies:
+      '@node-oauth/formats': 1.0.0
+      basic-auth: 2.0.1
+      type-is: 1.6.18
+    dev: false
 
   /@nodelib/fs.scandir@2.1.5:
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -791,6 +817,13 @@ packages:
   /balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
     dev: true
+
+  /basic-auth@2.0.1:
+    resolution: {integrity: sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==}
+    engines: {node: '>= 0.8'}
+    dependencies:
+      safe-buffer: 5.1.2
+    dev: false
 
   /binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -2630,6 +2663,10 @@ packages:
       has-symbols: 1.0.3
       isarray: 2.0.5
     dev: true
+
+  /safe-buffer@5.1.2:
+    resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
+    dev: false
 
   /safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
