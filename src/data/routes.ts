@@ -5,19 +5,19 @@ import { DataIndex } from './dataIndex'
 
 export class DynamicDataRoute {
   private readonly dataIndex: DataIndex
-  private readonly isInitialised: boolean = false
+  private isInitialised: boolean = false
 
   constructor (private readonly app: Express) {
     this.dataIndex = new DataIndex()
-    // this.dataIndex
-    //   .initialize()
-    //   .then(() => {
-    //     console.log('[server] data initialization complete')
-    //     this.isInitialised = true
-    //   })
-    //   .catch((error) => {
-    //     console.error('[server] data initialization failed:', error)
-    //   })
+    this.dataIndex
+      .initialize()
+      .then(() => {
+        console.log('[server] data initialization complete')
+        this.isInitialised = true
+      })
+      .catch((error) => {
+        console.error('[server] data initialization failed:', error)
+      })
   }
 
   setupRoutes (): void {

@@ -8,8 +8,9 @@ import { setupGoogleOAuth } from './googleOAuth'
 import { setupMicrosoftOAuth } from './microsoftOAuth'
 
 export class OAuthRoute {
+  private readonly config: any
   constructor (private readonly app: Express) {
-
+    this.config = app.get('config')
   }
 
   setupRoutes (): void {
@@ -18,7 +19,7 @@ export class OAuthRoute {
         cookie: {
           maxAge: 7 * 24 * 60 * 60 * 1000 // ms
         },
-        secret: 'yo',
+        secret: this.config.COOKIE_SECRET,
         resave: true,
         saveUninitialized: true,
         store: new PrismaSessionStore(
@@ -37,25 +38,25 @@ export class OAuthRoute {
     setupGoogleOAuth(this.app)
     setupMicrosoftOAuth(this.app)
 
-    passport.serializeUser(function (user: any, cb) {
-      process.nextTick(function () {
+    passport.serializeUser((user: any, cb) => {
+      process.nextTick(() => {
         console.log('serializing user:', user)
         cb(null, { providerId: user.providerId, name: user.name })
       })
     })
 
-    passport.deserializeUser(function (user: any, cb) {
-      process.nextTick(function () {
+    passport.deserializeUser((user: any, cb) => {
+      process.nextTick(() => {
         cb(null, user)
       })
     })
-    this.app.get('/', (req, res) => {
+    this.app.get('/session', (req, res) => {
       res.send(req.session)
     })
 
     this.app.get('/login', (req, res) => {
       res.send({
-        providers: ['github']
+        providers: ['github', 'google', 'microsoft']
       })
     })
 
