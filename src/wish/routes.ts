@@ -3,7 +3,6 @@ import { getGachaConfigList, getWishes } from '../utils/hoyolab'
 
 export class WishHistoryRoute {
   constructor (private readonly app: Express) {
-    this.setupRoutes()
   }
 
   setupRoutes (): void {
