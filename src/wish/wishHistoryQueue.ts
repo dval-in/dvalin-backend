@@ -12,9 +12,18 @@ interface WishHistoryQueueData {
 	providerId: string;
 }
 
+const connection = {
+	host: config.REDIS_HOSTNAME,
+	port: config.REDIS_PORT,
+	username: config.REDIS_USERNAME,
+	password: config.REDIS_PASSWORD
+};
+
 export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FETCH_WISH_HISTORY'>(
 	WISH_HISTORY_QUEUE_NAME,
-	{ connection: { host: config.REDIS_HOSTNAME, port: config.REDIS_PORT } }
+	{
+		connection
+	}
 );
 
 const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
@@ -34,6 +43,9 @@ const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 		const gachaTypeList = configResponse.data.gacha_type_list;
 
 		return await getWishes(authkey, gachaTypeList, providerId);
+	},
+	{
+		connection
 	}
 );
 
