@@ -14,6 +14,9 @@ const config: webpack.Configuration = {
 
 	module: {
 		rules: [{ test: /\.ts$/, use: ['ts-loader'] }]
+	},
+	node: {
+		__dirname: true
 	}
 };
 
