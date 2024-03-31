@@ -98,7 +98,7 @@ const getGenshinAccountFromUid = async (uid: string): Promise<GenshinAccount | u
 };
 
 const getGenshinAccountsFromUser = async (providerId: string): Promise<GenshinAccount[]> => {
-	return await prisma.genshinAccount.findMany({
+	return prisma.genshinAccount.findMany({
 		where: {
 			providerId
 		}
