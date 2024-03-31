@@ -15,7 +15,6 @@ interface WishHistoryQueueData {
 const connection = {
 	host: config.REDIS_HOSTNAME,
 	port: config.REDIS_PORT,
-	username: config.REDIS_USERNAME,
 	password: config.REDIS_PASSWORD
 };
 

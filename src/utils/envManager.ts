@@ -19,7 +19,6 @@ const configSchema = z.object({
 	DATABASE_URL: z.string().url(),
 	REDIS_HOSTNAME: z.string().min(1),
 	REDIS_PORT: z.number().min(1024).max(65535),
-	REDIS_USERNAME: z.string().min(1),
 	REDIS_PASSWORD: z.string().min(1)
 });
 
@@ -36,7 +35,6 @@ const validatedConfig = configSchema.safeParse({
 	DATABASE_URL: process.env.DATABASE_URL,
 	REDIS_HOSTNAME: process.env.REDIS_HOSTNAME,
 	REDIS_PORT: Number(process.env.REDIS_PORT),
-	REDIS_USERNAME: process.env.REDIS_USERNAME,
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD
 });
 
