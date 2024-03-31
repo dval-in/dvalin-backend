@@ -11,6 +11,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const oAuthRoute = new OAuthRoute(app);
 oAuthRoute.setupRoutes();
 
+const authExcludedPaths = ['/data', '/auth'];
+
+app.use((req, res, next) => {
+	const isExcluded =
+		authExcludedPaths.some((path) => req.path.startsWith(path)) || req.path === '/';
+	if (isExcluded) {
+		next();
+		return;
+	}
+
+	if (req.isAuthenticated()) {
+		next();
+		return;
+	}
+	res.status(401).send('Authentication required');
+});
+
 const dynamicDataRoute = new DynamicDataRoute(app);
 dynamicDataRoute.setupRoutes();
 

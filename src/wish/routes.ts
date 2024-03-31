@@ -1,5 +1,11 @@
 import { type Express, type Request, type Response } from 'express';
-import { getGachaConfigList, getWishes } from '../utils/hoyolab';
+import { wishHistoryQueue } from './wishHistoryQueue'; // Adjust the path as necessary
+import { getGachaConfigList } from '../utils/hoyolab';
+declare module 'express-session' {
+	interface Session {
+		passport: { user: { providerId: string; name: string } };
+	}
+}
 
 export class WishHistoryRoute {
 	constructor(private readonly app: Express) {}
@@ -10,25 +16,25 @@ export class WishHistoryRoute {
 				typeof req.query.authkey === 'string'
 					? decodeURIComponent(req.query.authkey)
 					: null;
-			const maxTime =
-				typeof req.query.maxtime === 'string' ? req.query.maxtime : '2020-09-28 00:00:00';
-
+			const uid =
+				typeof req.query.uid === 'string' ? decodeURIComponent(req.query.uid) : null;
 			if (authkey === null || authkey === '') {
 				return res.status(400).send('Missing authkey');
 			}
-
-			try {
-				const configResponse = await getGachaConfigList(authkey);
-				if (configResponse.retcode !== 0 || configResponse.data === null) {
-					return res.status(500).send('Failed to fetch gacha configuration list');
-				}
-				const gachaTypeList = configResponse.data.gacha_type_list;
-				const wishes = await getWishes(authkey, gachaTypeList, maxTime);
-				res.send(wishes);
-			} catch (error) {
-				console.error(error);
-				res.status(500).send('An error occurred while fetching wish history');
+			const providerId = req.session.passport.user.providerId;
+			const configResponse = await getGachaConfigList(authkey);
+			if (configResponse.retcode !== 0 || configResponse.data === null) {
+				console.error(
+					'[server] Failed to fetch gacha configuration list:',
+					configResponse.message
+				);
+				return res.status(500).send('Failed to fetch gacha configuration list');
 			}
+			const job = await wishHistoryQueue.add({ authkey, providerId, uid });
+			res.json({
+				jobId: job.id,
+				message: 'Your request is being processed. Please check back later for the results.'
+			});
 		});
 	}
 }

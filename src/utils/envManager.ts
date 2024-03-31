@@ -2,6 +2,9 @@
 
 import { z } from 'zod';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Define the schema as before
 const configSchema = z.object({
 	PORT: z.number().min(1024).max(65535),
@@ -12,7 +15,8 @@ const configSchema = z.object({
 	MICROSOFT_CLIENT_ID: z.string().min(1),
 	MICROSOFT_CLIENT_SECRET: z.string().min(1),
 	COOKIE_SECRET: z.string().min(1),
-	DATABASE_URL: z.string().url()
+	DATABASE_URL: z.string().url(),
+	REDIS_URL: z.string().url()
 });
 
 // Validate the environment configuration immediately
@@ -25,7 +29,8 @@ const validatedConfig = configSchema.safeParse({
 	MICROSOFT_CLIENT_ID: process.env.MICROSOFT_CLIENT_ID,
 	MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
 	COOKIE_SECRET: process.env.COOKIE_SECRET,
-	DATABASE_URL: process.env.DATABASE_URL
+	DATABASE_URL: process.env.DATABASE_URL,
+	REDIS_URL: process.env.REDIS_URL
 });
 
 if (!validatedConfig.success) {

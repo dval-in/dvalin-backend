@@ -6,6 +6,11 @@ import {
 	type HoyoWishResponse,
 	type GachaTypeName
 } from '../types/wish';
+import {
+	getLatestWishFromGenshinAccount,
+	linkGenshinAccountToUser,
+	saveWishesInBulk
+} from '../db/utils';
 
 /**
  * Fetches wish history from the Genshin Impact API.
@@ -18,7 +23,9 @@ import {
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	latestTimeSaved: string
+	providerId: string,
+	jobid: string,
+	uid?: string
 ): Promise<
 	Array<{
 		banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish';
@@ -27,7 +34,13 @@ const getWishes = async (
 > => {
 	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog';
 	const wishHistory: Array<{ banner: GachaTypeName; history: GachaItem[] }> = [];
-
+	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
+	if (uid) {
+		const latestWish = await getLatestWishFromGenshinAccount(uid);
+		if (latestWish) {
+			latestTimeSaved = latestWish.time.toISOString();
+		}
+	}
 	for (const gachaType of gachaTypeList) {
 		let currentPage = 1;
 		const endId = 0;
@@ -58,7 +71,6 @@ const getWishes = async (
 							break;
 						}
 					}
-
 					currentPage++;
 					if (currentPage % 5 === 0) await randomDelay(100, 1000);
 				} else {
@@ -71,7 +83,27 @@ const getWishes = async (
 		}
 		wishHistory.push({ banner: gachaType.name, history: bannerHistory });
 	}
-
+	if (!uid) {
+		uid = wishHistory[0].history[0].uid;
+		await linkGenshinAccountToUser(providerId, uid);
+	}
+	const wishesToSave = wishHistory.flatMap((history) =>
+		history.history.map((wish) => {
+			return {
+				gachaType: wish.gacha_type,
+				itemId: wish.item_id || null,
+				count: wish.count,
+				time: new Date(wish.time),
+				name: wish.name,
+				lang: wish.lang,
+				itemType: wish.item_type,
+				rankType: wish.rank_type,
+				gachaId: wish.id,
+				uid: uid
+			};
+		})
+	);
+	saveWishesInBulk(wishesToSave);
 	return wishHistory;
 };
 

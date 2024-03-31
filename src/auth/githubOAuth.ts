@@ -6,7 +6,6 @@ import { config } from '../utils/envManager';
 
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));
-
 	app.get(
 		'/auth/github/callback',
 		passport.authenticate('github', { failureRedirect: '/login' }),
@@ -22,7 +21,7 @@ const setupGitHubOAuth = (app: Express): void => {
 				callbackURL: '/auth/github/callback'
 			},
 			async (accessToken, refreshToken, profile, cb) => {
-				const email = profile.emails?.[0].value;
+				const email = profile.emails?.[0].value ?? '';
 				let user = await getUserFromProvider(profile.id);
 				if (user == null) {
 					user = await createUser(profile.id, profile.displayName, email);

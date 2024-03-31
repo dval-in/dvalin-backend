@@ -6,7 +6,6 @@ import { config } from '../utils/envManager';
 
 const setupGoogleOAuth = (app: Express): void => {
 	app.get('/auth/google', passport.authenticate('google'));
-
 	app.get(
 		'/auth/google/callback',
 		passport.authenticate('google', { failureRedirect: '/login' }),
@@ -23,7 +22,7 @@ const setupGoogleOAuth = (app: Express): void => {
 				scope: ['profile', 'email']
 			},
 			async (accessToken, refreshToken, profile, cb) => {
-				const email = profile.emails?.[0].value;
+				const email = profile.emails?.[0].value ?? '';
 				let user = await getUserFromProvider(profile.id);
 				if (user == null) {
 					user = await createUser(profile.id, profile.displayName, email);
