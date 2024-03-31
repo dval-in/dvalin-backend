@@ -29,7 +29,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 				profile: Profile,
 				cb: (err?: Error | null, user?: Express.User, info?: object) => void
 			) => {
-				const email = profile.emails?.[0].value;
+				const email = profile.emails?.[0].value ?? '';
 				let user = await getUserFromProvider(profile.id);
 				if (user == null) {
 					user = await createUser(profile.id, profile.displayName, email);
