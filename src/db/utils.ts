@@ -1,13 +1,14 @@
-import { PrismaClient, type User, type GenshinAccount, type WishSave } from '@prisma/client'
-const prisma = new PrismaClient()
+import { PrismaClient, type User, type GenshinAccount, type WishSave } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 const getUserFromProvider = async (providerId: string): Promise<User | null> => {
-  return await prisma.user.findUnique({
-    where: {
-      providerId
-    }
-  })
-}
+	return prisma.user.findUnique({
+		where: {
+			providerId
+		}
+	});
+};
 
 const createUser = async (providerId: string, name: string, email: string): Promise<User> => {
   return await prisma.user.create({

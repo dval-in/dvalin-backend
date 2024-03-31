@@ -1,6 +1,6 @@
 // config.ts
 
-import { z } from 'zod'
+import { z } from 'zod';
 
 import dotenv from 'dotenv'
 dotenv.config()
@@ -33,10 +33,11 @@ const validatedConfig = configSchema.safeParse({
   REDIS_URL: process.env.REDIS_URL
 })
 
+
 if (!validatedConfig.success) {
-  console.error('Configuration validation failed', validatedConfig.error)
-  throw new Error('Configuration validation failed')
+	console.error('Configuration validation failed', validatedConfig.error);
+	throw new Error('Configuration validation failed');
 }
 
 // Export the validated configuration as a singleton object
-export const config: z.infer<typeof configSchema> = validatedConfig.data
+export const config: z.infer<typeof configSchema> = validatedConfig.data;

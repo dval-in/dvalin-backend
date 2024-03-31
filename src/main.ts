@@ -1,17 +1,15 @@
-import express from 'express'
-import { DynamicDataRoute } from './data/routes'
-import { WishHistoryRoute } from './wish/routes'
-import { OAuthRoute } from './auth/routes'
-import bodyParser from 'body-parser'
-import { config } from './utils/envManager'
+import express from 'express';
+import { DynamicDataRoute } from './data/routes';
+import { WishHistoryRoute } from './wish/routes';
+import { OAuthRoute } from './auth/routes';
+import bodyParser from 'body-parser';
+import { config } from './utils/envManager';
 
-const app = express()
-app.use(bodyParser.urlencoded({ extended: true }))
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 
-app.set('config', config)
-
-const oAuthRoute = new OAuthRoute(app)
-oAuthRoute.setupRoutes()
+const oAuthRoute = new OAuthRoute(app);
+oAuthRoute.setupRoutes();
 
 const authExcludedPaths = ['/data', '/auth']
 
@@ -27,13 +25,13 @@ app.use((req, res, next) => {
   res.status(401).send('Authentication required')
 })
 
-const dynamicDataRoute = new DynamicDataRoute(app)
-dynamicDataRoute.setupRoutes()
+const dynamicDataRoute = new DynamicDataRoute(app);
+dynamicDataRoute.setupRoutes();
 
-const wishHistoryRoute = new WishHistoryRoute(app)
-wishHistoryRoute.setupRoutes()
+const wishHistoryRoute = new WishHistoryRoute(app);
+wishHistoryRoute.setupRoutes();
 
-const port = config.PORT
+const port = config.PORT;
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`)
-})
+	console.log(`Server listening on port ${port}`);
+});

@@ -17,10 +17,10 @@ const getWishes = async (
   jobid: string,
   uid?: string
 ): Promise<
-Array<{
-  banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish'
-  history: GachaItem[]
-}>
+	Array<{
+		banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish';
+		history: GachaItem[];
+	}>
 > => {
   const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog'
   const wishHistory: Array<{ banner: GachaTypeName, history: GachaItem[] }> = []
@@ -37,19 +37,19 @@ Array<{
     let hasMore = true
     const bannerHistory: GachaItem[] = []
 
-    while (hasMore) {
-      try {
-        const response = await axios.get<HoyoWishResponse>(url, {
-          params: {
-            authkey,
-            authkey_ver: 1,
-            lang: 'en-us',
-            page: currentPage,
-            size: 20,
-            end_id: endId,
-            gacha_type: gachaType.key
-          }
-        })
+		while (hasMore) {
+			try {
+				const response = await axios.get<HoyoWishResponse>(url, {
+					params: {
+						authkey,
+						authkey_ver: 1,
+						lang: 'en-us',
+						page: currentPage,
+						size: 20,
+						end_id: endId,
+						gacha_type: gachaType.key
+					}
+				});
 
         const { data } = response
         if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
@@ -88,6 +88,7 @@ Array<{
   return wishHistory
 }
 
+
 /**
  * Fetches the Gacha configuration list.
  *
@@ -95,23 +96,23 @@ Array<{
  * @returns The Gacha configuration list.
  */
 const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse> => {
-  const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getConfigList'
+	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getConfigList';
 
-  try {
-    const response = await axios.get<HoyoConfigResponse>(url, {
-      params: {
-        authkey,
-        lang: 'en-us',
-        authkey_ver: 1
-      }
-    })
+	try {
+		const response = await axios.get<HoyoConfigResponse>(url, {
+			params: {
+				authkey,
+				lang: 'en-us',
+				authkey_ver: 1
+			}
+		});
 
-    return response.data
-  } catch (error) {
-    console.error('Failed to fetch gacha configuration list:', error)
-    throw error
-  }
-}
+		return response.data;
+	} catch (error) {
+		console.error('Failed to fetch gacha configuration list:', error);
+		throw error;
+	}
+};
 
 /**
  * Generates a random delay between min and max milliseconds.
@@ -120,8 +121,8 @@ const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse> 
  * @param max Maximum delay in milliseconds.
  */
 const randomDelay = async (min: number, max: number): Promise<void> => {
-  const duration = Math.floor(Math.random() * (max - min + 1) + min)
-  await new Promise((resolve) => setTimeout(resolve, duration))
-}
+	const duration = Math.floor(Math.random() * (max - min + 1) + min);
+	await new Promise((resolve) => setTimeout(resolve, duration));
+};
 
-export { getWishes, getGachaConfigList }
+export { getWishes, getGachaConfigList };

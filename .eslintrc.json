@@ -1,17 +1,9 @@
 {
-	"env": {
-		"es2021": true,
-		"node": true
-	},
-	"extends": "standard-with-typescript",
+	"parser": "@typescript-eslint/parser",
+	"extends": ["plugin:@typescript-eslint/recommended", "plugin:prettier/recommended"],
 	"parserOptions": {
-		"ecmaVersion": "latest",
+		"ecmaVersion": 2016,
 		"sourceType": "module"
 	},
-	"rules": {
-		"@typescript-eslint/no-misused-promises": "off",
-		"@typescript-eslint/strict-boolean-expressions": "off",
-		"@typescript-eslint/no-unsafe-argument": "off",
-		"@typescript-eslint/explicit-function-return-type": "off"
-	}
+	"rules": {}
 }

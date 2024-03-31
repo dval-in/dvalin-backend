@@ -1,12 +1,12 @@
 interface DataItem {
-  name: string
-  icon: string
-  rarity: number
+	name: string;
+	icon: string;
+	rarity: number;
 }
 
 interface Index {
-  Character: Record<string, DataItem>
-  Weapon: Record<string, DataItem>
+	Character: Record<string, DataItem>;
+	Weapon: Record<string, DataItem>;
 }
 
-export type { Index }
+export type { Index };
