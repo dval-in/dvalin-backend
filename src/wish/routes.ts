@@ -28,10 +28,9 @@ export class WishHistoryRoute {
 					'[server] Failed to fetch gacha configuration list:',
 					configResponse.message
 				);
-				throw new Error('Failed to fetch gacha configuration list');
+				return res.status(500).send('Failed to fetch gacha configuration list');
 			}
-			const gachaTypeList = configResponse.data.gacha_type_list;
-			const job = await wishHistoryQueue.add({ authkey, providerId, uid, gachaTypeList });
+			const job = await wishHistoryQueue.add({ authkey, providerId, uid });
 			res.json({
 				jobId: job.id,
 				message: 'Your request is being processed. Please check back later for the results.'

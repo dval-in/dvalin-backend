@@ -103,7 +103,7 @@ const getWishes = async (
 			};
 		})
 	);
-	await saveWishesInBulk(wishesToSave);
+	saveWishesInBulk(wishesToSave);
 	return wishHistory;
 };
 

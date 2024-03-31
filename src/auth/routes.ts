@@ -3,10 +3,11 @@ import { type Express } from 'express';
 import { setupGitHubOAuth } from './githubOAuth';
 import expressSession from 'express-session';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User as PrismaUser } from '@prisma/client';
 import { setupGoogleOAuth } from './googleOAuth';
 import { setupMicrosoftOAuth } from './microsoftOAuth';
 import { config } from '../utils/envManager';
+import { getUserFromProvider } from '../db/utils';
 
 export class OAuthRoute {
 	constructor(private readonly app: Express) {}
@@ -33,19 +34,29 @@ export class OAuthRoute {
 		setupGoogleOAuth(this.app);
 		setupMicrosoftOAuth(this.app);
 
-		passport.serializeUser((user, cb) => {
-			process.nextTick(() => {
-				// @ts-expect-error "Passport returns wrong user type"
-				// TODO: This needs to be refactored when adding non-oauth providers
-				cb(null, { providerId: user.providerId, name: user.name });
-			});
-		});
+		interface SessionUser {
+			providerId: string;
+			name: string;
+		}
 
-		passport.deserializeUser((user: false | Express.User | null | undefined, cb) => {
-			process.nextTick(() => {
-				cb(null, user);
-			});
-		});
+		passport.serializeUser<PrismaUser>(
+			// @ts-expect-error ts is dumb
+			(user: PrismaUser, cb: (err: null, serializedUser: SessionUser) => void) => {
+				process.nextTick(() => {
+					cb(null, { providerId: user.providerId, name: user.name ?? '' });
+				});
+			}
+		);
+
+		passport.deserializeUser<SessionUser>(
+			async (sessionUser: SessionUser, cb: (err: null, user?: PrismaUser) => void) => {
+				const prismaUser = await getUserFromProvider(sessionUser.providerId);
+				if (prismaUser) {
+					cb(null, prismaUser);
+				}
+			}
+		);
+
 		this.app.get('/session', (req, res) => {
 			res.send(req.session);
 		});
