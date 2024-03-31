@@ -1,4 +1,5 @@
-import axios from 'axios'
+import axios from 'axios';
+import { GithubFile } from '../types/github';
 
 /**
  * Queries a specified folder within a GitHub repository for its contents,
@@ -11,19 +12,19 @@ import axios from 'axios'
  * @throws {Error} Throws an error if the query to GitHub fails.
  */
 export const queryGitHubFolder = async (
-  language: string,
-  folder: string
-): Promise<Array<{ name: string, download_url: string }>> => {
-  try {
-    const response = await axios.get(
-      `https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`
-    )
-    return response.data.filter((file: any) => file.name !== 'index.json')
-  } catch (error) {
-    console.error(error)
-    throw new Error('Failed to query GitHub')
-  }
-}
+	language: string,
+	folder: string
+): Promise<GithubFile[]> => {
+	try {
+		const response = await axios.get(
+			`https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`
+		);
+		return response.data.filter((file: GithubFile) => file.name !== 'index.json');
+	} catch (error) {
+		console.error(error);
+		throw new Error('Failed to query GitHub');
+	}
+};
 
 /**
  * Queries for a specific file within a GitHub repository.
@@ -34,14 +35,18 @@ export const queryGitHubFolder = async (
  * @returns {Promise<any>} A promise that resolves to the content of the requested file.
  * @throws {Error} Throws an error if the query to GitHub fails.
  */
-export const queryGitHubFile = async (language: string, folder: string, fileName: string): Promise<any> => {
-  try {
-    const response = await axios.get(
-      `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`
-    )
-    return response.data
-  } catch (error) {
-    console.error(error)
-    throw new Error('Failed to query GitHub')
-  }
-}
+export const queryGitHubFile = async (
+	language: string,
+	folder: string,
+	fileName: string
+): Promise<unknown> => {
+	try {
+		const response = await axios.get(
+			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`
+		);
+		return response.data;
+	} catch (error) {
+		console.error(error);
+		throw new Error('Failed to query GitHub');
+	}
+};

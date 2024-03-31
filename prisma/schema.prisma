@@ -14,17 +14,17 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  providerId String    @unique
+  id         Int      @id @default(autoincrement())
+  providerId String   @unique
   name       String?
-  email      String?  
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  email      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Session {
   id        String   @id
   sid       String   @unique
   data      String
-  expiresAt   DateTime
+  expiresAt DateTime
 }
