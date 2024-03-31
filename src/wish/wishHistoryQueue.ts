@@ -17,9 +17,9 @@ void wishHistoryQueue.process(async (job) => {
 		}
 		const gachaTypeList = configResponse.data.gacha_type_list;
 		return await getWishes(authkey, gachaTypeList, providerId, job.id.toString(), uid); // Convert job.id to a string cause ts for some obscure reason is not happy even with number
-	} catch (error: any) {
+	} catch (error) {
 		console.error('[server] Failed to process wish history:', error);
-		throw new Error(`Failed to process wish history: ${error.message}`);
+		throw new Error(`Failed to process wish history: ${error}`);
 	}
 });
 
