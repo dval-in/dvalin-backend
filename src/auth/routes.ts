@@ -39,8 +39,7 @@ export class OAuthRoute {
 			name: string;
 		}
 
-		passport.serializeUser<PrismaUser>(
-			// @ts-expect-error ts is dumb
+		passport.serializeUser<SessionUser>(
 			(user: PrismaUser, cb: (err: null, serializedUser: SessionUser) => void) => {
 				process.nextTick(() => {
 					cb(null, { providerId: user.providerId, name: user.name ?? '' });
