@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { type GachaItem, type HoyoConfigResponse, type GachaTypeList, type HoyoWishResponse, type GachaTypeName } from '../types/wish'
+import { createWishSave, getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db/utils'
 
 /**
  * Fetches wish history from the Genshin Impact API.
@@ -12,7 +13,9 @@ import { type GachaItem, type HoyoConfigResponse, type GachaTypeList, type HoyoW
 const getWishes = async (
   authkey: string,
   gachaTypeList: GachaTypeList,
-  latestTimeSaved: string
+  providerId: string,
+  jobid: string,
+  uid?: string
 ): Promise<
 Array<{
   banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish'
@@ -21,7 +24,13 @@ Array<{
 > => {
   const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog'
   const wishHistory: Array<{ banner: GachaTypeName, history: GachaItem[] }> = []
-
+  let latestTimeSaved = '2020-09-28T00:00:00.000Z'
+  if (uid) {
+    const latestWish = await getLatestWishFromGenshinAccount(uid)
+    if (latestWish) {
+      latestTimeSaved = latestWish.time.toISOString()
+    }
+  }
   for (const gachaType of gachaTypeList) {
     let currentPage = 1
     const endId = 0
@@ -52,7 +61,6 @@ Array<{
               break
             }
           }
-
           currentPage++
           if (currentPage % 5 === 0) await randomDelay(100, 1000)
         } else {
@@ -65,7 +73,18 @@ Array<{
     }
     wishHistory.push({ banner: gachaType.name, history: bannerHistory })
   }
-
+  if (!uid) {
+    uid = wishHistory[0].history[0].uid
+    await linkGenshinAccountToUser(providerId, uid)
+  }
+  wishHistory.forEach(async (history) => {
+    for (const wish of history.history) {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { gacha_type, item_id, count, time, name, lang, item_type, rank_type, id } = wish
+      await createWishSave(uid, gacha_type, item_id, count, new Date(time), name, lang, item_type, rank_type, id)
+    }
+  }
+  )
   return wishHistory
 }
 

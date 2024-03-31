@@ -14,17 +14,41 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  providerId String    @unique
-  name       String?
-  email      String?  
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  providerId      String           @id @unique
+  name            String?
+  email           String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  genshinAccounts GenshinAccount[]
 }
 
 model Session {
   id        String   @id
   sid       String   @unique
   data      String
-  expiresAt   DateTime
+  expiresAt DateTime
+}
+
+model GenshinAccount {
+  uid        String     @id @unique
+  user       User       @relation(fields: [providerId], references: [providerId])
+  providerId String
+  wishes     WishSave[]
+  name       String?
+}
+
+model WishSave {
+  id             Int            @id @default(autoincrement())
+  gachaType      String         @map("gacha_type")
+  itemId         String?        @map("item_id")
+  count          String
+  time           DateTime       @map("wish_time")
+  name           String
+  lang           String
+  itemType       String         @map("item_type")
+  rankType       String         @map("rank_type")
+  gachaId        String
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  uid            String
+  createdAt      DateTime       @default(now())
 }

@@ -16,7 +16,7 @@ const setupGoogleOAuth = (app: Express): void => {
     callbackURL: '/auth/google/callback',
     scope: ['profile', 'email']
   }, async (accessToken, refreshToken, profile, cb) => {
-    const email = profile.emails?.[0].value
+    const email = profile.emails?.[0].value ?? ''
     let user = await getUserFromProvider(profile.id)
     if (user == null) {
       user = await createUser(profile.id, profile.displayName, email)

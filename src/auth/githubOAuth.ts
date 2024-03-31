@@ -15,7 +15,7 @@ const setupGitHubOAuth = (app: Express): void => {
     clientSecret: config.GITHUB_CLIENT_SECRET,
     callbackURL: '/auth/github/callback'
   }, async (accessToken, refreshToken, profile, cb) => {
-    const email = profile.emails?.[0].value
+    const email = profile.emails?.[0].value ?? ''
     let user = await getUserFromProvider(profile.id)
     if (user == null) {
       user = await createUser(profile.id, profile.displayName, email)
