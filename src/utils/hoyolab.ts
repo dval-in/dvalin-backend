@@ -1,6 +1,16 @@
-import axios from 'axios'
-import { type GachaItem, type HoyoConfigResponse, type GachaTypeList, type HoyoWishResponse, type GachaTypeName } from '../types/wish'
-import { createWishSave, getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db/utils'
+import axios from 'axios';
+import {
+	type GachaItem,
+	type HoyoConfigResponse,
+	type GachaTypeList,
+	type HoyoWishResponse,
+	type GachaTypeName
+} from '../types/wish';
+import {
+	createWishSave,
+	getLatestWishFromGenshinAccount,
+	linkGenshinAccountToUser
+} from '../db/utils';
 
 /**
  * Fetches wish history from the Genshin Impact API.
@@ -11,31 +21,31 @@ import { createWishSave, getLatestWishFromGenshinAccount, linkGenshinAccountToUs
  * @returns A Promise with the wish history.
  */
 const getWishes = async (
-  authkey: string,
-  gachaTypeList: GachaTypeList,
-  providerId: string,
-  jobid: string,
-  uid?: string
+	authkey: string,
+	gachaTypeList: GachaTypeList,
+	providerId: string,
+	jobid: string,
+	uid?: string
 ): Promise<
 	Array<{
 		banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish';
 		history: GachaItem[];
 	}>
 > => {
-  const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog'
-  const wishHistory: Array<{ banner: GachaTypeName, history: GachaItem[] }> = []
-  let latestTimeSaved = '2020-09-28T00:00:00.000Z'
-  if (uid) {
-    const latestWish = await getLatestWishFromGenshinAccount(uid)
-    if (latestWish) {
-      latestTimeSaved = latestWish.time.toISOString()
-    }
-  }
-  for (const gachaType of gachaTypeList) {
-    let currentPage = 1
-    const endId = 0
-    let hasMore = true
-    const bannerHistory: GachaItem[] = []
+	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog';
+	const wishHistory: Array<{ banner: GachaTypeName; history: GachaItem[] }> = [];
+	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
+	if (uid) {
+		const latestWish = await getLatestWishFromGenshinAccount(uid);
+		if (latestWish) {
+			latestTimeSaved = latestWish.time.toISOString();
+		}
+	}
+	for (const gachaType of gachaTypeList) {
+		let currentPage = 1;
+		const endId = 0;
+		let hasMore = true;
+		const bannerHistory: GachaItem[] = [];
 
 		while (hasMore) {
 			try {
@@ -51,43 +61,52 @@ const getWishes = async (
 					}
 				});
 
-        const { data } = response
-        if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
-          for (const wish of data.data.list) {
-            if (wish.time > latestTimeSaved) {
-              bannerHistory.push(wish)
-            } else {
-              hasMore = false
-              break
-            }
-          }
-          currentPage++
-          if (currentPage % 5 === 0) await randomDelay(100, 1000)
-        } else {
-          hasMore = false
-        }
-      } catch (error) {
-        console.error('Failed to fetch gacha history:', error)
-        break
-      }
-    }
-    wishHistory.push({ banner: gachaType.name, history: bannerHistory })
-  }
-  if (!uid) {
-    uid = wishHistory[0].history[0].uid
-    await linkGenshinAccountToUser(providerId, uid)
-  }
-  wishHistory.forEach(async (history) => {
-    for (const wish of history.history) {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      const { gacha_type, item_id, count, time, name, lang, item_type, rank_type, id } = wish
-      await createWishSave(uid, gacha_type, item_id, count, new Date(time), name, lang, item_type, rank_type, id)
-    }
-  }
-  )
-  return wishHistory
-}
-
+				const { data } = response;
+				if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
+					for (const wish of data.data.list) {
+						if (wish.time > latestTimeSaved) {
+							bannerHistory.push(wish);
+						} else {
+							hasMore = false;
+							break;
+						}
+					}
+					currentPage++;
+					if (currentPage % 5 === 0) await randomDelay(100, 1000);
+				} else {
+					hasMore = false;
+				}
+			} catch (error) {
+				console.error('Failed to fetch gacha history:', error);
+				break;
+			}
+		}
+		wishHistory.push({ banner: gachaType.name, history: bannerHistory });
+	}
+	if (!uid) {
+		uid = wishHistory[0].history[0].uid;
+		await linkGenshinAccountToUser(providerId, uid);
+	}
+	wishHistory.forEach(async (history) => {
+		for (const wish of history.history) {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			const { gacha_type, item_id, count, time, name, lang, item_type, rank_type, id } = wish;
+			await createWishSave(
+				uid,
+				gacha_type,
+				item_id,
+				count,
+				new Date(time),
+				name,
+				lang,
+				item_type,
+				rank_type,
+				id
+			);
+		}
+	});
+	return wishHistory;
+};
 
 /**
  * Fetches the Gacha configuration list.
