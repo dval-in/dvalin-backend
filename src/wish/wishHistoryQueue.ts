@@ -14,7 +14,7 @@ interface WishHistoryQueueData {
 
 export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FETCH_WISH_HISTORY'>(
 	WISH_HISTORY_QUEUE_NAME,
-	{ connection: { host: config.REDIS_URL } }
+	{ connection: { host: config.REDIS_HOSTNAME, port: config.REDIS_PORT } }
 );
 
 const worker = new Worker<WishHistoryQueueData, GachaItem[]>(

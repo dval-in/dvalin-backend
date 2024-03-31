@@ -3,6 +3,7 @@
 import { z } from 'zod';
 
 import dotenv from 'dotenv';
+
 dotenv.config();
 
 // Define the schema as before
@@ -16,7 +17,8 @@ const configSchema = z.object({
 	MICROSOFT_CLIENT_SECRET: z.string().min(1),
 	COOKIE_SECRET: z.string().min(1),
 	DATABASE_URL: z.string().url(),
-	REDIS_URL: z.string().url()
+	REDIS_HOSTNAME: z.string().min(1),
+	REDIS_PORT: z.number().min(1024).max(65535)
 });
 
 // Validate the environment configuration immediately
@@ -30,7 +32,8 @@ const validatedConfig = configSchema.safeParse({
 	MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
 	COOKIE_SECRET: process.env.COOKIE_SECRET,
 	DATABASE_URL: process.env.DATABASE_URL,
-	REDIS_URL: process.env.REDIS_URL
+	REDIS_HOSTNAME: process.env.REDIS_HOSTNAME,
+	REDIS_PORT: Number(process.env.REDIS_PORT)
 });
 
 if (!validatedConfig.success) {
