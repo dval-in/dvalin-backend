@@ -1,5 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
 import { wishHistoryQueue } from './wishHistoryQueue'; // Adjust the path as necessary
+import { getGachaConfigList } from '../utils/hoyolab';
 declare module 'express-session' {
 	interface Session {
 		passport: { user: { providerId: string; name: string } };
@@ -21,7 +22,16 @@ export class WishHistoryRoute {
 				return res.status(400).send('Missing authkey');
 			}
 			const providerId = req.session.passport.user.providerId;
-			const job = await wishHistoryQueue.add({ authkey, providerId, uid });
+			const configResponse = await getGachaConfigList(authkey);
+			if (configResponse.retcode !== 0 || configResponse.data === null) {
+				console.error(
+					'[server] Failed to fetch gacha configuration list:',
+					configResponse.message
+				);
+				throw new Error('Failed to fetch gacha configuration list');
+			}
+			const gachaTypeList = configResponse.data.gacha_type_list;
+			const job = await wishHistoryQueue.add({ authkey, providerId, uid, gachaTypeList });
 			res.json({
 				jobId: job.id,
 				message: 'Your request is being processed. Please check back later for the results.'

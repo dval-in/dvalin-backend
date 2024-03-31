@@ -7,9 +7,9 @@ import {
 	type GachaTypeName
 } from '../types/wish';
 import {
-	createWishSave,
 	getLatestWishFromGenshinAccount,
-	linkGenshinAccountToUser
+	linkGenshinAccountToUser,
+	saveWishesInBulk
 } from '../db/utils';
 
 /**
@@ -87,24 +87,23 @@ const getWishes = async (
 		uid = wishHistory[0].history[0].uid;
 		await linkGenshinAccountToUser(providerId, uid);
 	}
-	wishHistory.forEach(async (history) => {
-		for (const wish of history.history) {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			const { gacha_type, item_id, count, time, name, lang, item_type, rank_type, id } = wish;
-			await createWishSave(
-				uid,
-				gacha_type,
-				item_id,
-				count,
-				new Date(time),
-				name,
-				lang,
-				item_type,
-				rank_type,
-				id
-			);
-		}
-	});
+	const wishesToSave = wishHistory.flatMap((history) =>
+		history.history.map((wish) => {
+			return {
+				gachaType: wish.gacha_type,
+				itemId: wish.item_id || null,
+				count: wish.count,
+				time: new Date(wish.time),
+				name: wish.name,
+				lang: wish.lang,
+				itemType: wish.item_type,
+				rankType: wish.rank_type,
+				gachaId: wish.id,
+				uid: uid
+			};
+		})
+	);
+	await saveWishesInBulk(wishesToSave);
 	return wishHistory;
 };
 

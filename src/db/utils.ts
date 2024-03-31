@@ -1,4 +1,4 @@
-import { PrismaClient, type User, type GenshinAccount, type WishSave } from '@prisma/client';
+import { PrismaClient, User, GenshinAccount, WishSave } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +11,7 @@ const getUserFromProvider = async (providerId: string): Promise<User | null> => 
 };
 
 const createUser = async (providerId: string, name: string, email: string): Promise<User> => {
-	return await prisma.user.create({
+	return prisma.user.create({
 		data: {
 			providerId,
 			name,
@@ -25,7 +25,7 @@ const linkGenshinAccountToUser = async (
 	uid: string,
 	name?: string
 ): Promise<GenshinAccount> => {
-	return await prisma.genshinAccount.create({
+	return prisma.genshinAccount.create({
 		data: {
 			providerId,
 			uid,
@@ -46,7 +46,7 @@ const createWishSave = async (
 	rankType: string,
 	gachaId: string
 ): Promise<WishSave> => {
-	return await prisma.wishSave.create({
+	return prisma.wishSave.create({
 		data: {
 			uid,
 			gachaType,
@@ -63,14 +63,14 @@ const createWishSave = async (
 };
 
 const getWishesFromGenshinAccount = async (uid: string): Promise<WishSave[]> => {
-	return await prisma.wishSave.findMany({
+	return prisma.wishSave.findMany({
 		where: {
 			uid
 		}
 	});
 };
 
-const getLatestWishFromGenshinAccount = async (uid: string): Promise<WishSave> => {
+const getLatestWishFromGenshinAccount = async (uid: string): Promise<WishSave | undefined> => {
 	const wishes = await prisma.wishSave.findFirst({
 		where: {
 			uid
@@ -80,19 +80,19 @@ const getLatestWishFromGenshinAccount = async (uid: string): Promise<WishSave> =
 		}
 	});
 	if (!wishes) {
-		throw new Error('No wishes found for this account');
+		return undefined;
 	}
 	return wishes;
 };
 
-const getGenshinAccountFromUid = async (uid: string): Promise<GenshinAccount> => {
+const getGenshinAccountFromUid = async (uid: string): Promise<GenshinAccount | undefined> => {
 	const account = await prisma.genshinAccount.findUnique({
 		where: {
 			uid
 		}
 	});
 	if (!account) {
-		throw new Error('No account found for this uid');
+		return undefined;
 	}
 	return account;
 };
@@ -105,6 +105,31 @@ const getGenshinAccountsFromUser = async (providerId: string): Promise<GenshinAc
 	});
 };
 
+async function saveWishesInBulk(
+	wishesToSave: Array<{
+		gachaType: string;
+		itemId: string | null;
+		count: string;
+		time: Date;
+		name: string;
+		lang: string;
+		itemType: string;
+		rankType: string;
+		gachaId: string;
+		uid: string;
+	}>
+) {
+	try {
+		await prisma.wishSave.createMany({
+			data: wishesToSave,
+			skipDuplicates: true
+		});
+		console.log('[prisma] All wishes have been saved');
+	} catch (error) {
+		console.error('[prisma] An error occurred during the bulk save:', error);
+	}
+}
+
 export {
 	getUserFromProvider,
 	createUser,
@@ -113,5 +138,6 @@ export {
 	getLatestWishFromGenshinAccount,
 	getGenshinAccountFromUid,
 	getGenshinAccountsFromUser,
-	getWishesFromGenshinAccount
+	getWishesFromGenshinAccount,
+	saveWishesInBulk
 };
