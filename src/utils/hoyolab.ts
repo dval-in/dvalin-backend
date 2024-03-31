@@ -1,109 +1,79 @@
 import axios from 'axios';
 import {
 	type GachaItem,
-	type HoyoConfigResponse,
 	type GachaTypeList,
-	type HoyoWishResponse,
-	type GachaTypeName
+	type HoyoConfigResponse,
+	type HoyoWishResponse
 } from '../types/wish';
-import {
-	getLatestWishFromGenshinAccount,
-	linkGenshinAccountToUser,
-	saveWishesInBulk
-} from '../db/utils';
+import { getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db/utils';
 
 /**
  * Fetches wish history from the Genshin Impact API.
  *
  * @param authkey Authentication key for the API.
  * @param gachaTypeList List of gacha types to query.
- * @param latestTimeSaved The latest saved wish time in "YYYY-MM-DD HH:mm:ss" format.
+ * @param providerId
+ * @param uid
  * @returns A Promise with the wish history.
  */
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	providerId: string,
-	jobid: string,
 	uid?: string
-): Promise<
-	Array<{
-		banner: 'Permanent Wish' | 'Character Event Wish' | 'Novice Wishes' | 'Weapon Event Wish';
-		history: GachaItem[];
-	}>
-> => {
+): Promise<GachaItem[]> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog';
-	const wishHistory: Array<{ banner: GachaTypeName; history: GachaItem[] }> = [];
+	const wishHistory: GachaItem[] = [];
 	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
+
 	if (uid) {
 		const latestWish = await getLatestWishFromGenshinAccount(uid);
+
 		if (latestWish) {
 			latestTimeSaved = latestWish.time.toISOString();
 		}
 	}
+
 	for (const gachaType of gachaTypeList) {
 		let currentPage = 1;
 		const endId = 0;
 		let hasMore = true;
-		const bannerHistory: GachaItem[] = [];
 
 		while (hasMore) {
-			try {
-				const response = await axios.get<HoyoWishResponse>(url, {
-					params: {
-						authkey,
-						authkey_ver: 1,
-						lang: 'en-us',
-						page: currentPage,
-						size: 20,
-						end_id: endId,
-						gacha_type: gachaType.key
-					}
-				});
-
-				const { data } = response;
-				if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
-					for (const wish of data.data.list) {
-						if (wish.time > latestTimeSaved) {
-							bannerHistory.push(wish);
-						} else {
-							hasMore = false;
-							break;
-						}
-					}
-					currentPage++;
-					if (currentPage % 5 === 0) await randomDelay(100, 1000);
-				} else {
-					hasMore = false;
+			const response = await axios.get<HoyoWishResponse>(url, {
+				params: {
+					authkey,
+					authkey_ver: 1,
+					lang: 'en-us',
+					page: currentPage,
+					size: 20,
+					end_id: endId,
+					gacha_type: gachaType.key
 				}
-			} catch (error) {
-				console.error('Failed to fetch gacha history:', error);
-				break;
+			});
+
+			const { data } = response;
+			if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
+				for (const wish of data.data.list) {
+					if (wish.time > latestTimeSaved) {
+						wishHistory.push(wish);
+					} else {
+						hasMore = false;
+						break;
+					}
+				}
+				currentPage++;
+				if (currentPage % 5 === 0) await randomDelay(100, 1000);
+			} else {
+				hasMore = false;
 			}
 		}
-		wishHistory.push({ banner: gachaType.name, history: bannerHistory });
 	}
+
 	if (!uid) {
-		uid = wishHistory[0].history[0].uid;
-		await linkGenshinAccountToUser(providerId, uid);
+		await linkGenshinAccountToUser(providerId, wishHistory[0].uid);
 	}
-	const wishesToSave = wishHistory.flatMap((history) =>
-		history.history.map((wish) => {
-			return {
-				gachaType: wish.gacha_type,
-				itemId: wish.item_id || null,
-				count: wish.count,
-				time: new Date(wish.time),
-				name: wish.name,
-				lang: wish.lang,
-				itemType: wish.item_type,
-				rankType: wish.rank_type,
-				gachaId: wish.id,
-				uid: uid
-			};
-		})
-	);
-	saveWishesInBulk(wishesToSave);
+
 	return wishHistory;
 };
 

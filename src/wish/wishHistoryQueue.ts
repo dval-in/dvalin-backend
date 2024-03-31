@@ -1,13 +1,28 @@
-import Queue from 'bull';
+import { Queue, Worker } from 'bullmq';
 import { getGachaConfigList, getWishes } from '../utils/hoyolab';
+
 import { config } from '../utils/envManager';
+import { saveWishesInBulk } from '../db/utils';
+import type { GachaItem } from '../types/wish';
 
-const wishHistoryQueue = new Queue('wishHistory', config.REDIS_URL);
+const WISH_HISTORY_QUEUE_NAME = 'wishHistory';
 
-void wishHistoryQueue.process(async (job) => {
-	const { authkey, providerId, uid } = job.data;
-	try {
+interface WishHistoryQueueData {
+	authkey: string;
+	providerId: string;
+}
+
+export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FETCH_WISH_HISTORY'>(
+	WISH_HISTORY_QUEUE_NAME,
+	{ connection: { host: config.REDIS_URL } }
+);
+
+const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
+	WISH_HISTORY_QUEUE_NAME,
+	async (job) => {
+		const { authkey, providerId } = job.data;
 		const configResponse = await getGachaConfigList(authkey);
+
 		if (configResponse.retcode !== 0 || configResponse.data === null) {
 			console.error(
 				'[server] Failed to fetch gacha configuration list:',
@@ -15,38 +30,39 @@ void wishHistoryQueue.process(async (job) => {
 			);
 			throw new Error('Failed to fetch gacha configuration list');
 		}
+
 		const gachaTypeList = configResponse.data.gacha_type_list;
 
-		return await getWishes(authkey, gachaTypeList, providerId, job.id.toString(), uid); // Convert job.id to a string cause ts for some obscure reason is not happy even with number
-	} catch (error) {
-		console.error('[server] Failed to process wish history:', error);
-		throw new Error(`Failed to process wish history: ${error}`);
+		return await getWishes(authkey, gachaTypeList, providerId);
 	}
+);
+
+worker.on('active', (job) => {
+	console.log(`active:${job.id}, remaining: ${wishHistoryQueue.getWaitingCount()}`);
 });
 
-const checkQueueStatus = async () => {
-	const waiting = await wishHistoryQueue.getWaitingCount();
-	const active = await wishHistoryQueue.getActiveCount();
-	const completed = await wishHistoryQueue.getCompletedCount();
-	const failed = await wishHistoryQueue.getFailedCount();
-	const delayed = await wishHistoryQueue.getDelayedCount();
+worker.on('completed', (job, returnvalue) => {
+	console.log(`completed:${job.id}, remaining: ${wishHistoryQueue.getWaitingCount()}`);
+	console.log('Saving to database');
 
-	console.log(`Queue Status:
-    Waiting: ${waiting}
-    Active: ${active}
-    Completed: ${completed}
-    Failed: ${failed}
-    Delayed: ${delayed}`);
-};
+	const wishesToSave = returnvalue.flatMap((wish) => {
+		return {
+			gachaType: wish.gacha_type,
+			itemId: wish.item_id || null,
+			count: wish.count,
+			time: new Date(wish.time),
+			name: wish.name,
+			lang: wish.lang,
+			itemType: wish.item_type,
+			rankType: wish.rank_type,
+			gachaId: wish.id,
+			uid: wish.uid
+		};
+	});
 
-const clearQueue = async () => {
-	await wishHistoryQueue.clean(0, 'completed');
-	await wishHistoryQueue.clean(0, 'wait');
-	await wishHistoryQueue.clean(0, 'active');
-	await wishHistoryQueue.clean(0, 'delayed');
-	await wishHistoryQueue.clean(0, 'failed');
+	saveWishesInBulk(wishesToSave);
+});
 
-	console.log('Queue cleared.');
-};
-
-export { wishHistoryQueue, checkQueueStatus, clearQueue };
+worker.on('failed', (job) => {
+	console.log(`failed:${job?.id}, remaining: ${wishHistoryQueue.getWaitingCount()}`);
+});
