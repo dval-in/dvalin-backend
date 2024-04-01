@@ -7,7 +7,7 @@ import { config } from '../utils/envManager';
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));
 	app.get(
-		'/auth/github/callback',
+		config.BACKEND_URL + '/auth/github/callback',
 		passport.authenticate('github', { failureRedirect: '/login' }),
 		(req, res) => {
 			res.redirect('/');

@@ -20,7 +20,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 			{
 				clientID: config.MICROSOFT_CLIENT_ID,
 				clientSecret: config.MICROSOFT_CLIENT_SECRET,
-				callbackURL: '/auth/microsoft/callback',
+				callbackURL: config.BACKEND_URL + '/auth/microsoft/callback',
 				scope: ['user.read']
 			},
 			async (
