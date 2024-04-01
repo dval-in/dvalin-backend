@@ -16,7 +16,9 @@ export class OAuthRoute {
 		this.app.use(
 			expressSession({
 				cookie: {
-					maxAge: 7 * 24 * 60 * 60 * 1000 // ms
+					maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+					domain: config.FRONTEND_URL,
+					sameSite: 'lax'
 				},
 				secret: config.COOKIE_SECRET,
 				resave: true,
@@ -56,10 +58,6 @@ export class OAuthRoute {
 			}
 		);
 
-		this.app.get('/session', (req, res) => {
-			res.send(req.session);
-		});
-
 		this.app.get('/login', (req, res) => {
 			res.send({
 				providers: ['github', 'google', 'microsoft']
@@ -72,7 +70,7 @@ export class OAuthRoute {
 					if (err) {
 						console.error('Session destroy error:', err);
 					} else {
-						res.redirect('/');
+						res.redirect(config.FRONTEND_URL);
 					}
 				});
 			});

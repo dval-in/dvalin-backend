@@ -12,7 +12,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 		'/auth/microsoft/callback',
 		passport.authenticate('microsoft', { failureRedirect: '/login' }),
 		(req, res) => {
-			res.redirect('/');
+			res.redirect(config.FRONTEND_URL);
 		}
 	);
 	passport.use(

@@ -10,7 +10,7 @@ const setupGoogleOAuth = (app: Express): void => {
 		'/auth/google/callback',
 		passport.authenticate('google', { failureRedirect: '/login' }),
 		(req, res) => {
-			res.redirect('/');
+			res.redirect(config.FRONTEND_URL);
 		}
 	);
 	passport.use(
