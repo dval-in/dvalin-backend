@@ -1,15 +1,9 @@
-FROM node:bookworm as builder
+FROM node:bookworm
 
 COPY . /
-
-RUN npm install && \
-    npm run build
-
-
-FROM gcr.io/distroless/nodejs20-debian12:nonroot
-
-COPY --from=builder dist /
 WORKDIR /
 
+RUN npm install
+
 EXPOSE 3000
-CMD ["main.js"]
+CMD npm run start
