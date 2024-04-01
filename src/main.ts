@@ -34,7 +34,7 @@ dynamicDataRoute.setupRoutes();
 const wishHistoryRoute = new WishHistoryRoute(app);
 wishHistoryRoute.setupRoutes();
 
-const port = config.PORT;
+const port = config.BACKEND_PORT;
 app.listen(port, () => {
 	console.log(`Server listening on port ${port}`);
 });

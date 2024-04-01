@@ -7,7 +7,7 @@ import { config } from '../utils/envManager';
 const setupGoogleOAuth = (app: Express): void => {
 	app.get('/auth/google', passport.authenticate('google'));
 	app.get(
-		'/auth/google/callback',
+		config.BACKEND_URL + '/auth/google/callback',
 		passport.authenticate('google', { failureRedirect: '/login' }),
 		(req, res) => {
 			res.redirect('/');
