@@ -25,7 +25,6 @@ const configSchema = z.object({
 
 // Validate the environment configuration immediately
 const validatedConfig = configSchema.safeParse({
-	PORT: Number(process.env.PORT),
 	GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
 	GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
 	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -34,7 +33,7 @@ const validatedConfig = configSchema.safeParse({
 	MICROSOFT_CLIENT_SECRET: process.env.MICROSOFT_CLIENT_SECRET,
 	COOKIE_SECRET: process.env.COOKIE_SECRET,
 	BACKEND_URL: process.env.BACKEND_URL,
-	BACKEND_PORT: process.env.BACKEND_PORT,
+	BACKEND_PORT: Number(process.env.BACKEND_PORT),
 	DATABASE_URL: process.env.DATABASE_URL,
 	REDIS_HOSTNAME: process.env.REDIS_HOSTNAME,
 	REDIS_PORT: Number(process.env.REDIS_PORT),
