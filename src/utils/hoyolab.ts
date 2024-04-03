@@ -7,6 +7,54 @@ import {
 } from '../types/wish';
 import { getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db/utils';
 
+
+// last updated 3/04/2024
+/**
+ * converts a time returned by server into utc time:
+ * 
+ * @param uid genshin uid
+ * @param date the time that should be converted into utc
+ * @returns utc taime
+ */
+const serverTimeToUTC = (
+	uid: string,
+	date: string,
+): Date => {
+	const prefix = uid.length === 9 ? uid.substring(0, 1) : uid.substring(0, 2);
+	// convert to utc date, or js will take in as local
+	let utcDate = new Date(date + 'Z');
+	switch (prefix) {
+		// mainland china
+		// utc + 8
+		case "1":
+		case "2":
+		case "3":
+		case "5":
+		// TW, HK, MO china aswell
+		case "9":
+		// asia also follows china
+		case "8":
+		case "18":
+			utcDate.setHours(utcDate.getHours() - 8);
+			break;
+
+		// america utc -5
+		case "6":
+			utcDate.setHours(utcDate.getHours() + 5);
+			break;
+
+		// europe utc + 1
+		case "7":
+			utcDate.setHours(utcDate.getHours() - 1);
+			break;
+
+		default:
+			console.error(`Unhandled UID prefix {${prefix}} for {${date}}`);
+			break;
+	}
+	return utcDate;
+}
+
 /**
  * Fetches wish history from the Genshin Impact API.
  *
