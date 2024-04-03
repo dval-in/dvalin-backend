@@ -18,7 +18,7 @@ import { getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db
 const serverTimeToUTC = (uid: string, date: string): Date => {
 	const prefix = uid.length === 9 ? uid.substring(0, 1) : uid.substring(0, 2);
 	// convert to utc date, or js will take in as local
-	let utcDate = new Date(date + 'Z');
+	const utcDate = new Date(date + 'Z');
 	switch (prefix) {
 		// mainland china
 		// utc + 8
@@ -157,4 +157,4 @@ const randomDelay = async (min: number, max: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, duration));
 };
 
-export { getWishes, getGachaConfigList };
+export { getWishes, getGachaConfigList, serverTimeToUTC };
