@@ -52,7 +52,7 @@
 		"prisma": "^5.12.1",
 		"ts-loader": "^9.5.1",
 		"ts-node": "^10.9.2",
-		"typescript": "^5.4.3"
+		"typescript": "^5.4.4"
 	},
 	"engines": {
 		"pnpm": ">= 8",
