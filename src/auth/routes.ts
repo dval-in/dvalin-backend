@@ -3,6 +3,7 @@ import { setupGitHubOAuth } from './githubOAuth';
 import { setupGoogleOAuth } from './googleOAuth';
 import { setupMicrosoftOAuth } from './microsoftOAuth';
 import { config } from '../utils/envManager';
+import { getDomain } from '../utils/passport';
 
 export class AuthRoute {
 	constructor(private readonly app: Express) {}
@@ -24,7 +25,9 @@ export class AuthRoute {
 					if (err) {
 						console.error('Session destroy error:', err);
 					} else {
-						res.cookie('isAuthenticated', false);
+						res.cookie('isAuthenticated', 'false', {
+							domain: getDomain(new URL(config.BACKEND_URL).hostname)
+						});
 						res.redirect(config.FRONTEND_URL);
 					}
 				});
