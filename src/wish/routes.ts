@@ -15,7 +15,10 @@ export class WishHistoryRoute {
 			if (authkey === null || authkey === '') {
 				return res.status(400).send('Missing authkey');
 			}
-			const providerId = req.session.passport.user.providerId;
+			if (req.user === undefined) {
+				return res.status(500).send('Missing user');
+			}
+
 			const configResponse = await getGachaConfigList(authkey);
 			if (configResponse.retcode !== 0 || configResponse.data === null) {
 				console.error(
@@ -28,7 +31,7 @@ export class WishHistoryRoute {
 				'FETCH_WISH_HISTORY',
 				{
 					authkey,
-					providerId
+					providerId: req.user.providerId
 				},
 				{ delay: 5000, removeOnComplete: 100, removeOnFail: 100 }
 			);

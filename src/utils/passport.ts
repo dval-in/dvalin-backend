@@ -14,6 +14,7 @@ interface SessionUser {
 export const setupPassport = (app: Express) => {
 	app.use(
 		expressSession({
+			name: 'dvalin-session',
 			cookie: {
 				maxAge: 7 * 24 * 60 * 60 * 1000, // ms
 				domain: new URL(config.FRONTEND_URL).hostname,

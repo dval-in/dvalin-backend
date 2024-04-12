@@ -24,6 +24,7 @@ export class AuthRoute {
 					if (err) {
 						console.error('Session destroy error:', err);
 					} else {
+						res.cookie('isAuthenticated', false);
 						res.redirect(config.FRONTEND_URL);
 					}
 				});
