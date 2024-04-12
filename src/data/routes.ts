@@ -24,6 +24,7 @@ export class DynamicDataRoute {
 		this.app.get('/data', async (req: Request, res: Response) => {
 			res.json(Folder);
 		});
+
 		this.app.get('/data/:dataType/index', async (req: Request, res: Response) => {
 			if (!this.isInitialised) {
 				return res.status(503).send('Data is not ready yet.');
