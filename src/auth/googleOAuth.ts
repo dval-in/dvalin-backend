@@ -3,14 +3,17 @@ import { type Express } from 'express';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { config } from '../utils/envManager';
+import { getDomain } from '../utils/passport';
 
 const setupGoogleOAuth = (app: Express): void => {
 	app.get('/auth/google', passport.authenticate('google'));
 	app.get(
 		'/auth/google/callback',
-		passport.authenticate('google', { failureRedirect: '/login' }),
+		passport.authenticate('google', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
-			res.cookie('isAuthenticated', true);
+			res.cookie('isAuthenticated', 'true', {
+				domain: getDomain(new URL(config.BACKEND_URL).hostname)
+			});
 			res.redirect(config.FRONTEND_URL);
 		}
 	);

@@ -4,15 +4,20 @@ import { type Express } from 'express';
 import passport from 'passport';
 import { config } from '../utils/envManager';
 import { Profile } from 'passport-google-oauth20';
+import { getDomain } from '../utils/passport';
 
 const setupMicrosoftOAuth = (app: Express): void => {
 	app.get('/auth/microsoft', passport.authenticate('microsoft'));
 
 	app.get(
 		'/auth/microsoft/callback',
-		passport.authenticate('microsoft', { failureRedirect: '/login' }),
+		passport.authenticate('microsoft', {
+			failureRedirect: config.FRONTEND_URL + '/login'
+		}),
 		(req, res) => {
-			res.cookie('isAuthenticated', true);
+			res.cookie('isAuthenticated', 'true', {
+				domain: getDomain(new URL(config.BACKEND_URL).hostname)
+			});
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
