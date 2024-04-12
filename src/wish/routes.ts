@@ -2,12 +2,6 @@ import { type Express, type Request, type Response } from 'express';
 import { wishHistoryQueue } from './wishHistoryQueue'; // Adjust the path as necessary
 import { getGachaConfigList } from '../utils/hoyolab';
 
-declare module 'express-session' {
-	interface Session {
-		passport: { user: { providerId: string; name: string } };
-	}
-}
-
 export class WishHistoryRoute {
 	constructor(private readonly app: Express) {}
 
