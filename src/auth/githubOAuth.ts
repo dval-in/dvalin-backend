@@ -3,14 +3,17 @@ import { createUser, getUserFromProvider } from '../db/utils';
 import { type Express } from 'express';
 import passport from 'passport';
 import { config } from '../utils/envManager';
+import { getDomain } from '../utils/passport';
 
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));
 	app.get(
 		'/auth/github/callback',
-		passport.authenticate('github', { failureRedirect: '/login' }),
+		passport.authenticate('github', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
-			res.cookie('isAuthenticated', true);
+			res.cookie('isAuthenticated', 'true', {
+				domain: getDomain(new URL(config.BACKEND_URL).hostname)
+			});
 			res.redirect(config.FRONTEND_URL);
 		}
 	);

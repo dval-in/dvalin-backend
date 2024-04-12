@@ -11,13 +11,19 @@ interface SessionUser {
 	name: string;
 }
 
+export const getDomain = (hostname: string): string => {
+	const splitHostname = hostname.split('.');
+	splitHostname.reverse();
+	return `${splitHostname[1]}.${splitHostname[0]}`;
+};
+
 export const setupPassport = (app: Express) => {
 	app.use(
 		expressSession({
 			name: 'dvalin-session',
 			cookie: {
 				maxAge: 7 * 24 * 60 * 60 * 1000, // ms
-				domain: new URL(config.FRONTEND_URL).hostname,
+				domain: getDomain(new URL(config.BACKEND_URL).hostname),
 				sameSite: 'lax',
 				httpOnly: false
 			},
