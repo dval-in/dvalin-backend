@@ -5,7 +5,7 @@ import {
 	type HoyoConfigResponse,
 	type HoyoWishResponse
 } from '../types/wish';
-import { getLatestWishFromGenshinAccount, linkGenshinAccountToUser } from '../db/utils';
+import { getLatestWishFromGenshinAccount } from '../db/user';
 
 // last updated 3/04/2024
 /**
@@ -115,7 +115,7 @@ const getWishes = async (
 	}
 
 	if (!uid) {
-		await linkGenshinAccountToUser(providerId, wishHistory[0].uid);
+		//await linkGenshinAccountToUser(providerId, wishHistory[0].uid);
 	}
 
 	return wishHistory;

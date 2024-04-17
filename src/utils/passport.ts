@@ -1,10 +1,11 @@
 import passport from 'passport';
 import { PrismaClient, User as PrismaUser } from '@prisma/client';
-import { getUserFromProvider } from '../db/utils';
+import { getUserFromProvider } from '../db/user';
 import expressSession from 'express-session';
 import { config } from './envManager';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import type { Express } from 'express';
+import { logToConsole } from './log';
 
 interface SessionUser {
 	providerId: string;
@@ -12,12 +13,18 @@ interface SessionUser {
 }
 
 export const getDomain = (hostname: string): string => {
+	if (hostname === 'localhost') {
+		return hostname;
+	}
+
 	const splitHostname = hostname.split('.');
 	splitHostname.reverse();
 	return `${splitHostname[1]}.${splitHostname[0]}`;
 };
 
 export const setupPassport = (app: Express) => {
+	logToConsole('Passport', getDomain(new URL(config.BACKEND_URL).hostname));
+
 	app.use(
 		expressSession({
 			name: 'dvalin-session',

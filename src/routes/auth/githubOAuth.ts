@@ -1,9 +1,9 @@
 import { Strategy as GitHubStrategy } from 'passport-github';
-import { createUser, getUserFromProvider } from '../db/utils';
 import { type Express } from 'express';
 import passport from 'passport';
-import { config } from '../utils/envManager';
-import { getDomain } from '../utils/passport';
+import { config } from '../../utils/envManager';
+import { getDomain } from '../../utils/passport';
+import { createUser, getUserFromProvider } from '../../db/user';
 
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));
@@ -27,7 +27,7 @@ const setupGitHubOAuth = (app: Express): void => {
 			async (accessToken, refreshToken, profile, cb) => {
 				const email = profile.emails?.[0].value ?? '';
 				let user = await getUserFromProvider(profile.id);
-				if (user == null) {
+				if (user === null) {
 					user = await createUser(profile.id, profile.displayName, email);
 				}
 				cb(null, user);

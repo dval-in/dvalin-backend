@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { GithubFile } from '../types/github';
+import { LanguageKey } from '../types/language';
+import { DataTypeKey } from '../types/fileReference';
+import { logToConsole } from './log';
 
 /**
  * Queries a specified folder within a GitHub repository for its contents,
@@ -12,17 +15,22 @@ import { GithubFile } from '../types/github';
  * @throws {Error} Throws an error if the query to GitHub fails.
  */
 export const queryGitHubFolder = async (
-	language: string,
-	folder: string
-): Promise<GithubFile[]> => {
+	language: LanguageKey,
+	folder: DataTypeKey
+): Promise<GithubFile[] | undefined> => {
 	try {
-		const response = await axios.get(
+		const response = await axios.get<GithubFile[]>(
 			`https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`
 		);
+
+		if (response.status !== 200) {
+			return undefined;
+		}
+
 		return response.data.filter((file: GithubFile) => file.name !== 'index.json');
-	} catch (error) {
-		console.error(error);
-		throw new Error('Failed to query GitHub');
+	} catch (e) {
+		logToConsole('Utils', `queryGitHubFolder failed for ${language}/${folder}`);
+		return undefined;
 	}
 };
 
@@ -36,17 +44,22 @@ export const queryGitHubFolder = async (
  * @throws {Error} Throws an error if the query to GitHub fails.
  */
 export const queryGitHubFile = async (
-	language: string,
+	language: LanguageKey,
 	folder: string,
-	fileName: string
-): Promise<unknown> => {
+	fileName: DataTypeKey
+): Promise<object | undefined> => {
 	try {
 		const response = await axios.get(
 			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`
 		);
+
+		if (response.status !== 200) {
+			return undefined;
+		}
+
 		return response.data;
-	} catch (error) {
-		console.error(error);
-		throw new Error('Failed to query GitHub');
+	} catch (e) {
+		logToConsole('Utils', `queryGitHubFile failed for ${language}/${folder}/${fileName}`);
+		return undefined;
 	}
 };
