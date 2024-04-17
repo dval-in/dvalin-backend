@@ -1,10 +1,10 @@
 import { Strategy as MicrosoftStrategy } from 'passport-microsoft';
-import { createUser, getUserFromProvider } from '../db/utils';
 import { type Express } from 'express';
 import passport from 'passport';
-import { config } from '../utils/envManager';
 import { Profile } from 'passport-google-oauth20';
-import { getDomain } from '../utils/passport';
+import { config } from '../../utils/envManager';
+import { getDomain } from '../../utils/passport';
+import { createUser, getUserFromProvider } from '../../db/user';
 
 const setupMicrosoftOAuth = (app: Express): void => {
 	app.get('/auth/microsoft', passport.authenticate('microsoft'));
@@ -22,7 +22,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 		}
 	);
 	passport.use(
-		new MicrosoftStrategy(
+		<passport.Strategy>new MicrosoftStrategy(
 			{
 				clientID: config.MICROSOFT_CLIENT_ID,
 				clientSecret: config.MICROSOFT_CLIENT_SECRET,
