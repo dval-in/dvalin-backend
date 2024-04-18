@@ -18,8 +18,8 @@ dependencies:
     specifier: ^1.20.2
     version: 1.20.2
   bullmq:
-    specifier: ^5.7.1
-    version: 5.7.1
+    specifier: ^5.7.2
+    version: 5.7.2
   cors:
     specifier: ^2.8.5
     version: 2.8.5
@@ -1218,8 +1218,8 @@ packages:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
     dev: true
 
-  /bullmq@5.7.1:
-    resolution: {integrity: sha512-t7FhF2mCGgmjZ1rHuBYIcLwzONm4QFGrO1+9mF7hpjWtXalGfy+nGciVcb69L7aPcdJMR2XTe6bNMWHGbKy8mQ==}
+  /bullmq@5.7.2:
+    resolution: {integrity: sha512-5Z8cyPqno+V7l7NmQ0t15Gdkc6RYCs+SR6zSxvAg3ADofyQA+0rll60w6uJpKuUcE2ausC8EFLwW/FJDxSIP5Q==}
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.3.2
