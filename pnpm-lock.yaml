@@ -6,11 +6,11 @@ settings:
 
 dependencies:
   '@prisma/client':
-    specifier: ^5.12.1
-    version: 5.12.1(prisma@5.13.0)
+    specifier: ^5.13.0
+    version: 5.13.0(prisma@5.13.0)
   '@quixo3/prisma-session-store':
     specifier: ^3.1.13
-    version: 3.1.13(@prisma/client@5.12.1)(express-session@1.18.0)
+    version: 3.1.13(@prisma/client@5.13.0)(express-session@1.18.0)
   axios:
     specifier: ^1.6.8
     version: 1.6.8
@@ -518,8 +518,8 @@ packages:
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
     dev: true
 
-  /@prisma/client@5.12.1(prisma@5.13.0):
-    resolution: {integrity: sha512-6/JnizEdlSBxDIdiLbrBdMW5NqDxOmhXAJaNXiPpgzAPr/nLZResT6MMpbOHLo5yAbQ1Vv5UU8PTPRzb0WIxdA==}
+  /@prisma/client@5.13.0(prisma@5.13.0):
+    resolution: {integrity: sha512-uYdfpPncbZ/syJyiYBwGZS8Gt1PTNoErNYMuqHDa2r30rNSFtgTA/LXsSk55R7pdRTMi5pHkeP9B14K6nHmwkg==}
     engines: {node: '>=16.13'}
     requiresBuild: true
     peerDependencies:
@@ -558,7 +558,7 @@ packages:
     dependencies:
       '@prisma/debug': 5.13.0
 
-  /@quixo3/prisma-session-store@3.1.13(@prisma/client@5.12.1)(express-session@1.18.0):
+  /@quixo3/prisma-session-store@3.1.13(@prisma/client@5.13.0)(express-session@1.18.0):
     resolution: {integrity: sha512-EAuOvYAaAsQ0OqxkdJG/Qs3cxlT4VV8SFHjtsA3G01uB1b6r7xftX3oeg7mcG0HN/DI1qOqwvy3YFoJ38ls0iA==}
     engines: {node: '>=12.0'}
     peerDependencies:
@@ -566,7 +566,7 @@ packages:
       express-session: '>=1.17.1'
     dependencies:
       '@paralleldrive/cuid2': 2.2.2
-      '@prisma/client': 5.12.1(prisma@5.13.0)
+      '@prisma/client': 5.13.0(prisma@5.13.0)
       express-session: 1.18.0
       ts-dedent: 2.2.0
       type-fest: 2.19.0
