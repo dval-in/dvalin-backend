@@ -14,12 +14,6 @@ export class WishHistoryRoute {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
-			const runningJob = await wishHistoryQueue.getJob(req.user.providerId + 'wish');
-
-			if (runningJob !== undefined) {
-				return sendSuccessResponse(res, { state: 'IN_PROGRESS' });
-			}
-
 			const authkey =
 				typeof req.query.authkey === 'string'
 					? decodeURIComponent(req.query.authkey)
@@ -51,6 +45,35 @@ export class WishHistoryRoute {
 			);
 
 			sendSuccessResponse(res, { state: 'CREATED' });
+		});
+
+		this.app.get('/wishhistory/status', async (req, res) => {
+			if (req.user === undefined) {
+				return sendErrorResponse(res, 500, 'MISSING_USER');
+			}
+
+			const runningJob = await wishHistoryQueue.getJob(req.user.providerId + 'wish');
+
+			if (runningJob !== undefined) {
+				const isCompleted = await runningJob.isCompleted();
+				const finishedOn = runningJob.finishedOn;
+
+				if (isCompleted && finishedOn !== undefined) {
+					return sendSuccessResponse(res, {
+						state: 'COMPLETED_RATE_LIMIT',
+						data: { completedTimestamp: finishedOn }
+					});
+				} else {
+					const queueJobCount = await wishHistoryQueue.count();
+
+					return sendSuccessResponse(res, {
+						state: 'IN_PROGRESS',
+						data: { max: queueJobCount }
+					});
+				}
+			}
+
+			return sendSuccessResponse(res, { state: 'NO_JOB' });
 		});
 	}
 }
