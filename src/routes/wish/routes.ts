@@ -2,7 +2,6 @@ import { type Express } from 'express';
 
 import { getGachaConfigList } from '../../utils/hoyolab';
 import { sendErrorResponse, sendSuccessResponse } from '../../utils/sendResponse';
-import { logToConsole } from '../../utils/log';
 import { wishHistoryQueue } from '../../queues/wishHistoryQueue';
 
 export class WishHistoryRoute {
@@ -25,9 +24,8 @@ export class WishHistoryRoute {
 
 			const configResponse = await getGachaConfigList(authkey);
 
-			if (configResponse.retcode !== 0 || configResponse.data === null) {
+			if (configResponse === undefined) {
 				sendErrorResponse(res, 500, 'AUTHKEY_INVALID');
-				logToConsole('/wishhistory', configResponse.message);
 				return;
 			}
 

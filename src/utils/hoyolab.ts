@@ -6,6 +6,7 @@ import {
 	type HoyoWishResponse
 } from '../types/wish';
 import { getLatestWishFromGenshinAccount } from '../db/user';
+import { logToConsole } from './log';
 
 // last updated 3/04/2024
 /**
@@ -66,7 +67,7 @@ const getWishes = async (
 	providerId: string,
 	uid?: string
 ): Promise<GachaItem[]> => {
-	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getGachaLog';
+	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
 	const wishHistory: GachaItem[] = [];
 	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
 
@@ -127,8 +128,8 @@ const getWishes = async (
  * @param authkey Authentication key for the API.
  * @returns The Gacha configuration list.
  */
-const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse> => {
-	const url = 'https://hk4e-api-os.mihoyo.com/event/gacha_info/api/getConfigList';
+const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse | undefined> => {
+	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getConfigList';
 
 	try {
 		const response = await axios.get<HoyoConfigResponse>(url, {
@@ -139,10 +140,14 @@ const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse> 
 			}
 		});
 
+		if (response.status !== 200) {
+			return undefined;
+		}
+
 		return response.data;
 	} catch (error) {
-		console.error('Failed to fetch gacha configuration list:', error);
-		throw error;
+		logToConsole('Utils', `getGachaConfigList failed for ${authkey}`);
+		return undefined;
 	}
 };
 

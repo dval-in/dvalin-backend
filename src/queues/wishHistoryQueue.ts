@@ -33,7 +33,7 @@ const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 		const { authkey, providerId } = job.data;
 		const configResponse = await getGachaConfigList(authkey);
 
-		if (configResponse.retcode !== 0 || configResponse.data === null) {
+		if (configResponse === undefined || configResponse.data === null) {
 			throw new Error('Failed to fetch gacha configuration list');
 		}
 
