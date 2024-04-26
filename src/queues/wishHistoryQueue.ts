@@ -25,8 +25,6 @@ export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FE
 	}
 );
 
-wishHistoryQueue.obliterate();
-
 const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 	WISH_HISTORY_QUEUE_NAME,
 	async (job) => {

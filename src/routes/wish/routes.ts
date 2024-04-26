@@ -37,7 +37,7 @@ export class WishHistoryRoute {
 				},
 				{
 					jobId: req.user.providerId + 'wish',
-					removeOnComplete: 3600, //remove after one hour
+					removeOnComplete: { age: 3600 }, //remove after one hour
 					removeOnFail: true
 				}
 			);
