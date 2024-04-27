@@ -4,6 +4,7 @@ import { GachaItem } from '../types/wish';
 import { getGachaConfigList, getWishes } from '../utils/hoyolab';
 import { logToConsole } from '../utils/log';
 import { saveWishesInBulk } from '../db/user';
+import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
 
 const WISH_HISTORY_QUEUE_NAME = 'wishHistory';
 
@@ -24,6 +25,18 @@ export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FE
 		connection
 	}
 );
+
+const scheduler = new ToadScheduler();
+
+const task = new AsyncTask('clear wishhistory queue', () => {
+	return wishHistoryQueue.clean(60 * 60 * 1000, 0, 'completed').then((r) => {
+		logToConsole('WishhistoryQueue', `Cleared ${r.length} Jobs`);
+	});
+});
+
+const job = new SimpleIntervalJob({ minutes: 5 }, task);
+
+scheduler.addSimpleIntervalJob(job);
 
 const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 	WISH_HISTORY_QUEUE_NAME,

@@ -13,6 +13,12 @@ export class WishHistoryRoute {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
+			const runningJob = await wishHistoryQueue.getJob(req.user.providerId + 'wish');
+
+			if (runningJob !== undefined) {
+				return sendSuccessResponse(res, { state: 'CREATED' });
+			}
+
 			const authkey =
 				typeof req.query.authkey === 'string'
 					? decodeURIComponent(req.query.authkey)
@@ -37,7 +43,6 @@ export class WishHistoryRoute {
 				},
 				{
 					jobId: req.user.providerId + 'wish',
-					removeOnComplete: { age: 3600 }, //remove after one hour
 					removeOnFail: true
 				}
 			);
