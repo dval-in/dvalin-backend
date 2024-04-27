@@ -30,7 +30,7 @@ export class WishHistoryRoute {
 
 			const configResponse = await getGachaConfigList(authkey);
 
-			if (configResponse === undefined) {
+			if (configResponse === undefined || configResponse.data === null) {
 				sendErrorResponse(res, 500, 'AUTHKEY_INVALID');
 				return;
 			}
