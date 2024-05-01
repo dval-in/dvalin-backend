@@ -3,15 +3,12 @@ import { config } from '../utils/envManager';
 import { GachaItem } from '../types/wish';
 import { getGachaConfigList, getWishes } from '../utils/hoyolab';
 import { logToConsole } from '../utils/log';
-import { saveWishesInBulk } from '../db/user';
 import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
+import { createMultipleWishes } from '../db/wishes';
+import { createGenshinAccount, getGenshinAccountsByUser } from '../db/genshinAccount';
+import { WishHistoryQueueData } from '../types/queue';
 
 const WISH_HISTORY_QUEUE_NAME = 'wishHistory';
-
-interface WishHistoryQueueData {
-	authkey: string;
-	providerId: string;
-}
 
 const connection = {
 	host: config.REDIS_HOSTNAME,
@@ -41,7 +38,7 @@ scheduler.addSimpleIntervalJob(job);
 const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 	WISH_HISTORY_QUEUE_NAME,
 	async (job) => {
-		const { authkey, providerId } = job.data;
+		const { authkey } = job.data;
 		const configResponse = await getGachaConfigList(authkey);
 
 		if (configResponse === undefined || configResponse.data === null) {
@@ -50,7 +47,7 @@ const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 
 		const gachaTypeList = configResponse.data.gacha_type_list;
 
-		return await getWishes(authkey, gachaTypeList, providerId);
+		return await getWishes(authkey, gachaTypeList);
 	},
 	{
 		connection
@@ -73,17 +70,25 @@ worker.on('completed', async (job, returnvalue) => {
 	const wishesToSave = returnvalue.flatMap((wish) => ({
 		gachaType: wish.gacha_type,
 		itemId: wish.item_id || null,
-		count: wish.count,
 		time: new Date(wish.time),
 		name: wish.name,
-		lang: wish.lang,
 		itemType: wish.item_type,
 		rankType: wish.rank_type,
 		gachaId: wish.id,
 		uid: wish.uid
 	}));
 
-	saveWishesInBulk(wishesToSave);
+	await createMultipleWishes(wishesToSave);
+
+	const genshinAccounts = await getGenshinAccountsByUser(job.data.userId);
+
+	if (genshinAccounts !== undefined) {
+		const uid = wishesToSave[0].uid;
+
+		if (genshinAccounts.filter((account) => account.uid === uid).length === 0) {
+			await createGenshinAccount(uid, job.data.userId);
+		}
+	}
 });
 
 worker.on('failed', async (job, error) => {

@@ -1,110 +1,51 @@
-import { GenshinAccount, PrismaClient, User, WishSave } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
+import { Provider } from '../types/auth';
 
 const prisma = new PrismaClient();
 
-export const getUserFromProvider = async (providerId: string): Promise<User | null> => {
-	return prisma.user.findUnique({
-		where: {
-			providerId
-		}
-	});
-};
-
-export const createUser = async (
-	providerId: string,
-	name: string,
-	email: string
-): Promise<User> => {
+export const createUser = async (providerId: string, provider: Provider): Promise<User> => {
 	return prisma.user.create({
 		data: {
-			providerId,
-			name,
-			email
+			name: 'User',
+			auths: {
+				create: [{ providerId, provider }]
+			}
 		}
 	});
 };
 
-export const linkGenshinAccountToUser = async (
+export const getUserById = async (userId: string): Promise<User | undefined> => {
+	const user = await prisma.user.findUnique({
+		where: {
+			userId
+		}
+	});
+
+	if (!user) {
+		return undefined;
+	}
+
+	return user;
+};
+
+export const getUserByAuth = async (
 	providerId: string,
-	uid: string,
-	name?: string
-): Promise<GenshinAccount> => {
-	return prisma.genshinAccount.create({
-		data: {
-			providerId,
-			uid,
-			name
-		}
-	});
-};
-
-export const getWishesFromGenshinAccount = async (uid: string): Promise<WishSave[]> => {
-	return prisma.wishSave.findMany({
+	provider: Provider
+): Promise<User | undefined> => {
+	const user = await prisma.user.findFirst({
 		where: {
-			uid
-		}
-	});
-};
-
-export const getLatestWishFromGenshinAccount = async (
-	uid: string
-): Promise<WishSave | undefined> => {
-	const wishes = await prisma.wishSave.findFirst({
-		where: {
-			uid
-		},
-		orderBy: {
-			time: 'desc'
+			auths: {
+				some: {
+					providerId,
+					provider
+				}
+			}
 		}
 	});
 
-	if (!wishes) {
+	if (!user) {
 		return undefined;
 	}
 
-	return wishes;
+	return user;
 };
-
-export const getGenshinAccountFromUid = async (
-	uid: string
-): Promise<GenshinAccount | undefined> => {
-	const account = await prisma.genshinAccount.findUnique({
-		where: {
-			uid
-		}
-	});
-
-	if (!account) {
-		return undefined;
-	}
-
-	return account;
-};
-
-export const getGenshinAccountsFromUser = async (providerId: string): Promise<GenshinAccount[]> => {
-	return prisma.genshinAccount.findMany({
-		where: {
-			providerId
-		}
-	});
-};
-
-export async function saveWishesInBulk(
-	wishesToSave: Array<{
-		gachaType: string;
-		itemId: string | null;
-		count: string;
-		time: Date;
-		name: string;
-		lang: string;
-		itemType: string;
-		rankType: string;
-		gachaId: string;
-		uid: string;
-	}>
-) {
-	await prisma.wishSave.createMany({
-		data: wishesToSave,
-		skipDuplicates: true
-	});
-}

@@ -5,8 +5,8 @@ import {
 	type HoyoConfigResponse,
 	type HoyoWishResponse
 } from '../types/wish';
-import { getLatestWishFromGenshinAccount } from '../db/user';
 import { logToConsole } from './log';
+import { getLatestWishByUid } from '../db/wishes';
 
 // last updated 3/04/2024
 /**
@@ -64,7 +64,6 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	providerId: string,
 	uid?: string
 ): Promise<GachaItem[]> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
@@ -72,7 +71,7 @@ const getWishes = async (
 	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
 
 	if (uid) {
-		const latestWish = await getLatestWishFromGenshinAccount(uid);
+		const latestWish = await getLatestWishByUid(uid);
 
 		if (latestWish) {
 			latestTimeSaved = latestWish.time.toISOString();
@@ -113,10 +112,6 @@ const getWishes = async (
 				hasMore = false;
 			}
 		}
-	}
-
-	if (!uid) {
-		//await linkGenshinAccountToUser(providerId, wishHistory[0].uid);
 	}
 
 	return wishHistory;

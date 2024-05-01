@@ -4,7 +4,8 @@ import passport from 'passport';
 import { Profile } from 'passport-google-oauth20';
 import { config } from '../../utils/envManager';
 import { getDomain } from '../../utils/passport';
-import { createUser, getUserFromProvider } from '../../db/user';
+import { createUser, getUserByAuth } from '../../db/user';
+import { createAuth } from '../../db/auth';
 
 const setupMicrosoftOAuth = (app: Express): void => {
 	app.get('/auth/microsoft', passport.authenticate('microsoft'));
@@ -27,20 +28,29 @@ const setupMicrosoftOAuth = (app: Express): void => {
 				clientID: config.MICROSOFT_CLIENT_ID,
 				clientSecret: config.MICROSOFT_CLIENT_SECRET,
 				callbackURL: config.BACKEND_URL + '/auth/microsoft/callback',
-				scope: ['user.read']
+				scope: ['user.read'],
+				passReqToCallback: true
 			},
 			async (
+				req: Express.Request,
 				accessToken: string,
 				refreshToken: string,
 				profile: Profile,
 				cb: (err?: Error | null, user?: Express.User, info?: object) => void
 			) => {
-				const email = profile.emails?.[0].value ?? '';
-				let user = await getUserFromProvider(profile.id);
-				if (user == null) {
-					user = await createUser(profile.id, profile.displayName, email);
+				if (req.user === undefined) {
+					let user = await getUserByAuth(profile.id, 'Microsoft');
+
+					if (user === undefined) {
+						user = await createUser(profile.id, 'Microsoft');
+					}
+
+					cb(null, user);
+				} else {
+					await createAuth(profile.id, 'Microsoft', req.user.userId);
+
+					cb(null, req.user);
 				}
-				cb(null, user);
 			}
 		)
 	);
