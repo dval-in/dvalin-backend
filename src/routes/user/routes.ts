@@ -1,6 +1,7 @@
 import { type Express, type Request, type Response } from 'express';
 import { sendSuccessResponse } from '../../utils/sendResponse';
-import { getGenshinAccountsFromUser, getWishesFromGenshinAccount } from '../../db/user';
+import { getGenshinAccountsByUser } from '../../db/genshinAccount';
+import { getWishesByUid } from '../../db/wishes';
 
 export class UserRoute {
 	constructor(private readonly app: Express) {}
@@ -11,51 +12,53 @@ export class UserRoute {
 				return;
 			}
 
-			const genshinAccount = await getGenshinAccountsFromUser(req.user.providerId);
+			const genshinAccount = await getGenshinAccountsByUser(req.user.userId);
+			let wishes = undefined;
+			let user = undefined;
 
-			const uid = genshinAccount[0].uid;
+			if (genshinAccount !== undefined) {
+				const account = genshinAccount[0];
 
-			const allWishes = await getWishesFromGenshinAccount(uid);
+				const allWishes = await getWishesByUid(account.uid);
 
-			const BeginnerWishes = allWishes.filter((w) => w.gachaType === '100');
-			const StandardWishes = allWishes.filter((w) => w.gachaType === '200');
-			const CharacterEventWishes = allWishes.filter((w) => w.gachaType === '301');
-			const WeaponEventWishes = allWishes.filter((w) => w.gachaType === '302');
-			const ChronicledWishes = allWishes.filter((w) => w.gachaType === '500');
-
-			const a = {
-				format: 'dvalin',
-				version: 1,
-				user: {
+				user = {
 					server: 'Europe',
 					ar: 60,
-					uid: uid,
+					uid: account.uid,
 					wl: 6
-				},
-				...(allWishes.length > 0
-					? {
-							wishes: {
-								...(WeaponEventWishes.length !== 0
-									? { WeaponEvent: WeaponEventWishes }
-									: undefined),
-								...(StandardWishes.length !== 0
-									? { Standard: StandardWishes }
-									: undefined),
-								...(CharacterEventWishes.length !== 0
-									? { CharacterEvent: CharacterEventWishes }
-									: undefined),
-								...(BeginnerWishes.length !== 0
-									? { Beginner: BeginnerWishes }
-									: undefined),
-								...(ChronicledWishes.length !== 0
-									? { Chronicled: ChronicledWishes }
-									: undefined)
-							}
-						}
-					: undefined)
+				};
+
+				if (allWishes !== undefined) {
+					const BeginnerWishes = allWishes.filter((w) => w.gachaType === '100');
+					const StandardWishes = allWishes.filter((w) => w.gachaType === '200');
+					const CharacterEventWishes = allWishes.filter((w) => w.gachaType === '301');
+					const WeaponEventWishes = allWishes.filter((w) => w.gachaType === '302');
+					const ChronicledWishes = allWishes.filter((w) => w.gachaType === '500');
+
+					wishes = {
+						...(WeaponEventWishes.length !== 0
+							? { WeaponEvent: WeaponEventWishes }
+							: undefined),
+						...(StandardWishes.length !== 0 ? { Standard: StandardWishes } : undefined),
+						...(CharacterEventWishes.length !== 0
+							? { CharacterEvent: CharacterEventWishes }
+							: undefined),
+						...(BeginnerWishes.length !== 0 ? { Beginner: BeginnerWishes } : undefined),
+						...(ChronicledWishes.length !== 0
+							? { Chronicled: ChronicledWishes }
+							: undefined)
+					};
+				}
+			}
+
+			const userProfile = {
+				format: 'dvalin',
+				version: 1,
+				...(user !== undefined ? user : undefined),
+				...(wishes !== undefined ? wishes : undefined)
 			};
 
-			sendSuccessResponse(res, a);
+			sendSuccessResponse(res, userProfile);
 		});
 	}
 }

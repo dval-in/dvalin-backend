@@ -1,6 +1,4 @@
-import { User } from '@prisma/client';
-
-type PrismaUser = User;
+import { User as PrismaUser } from '@prisma/client';
 
 declare global {
 	namespace Express {

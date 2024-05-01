@@ -13,7 +13,7 @@ export class WishHistoryRoute {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
-			const runningJob = await wishHistoryQueue.getJob(req.user.providerId + 'wish');
+			const runningJob = await wishHistoryQueue.getJob(req.user.userId + 'wish');
 
 			if (runningJob !== undefined) {
 				return sendSuccessResponse(res, { state: 'CREATED' });
@@ -39,10 +39,10 @@ export class WishHistoryRoute {
 				'FETCH_WISH_HISTORY',
 				{
 					authkey,
-					providerId: req.user.providerId
+					userId: req.user.userId
 				},
 				{
-					jobId: req.user.providerId + 'wish',
+					jobId: req.user.userId + 'wish',
 					removeOnFail: true
 				}
 			);
@@ -55,7 +55,7 @@ export class WishHistoryRoute {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
-			const runningJob = await wishHistoryQueue.getJob(req.user.providerId + 'wish');
+			const runningJob = await wishHistoryQueue.getJob(req.user.userId + 'wish');
 
 			if (runningJob !== undefined) {
 				const isCompleted = await runningJob.isCompleted();

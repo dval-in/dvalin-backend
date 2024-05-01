@@ -13,15 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  providerId      String           @id @unique
-  name            String?
-  email           String
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  genshinAccounts GenshinAccount[]
-}
-
 model Session {
   id        String   @id
   sid       String   @unique
@@ -29,26 +20,41 @@ model Session {
   expiresAt DateTime
 }
 
-model GenshinAccount {
-  uid        String     @id @unique
-  user       User       @relation(fields: [providerId], references: [providerId])
-  providerId String
-  wishes     WishSave[]
-  name       String?
+model User {
+  userId          String           @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  name            String
+  auths           Auth[]
+  genshinAccounts GenshinAccount[]
 }
 
-model WishSave {
-  id             Int            @id @default(autoincrement())
+model Auth {
+  id         String @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  providerId String
+  provider   String
+  user       User   @relation(fields: [userId], references: [userId])
+  userId     String @db.Uuid
+}
+
+model GenshinAccount {
+  uid    String  @id @unique
+  name   String?
+  wishes Wish[]
+  user   User    @relation(fields: [userId], references: [userId])
+  userId String  @db.Uuid
+}
+
+model Wish {
+  id             String         @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  createdAt      DateTime       @default(now())
+  uid            String
   gachaType      String         @map("gacha_type")
   itemId         String?        @map("item_id")
-  count          String
   time           DateTime       @map("wish_time")
   name           String
-  lang           String
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
   gachaId        String
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
-  uid            String
-  createdAt      DateTime       @default(now())
 }

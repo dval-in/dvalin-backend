@@ -1,16 +1,12 @@
 import passport from 'passport';
 import { PrismaClient, User as PrismaUser } from '@prisma/client';
-import { getUserFromProvider } from '../db/user';
 import expressSession from 'express-session';
 import { config } from './envManager';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import type { Express } from 'express';
 import { logToConsole } from './log';
-
-interface SessionUser {
-	providerId: string;
-	name: string;
-}
+import { getUserById } from '../db/user';
+import { SessionUser } from '../types/auth';
 
 export const getDomain = (hostname: string): string => {
 	if (hostname === 'localhost') {
@@ -50,16 +46,19 @@ export const setupPassport = (app: Express) => {
 	passport.serializeUser<SessionUser>(
 		(user: PrismaUser, cb: (err: null, serializedUser: SessionUser) => void) => {
 			process.nextTick(() => {
-				cb(null, { providerId: user.providerId, name: user.name ?? '' });
+				cb(null, { userId: user.userId });
 			});
 		}
 	);
 
 	passport.deserializeUser<SessionUser>(
-		async (sessionUser: SessionUser, cb: (err: null, user?: PrismaUser) => void) => {
-			const prismaUser = await getUserFromProvider(sessionUser.providerId);
+		async (sessionUser: SessionUser, cb: (err: Error | null, user?: PrismaUser) => void) => {
+			const prismaUser = await getUserById(sessionUser.userId);
+
 			if (prismaUser) {
 				cb(null, prismaUser);
+			} else {
+				cb(new Error('Invalid User'));
 			}
 		}
 	);
