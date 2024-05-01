@@ -2,7 +2,6 @@ import { Strategy as GitHubStrategy } from 'passport-github';
 import { type Express } from 'express';
 import passport from 'passport';
 import { config } from '../../utils/envManager';
-import { getDomain } from '../../utils/passport';
 import { createUser, getUserByAuth } from '../../db/user';
 import { createAuth } from '../../db/auth';
 
@@ -12,9 +11,6 @@ const setupGitHubOAuth = (app: Express): void => {
 		'/auth/github/callback',
 		passport.authenticate('github', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
-			res.cookie('isAuthenticated', 'true', {
-				domain: getDomain(new URL(config.BACKEND_URL).hostname)
-			});
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
