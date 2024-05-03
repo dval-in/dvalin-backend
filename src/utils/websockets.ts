@@ -26,8 +26,10 @@ export const setupWebsockets = (io: Server) => {
 
 		if (req.user) {
 			socket.join(`user:${req.user.userId}`);
+			socket.emit('authenticationState', true);
 			logToConsole('WS', `${req.user.userId} connected`);
 		} else {
+			socket.emit('authenticationState', false);
 			logToConsole('WS', 'anonymous user connected');
 		}
 
