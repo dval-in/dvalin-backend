@@ -7,7 +7,7 @@ import { WebSocketService } from '../services/websocket';
 
 const onlyForHandshake = (middleware: RequestHandler): RequestHandler => {
 	return (req, res, next) => {
-		const isHandshake = req.query.sid === undefined;
+		const isHandshake = req.query?.sid === undefined;
 		if (isHandshake) {
 			middleware(req, res, next);
 		} else {
@@ -20,16 +20,6 @@ export const setupWebsockets = (io: Server) => {
 	WebSocketService.setupInstance(io);
 	io.engine.use(onlyForHandshake(session));
 	io.engine.use(onlyForHandshake(passport.session()));
-	io.engine.use(
-		onlyForHandshake((req, res, next) => {
-			if (req.user) {
-				next();
-			} else {
-				res.writeHead(401);
-				res.end();
-			}
-		})
-	);
 
 	io.on('connection', (socket) => {
 		const req = socket.request as unknown as Express.Request;
