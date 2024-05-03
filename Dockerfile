@@ -1,9 +1,9 @@
-FROM node:bookworm
+FROM node:lts-bookworm
 
 COPY . /
 WORKDIR /
 
-RUN npm install
+RUN npm add -g pnpm && pnpm install
 
 EXPOSE 3000
-CMD npm run start
+CMD pnpm run start
