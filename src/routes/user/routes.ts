@@ -54,11 +54,11 @@ export class UserRoute {
 			const userProfile = {
 				format: 'dvalin',
 				version: 1,
-				...(user !== undefined ? user : undefined),
-				...(wishes !== undefined ? wishes : undefined)
+				...(user !== undefined ? { user } : undefined),
+				...(wishes !== undefined ? { wishes } : undefined)
 			};
 
-			sendSuccessResponse(res, userProfile);
+			sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile });
 		});
 	}
 }

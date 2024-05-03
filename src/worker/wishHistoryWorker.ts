@@ -7,6 +7,7 @@ import { WishHistoryQueueData } from '../types/queue';
 import { WISH_HISTORY_QUEUE_NAME, wishHistoryQueue } from '../queues/wishHistoryQueue';
 import { connection } from '../utils/queue';
 import { WebSocketService } from '../services/websocket';
+import { createMultipleWishes } from '../db/wishes';
 
 export const setupWishHistoryWorker = () => {
 	const wss = WebSocketService.getInstance();
@@ -46,6 +47,19 @@ export const setupWishHistoryWorker = () => {
 			`completed: ${job.id}, remaining: ${await wishHistoryQueue.getWaitingCount()}`
 		);
 
+		const genshinAccounts = await getGenshinAccountsByUser(job.data.userId);
+		const uid = returnvalue[0].uid;
+
+		if (genshinAccounts !== undefined) {
+			const prefilter = genshinAccounts.filter((account) => account.uid === uid);
+
+			if (prefilter.length === 0) {
+				await createGenshinAccount(uid, job.data.userId);
+			}
+		} else {
+			await createGenshinAccount(uid, job.data.userId);
+		}
+
 		const wishesToSave = returnvalue.flatMap((wish) => ({
 			gachaType: wish.gacha_type,
 			itemId: wish.item_id || null,
@@ -57,15 +71,7 @@ export const setupWishHistoryWorker = () => {
 			uid: wish.uid
 		}));
 
-		const genshinAccounts = await getGenshinAccountsByUser(job.data.userId);
-
-		if (genshinAccounts !== undefined) {
-			const uid = wishesToSave[0].uid;
-
-			if (genshinAccounts.filter((account) => account.uid === uid).length === 0) {
-				await createGenshinAccount(uid, job.data.userId);
-			}
-		}
+		await createMultipleWishes(wishesToSave);
 
 		wss.invalidateQuery(job.data.userId, 'fetchUserProfile');
 		wss.invalidateQuery(job.data.userId, 'fetchHoyoWishhistoryStatus');
