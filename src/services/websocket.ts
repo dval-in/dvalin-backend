@@ -25,7 +25,7 @@ export class WebSocketService {
 	}
 
 	public invalidateQuery(userId: string, queryKey: QueryKey) {
-		this.io.to(`user:${userId}`).emit('invalidateQuery', { queryKey });
+		this.io.to(`user:${userId}`).emit('invalidateQuery', [queryKey]);
 	}
 
 	public broadcastInvalidateQuery(queryKey: QueryKey) {
