@@ -20,7 +20,12 @@ const authExcludedPaths = ['/data', '/auth'];
 
 const app = express();
 const server = createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+	cors: {
+		origin: config.FRONTEND_URL,
+		credentials: true
+	}
+});
 
 const authRoute = new AuthRoute(app);
 const dynamicDataRoute = new DynamicDataRoute(app);
@@ -28,7 +33,12 @@ const userRoute = new UserRoute(app);
 const wishHistoryRoute = new WishHistoryRoute(app);
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(
+	cors({
+		origin: config.FRONTEND_URL,
+		credentials: true
+	})
+);
 
 setupSession(app);
 setupPassport(app);
