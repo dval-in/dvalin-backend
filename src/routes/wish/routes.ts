@@ -2,7 +2,10 @@ import { type Express } from 'express';
 
 import { getGachaConfigList } from '../../utils/hoyolab';
 import { sendErrorResponse, sendSuccessResponse } from '../../utils/sendResponse';
-import { wishHistoryQueue } from '../../queues/wishHistoryQueue';
+import {
+	WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION,
+	wishHistoryQueue
+} from '../../queues/wishHistoryQueue';
 
 export class WishHistoryRoute {
 	constructor(private readonly app: Express) {}
@@ -59,21 +62,31 @@ export class WishHistoryRoute {
 
 			if (runningJob !== undefined) {
 				const isCompleted = await runningJob.isCompleted();
+				const isActive = await runningJob.isActive();
 				const finishedOn = runningJob.finishedOn;
 
 				if (isCompleted && finishedOn !== undefined) {
 					return sendSuccessResponse(res, {
 						state: 'COMPLETED_RATE_LIMIT',
-						data: { completedTimestamp: finishedOn }
-					});
-				} else {
-					const queueJobCount = await wishHistoryQueue.count();
-
-					return sendSuccessResponse(res, {
-						state: 'IN_PROGRESS',
-						data: { max: queueJobCount }
+						data: {
+							completedTimestamp: finishedOn,
+							rateLimitDuration: WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION
+						}
 					});
 				}
+
+				if (isActive) {
+					return sendSuccessResponse(res, {
+						state: 'ACTIVE'
+					});
+				}
+
+				const queueJobCount = await wishHistoryQueue.count();
+
+				return sendSuccessResponse(res, {
+					state: 'QUEUED',
+					data: { count: queueJobCount }
+				});
 			}
 
 			return sendSuccessResponse(res, { state: 'NO_JOB' });

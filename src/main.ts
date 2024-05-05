@@ -9,20 +9,40 @@ import { WishHistoryRoute } from './routes/wish/routes';
 import { logToConsole } from './utils/log';
 import { sendErrorResponse, sendSuccessResponse } from './utils/sendResponse';
 import { UserRoute } from './routes/user/routes';
+import { createServer } from 'node:http';
+import { setupWebsockets } from './utils/websockets';
+import { setupSession } from './utils/session';
+import { Server } from 'socket.io';
+import { setupWorkers } from './worker/worker';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+	cors: {
+		origin: config.FRONTEND_URL,
+		credentials: true
+	}
+});
+
 const authRoute = new AuthRoute(app);
 const dynamicDataRoute = new DynamicDataRoute(app);
 const userRoute = new UserRoute(app);
 const wishHistoryRoute = new WishHistoryRoute(app);
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cors());
+app.use(
+	cors({
+		origin: config.FRONTEND_URL,
+		credentials: true
+	})
+);
 
+setupSession(app);
 setupPassport(app);
+setupWebsockets(io);
 
 app.use((req, res, next) => {
 	const isExcluded =
@@ -49,6 +69,8 @@ dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
 wishHistoryRoute.setupRoutes();
 
-app.listen(port, () => {
+setupWorkers();
+
+server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);
 });
