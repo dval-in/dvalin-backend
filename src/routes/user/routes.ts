@@ -31,7 +31,9 @@ export class UserRoute {
 				if (allWishes !== undefined) {
 					const BeginnerWishes = allWishes.filter((w) => w.gachaType === '100');
 					const StandardWishes = allWishes.filter((w) => w.gachaType === '200');
-					const CharacterEventWishes = allWishes.filter((w) => w.gachaType === '301');
+					const CharacterEventWishes = allWishes.filter(
+						(w) => w.gachaType === '301' || w.gachaType === '400'
+					);
 					const WeaponEventWishes = allWishes.filter((w) => w.gachaType === '302');
 					const ChronicledWishes = allWishes.filter((w) => w.gachaType === '500');
 
