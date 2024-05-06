@@ -65,4 +65,11 @@ export class DynamicDataRoute {
 			sendSuccessResponse(res, data);
 		});
 	}
+
+	async getDataIndex() {
+		while (!this.isInitialised) {
+			await new Promise((resolve) => setTimeout(resolve, 1_000));
+		}
+		return this.dataIndex.getIndex();
+	}
 }

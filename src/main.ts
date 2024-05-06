@@ -14,6 +14,8 @@ import { setupWebsockets } from './utils/websockets';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
+import { BKTree } from './utils/BKTree';
+import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -69,7 +71,13 @@ dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
 wishHistoryRoute.setupRoutes();
 
-setupWorkers();
+const bkTree = new BKTree(optimizedLevenshteinDistance);
+dynamicDataRoute.getDataIndex().then((data) => {
+	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
+	indexes.forEach((key) => bkTree.insert(key));
+});
+
+setupWorkers(bkTree);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

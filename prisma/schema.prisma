@@ -46,15 +46,13 @@ model GenshinAccount {
 }
 
 model Wish {
-  id             String         @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  id             String         @id @unique
   createdAt      DateTime       @default(now())
   uid            String
   gachaType      String         @map("gacha_type")
-  itemId         String?        @map("item_id")
   time           DateTime       @map("wish_time")
   name           String
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
-  gachaId        String
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
 }

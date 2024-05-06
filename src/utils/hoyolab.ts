@@ -7,6 +7,7 @@ import {
 } from '../types/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/wishes';
+import { Wish } from '@prisma/client';
 
 // last updated 3/04/2024
 /**
@@ -68,19 +69,14 @@ const getWishes = async (
 ): Promise<GachaItem[]> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
 	const wishHistory: GachaItem[] = [];
-	let latestTimeSaved = '2020-09-28T00:00:00.000Z';
-
+	let latestSavedWish: Partial<Wish> & { id: string } = { id: '0' }; // yeah I know the type is awful please fix
 	if (uid) {
-		const latestWish = await getLatestWishByUid(uid);
-
-		if (latestWish) {
-			latestTimeSaved = latestWish.time.toISOString();
-		}
+		latestSavedWish = (await getLatestWishByUid(uid)) || { id: '0' };
 	}
 
 	for (const gachaType of gachaTypeList) {
+		let lastNewWishId = '0';
 		let currentPage = 1;
-		const endId = 0;
 		let hasMore = true;
 
 		while (hasMore) {
@@ -91,7 +87,7 @@ const getWishes = async (
 					lang: 'en-us',
 					page: currentPage,
 					size: 20,
-					end_id: endId,
+					end_id: lastNewWishId,
 					gacha_type: gachaType.key
 				}
 			});
@@ -99,8 +95,9 @@ const getWishes = async (
 			const { data } = response;
 			if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
 				for (const wish of data.data.list) {
-					if (wish.time > latestTimeSaved) {
+					if (wish.id > latestSavedWish.id) {
 						wishHistory.push(wish);
+						lastNewWishId = wish.id;
 					} else {
 						hasMore = false;
 						break;
