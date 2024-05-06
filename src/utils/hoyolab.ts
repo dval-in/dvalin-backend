@@ -7,7 +7,6 @@ import {
 } from '../types/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/wishes';
-import { Wish } from '@prisma/client';
 
 // last updated 3/04/2024
 /**
@@ -69,7 +68,7 @@ const getWishes = async (
 ): Promise<GachaItem[]> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
 	const wishHistory: GachaItem[] = [];
-	let latestSavedWish: Partial<Wish> & { id: string } = { id: '0' }; // yeah I know the type is awful please fix
+	let latestSavedWish: { id: string } = { id: '0' }; // yeah I know the type is awful please fix
 	if (uid) {
 		latestSavedWish = (await getLatestWishByUid(uid)) || { id: '0' };
 	}
