@@ -46,7 +46,7 @@ export class WishHistoryRoute {
 				},
 				{
 					jobId: req.user.userId + 'wish',
-					removeOnFail: false
+					removeOnFail: true
 				}
 			);
 
