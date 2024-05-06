@@ -75,7 +75,6 @@ const getWishes = async (
 
 	for (const gachaType of gachaTypeList) {
 		let lastNewWishId = '0';
-		let currentPage = 1;
 		let hasMore = true;
 
 		while (hasMore) {
@@ -84,7 +83,7 @@ const getWishes = async (
 					authkey,
 					authkey_ver: 1,
 					lang: 'en-us',
-					page: currentPage,
+					page: 1,
 					size: 20,
 					end_id: lastNewWishId,
 					gacha_type: gachaType.key
@@ -102,8 +101,7 @@ const getWishes = async (
 						break;
 					}
 				}
-				currentPage++;
-				if (currentPage % 5 === 0) await randomDelay(100, 1000);
+				await randomDelay(100, 1000);
 			} else {
 				hasMore = false;
 			}
