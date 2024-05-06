@@ -21,7 +21,7 @@ const configSchema = z.object({
 	DATABASE_URL: z.string().url(),
 	REDIS_HOSTNAME: z.string().min(1),
 	REDIS_PORT: z.number().min(1024).max(65535),
-	REDIS_PASSWORD: z.string().min(1)
+	REDIS_PASSWORD: z.string().min(0)
 });
 
 // Validate the environment configuration immediately

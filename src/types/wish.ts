@@ -32,7 +32,6 @@ export type GachaTypeName =
 export interface GachaItem {
 	uid: string;
 	gacha_type: string;
-	item_id: string;
 	count: string;
 	time: string; // "YYYY-MM-DD HH:mm:ss"
 	name: string;

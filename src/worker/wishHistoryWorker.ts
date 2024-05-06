@@ -8,10 +8,10 @@ import { WISH_HISTORY_QUEUE_NAME, wishHistoryQueue } from '../queues/wishHistory
 import { connection } from '../utils/queue';
 import { WebSocketService } from '../services/websocket';
 import { createMultipleWishes } from '../db/wishes';
+import { BKTree } from '../utils/BKTree';
 
-export const setupWishHistoryWorker = () => {
+export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
-
 	const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
 		WISH_HISTORY_QUEUE_NAME,
 		async (job) => {
@@ -62,12 +62,11 @@ export const setupWishHistoryWorker = () => {
 
 		const wishesToSave = returnvalue.flatMap((wish) => ({
 			gachaType: wish.gacha_type,
-			itemId: wish.item_id || null,
 			time: new Date(wish.time),
-			name: wish.name,
+			name: bkTree.search(wish.name)[0].word,
 			itemType: wish.item_type,
 			rankType: wish.rank_type,
-			gachaId: wish.id,
+			id: wish.id,
 			uid: wish.uid
 		}));
 
