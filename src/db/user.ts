@@ -1,7 +1,7 @@
-import { PrismaClient, User } from '@prisma/client';
+import { User } from '@prisma/client';
 import { Provider } from '../types/auth';
 
-const prisma = new PrismaClient();
+import { prisma } from './prismaclient'
 
 export const createUser = async (providerId: string, provider: Provider): Promise<User> => {
 	return prisma.user.create({

@@ -1,6 +1,5 @@
-import { GenshinAccount, PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { GenshinAccount } from '@prisma/client'
+import { prisma } from './prismaclient'
 
 export const createGenshinAccount = async (
 	uid: string,
