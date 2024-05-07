@@ -2,6 +2,18 @@ import { type Express, type Request, type Response } from 'express';
 import { sendSuccessResponse } from '../../utils/sendResponse';
 import { getGenshinAccountsByUser } from '../../db/genshinAccount';
 import { getWishesByUid } from '../../db/wishes';
+import { Wish } from '@prisma/client';
+
+const convertToFrontendWishes = (wishes: Wish[]) => {
+	return wishes.map((wish) => ({
+		type: wish.itemType,
+		number: wish.id,
+		key: wish.name,
+		date: wish.time,
+		pity: 1,
+		banner: 'BalladInGoblets1'
+	}));
+};
 
 export class UserRoute {
 	constructor(private readonly app: Express) {}
@@ -29,13 +41,21 @@ export class UserRoute {
 				};
 
 				if (allWishes !== undefined) {
-					const BeginnerWishes = allWishes.filter((w) => w.gachaType === '100');
-					const StandardWishes = allWishes.filter((w) => w.gachaType === '200');
-					const CharacterEventWishes = allWishes.filter(
-						(w) => w.gachaType === '301' || w.gachaType === '400'
+					const BeginnerWishes = convertToFrontendWishes(
+						allWishes.filter((w) => w.gachaType === '100')
 					);
-					const WeaponEventWishes = allWishes.filter((w) => w.gachaType === '302');
-					const ChronicledWishes = allWishes.filter((w) => w.gachaType === '500');
+					const StandardWishes = convertToFrontendWishes(
+						allWishes.filter((w) => w.gachaType === '200')
+					);
+					const CharacterEventWishes = convertToFrontendWishes(
+						allWishes.filter((w) => w.gachaType === '301' || w.gachaType === '400')
+					);
+					const WeaponEventWishes = convertToFrontendWishes(
+						allWishes.filter((w) => w.gachaType === '302')
+					);
+					const ChronicledWishes = convertToFrontendWishes(
+						allWishes.filter((w) => w.gachaType === '500')
+					);
 
 					wishes = {
 						...(WeaponEventWishes.length !== 0
