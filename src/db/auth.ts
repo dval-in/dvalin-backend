@@ -1,6 +1,8 @@
 import { Auth } from '@prisma/client';
 import { Provider } from '../types/auth';
-import { prisma } from './prismaclient'
+import { DBClient } from './prismaclient';
+
+const prisma = DBClient.getInstance();
 
 export const createAuth = async (
 	providerId: string,
