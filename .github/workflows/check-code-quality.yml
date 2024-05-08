@@ -17,8 +17,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/Iron
-      - run: npm install -g pnpm
-      - run: pnpm install
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: true
       - run: pnpm prisma generate
       - run: pnpm tsc
   check-prettier-and-eslint:
@@ -28,7 +31,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/Iron
-      - run: npm install -g pnpm
-      - run: pnpm install
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        with:
+          version: 9
+          run_install: true
       - run: pnpm prisma generate
       - run: pnpm run lint
