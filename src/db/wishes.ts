@@ -13,6 +13,9 @@ export const getWishesByUid = async (uid: string): Promise<Wish[] | undefined> =
 	const wishes = await prisma.wish.findMany({
 		where: {
 			uid
+		},
+		orderBy: {
+			time: 'desc'
 		}
 	});
 
