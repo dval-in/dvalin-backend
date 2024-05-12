@@ -54,5 +54,6 @@ model Wish {
   name           String
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
+  pity           String?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
 }

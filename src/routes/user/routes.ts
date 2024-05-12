@@ -10,7 +10,7 @@ const convertToFrontendWishes = (wishes: Wish[]) => {
 		number: wish.id,
 		key: wish.name,
 		date: wish.time,
-		pity: 1,
+		pity: wish.pity,
 		banner: 'BalladInGoblets1'
 	}));
 };

@@ -9,6 +9,7 @@ import { connection } from '../utils/queue';
 import { WebSocketService } from '../services/websocket';
 import { createMultipleWishes } from '../db/wishes';
 import { BKTree } from '../utils/BKTree';
+import { Wish } from '@prisma/client';
 
 export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
@@ -60,15 +61,37 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 			await createGenshinAccount(uid, job.data.userId);
 		}
 
-		const wishesToSave = returnvalue.flatMap((wish) => ({
-			gachaType: wish.gacha_type,
-			time: new Date(wish.time),
-			name: bkTree.search(wish.name)[0].word,
-			itemType: wish.item_type,
-			rankType: wish.rank_type,
-			id: wish.id,
-			uid: wish.uid
-		}));
+		const wishesToSave: Omit<Wish, 'createdAt'>[] = [];
+		let fourStarPity = 1;
+		let fiveStarPity = 1;
+
+		returnvalue.forEach((wish) => {
+			let pity = 1;
+
+			if (wish.rank_type === '4') {
+				pity = fourStarPity;
+				fourStarPity = 1;
+				fiveStarPity++;
+			} else if (wish.rank_type === '5') {
+				pity = fiveStarPity;
+				fiveStarPity = 1;
+				fourStarPity++;
+			} else {
+				fiveStarPity++;
+				fourStarPity++;
+			}
+
+			wishesToSave.push({
+				gachaType: wish.gacha_type,
+				time: new Date(wish.time),
+				name: bkTree.search(wish.name)[0].word,
+				itemType: wish.item_type,
+				rankType: wish.rank_type,
+				id: wish.id,
+				uid: wish.uid,
+				pity: pity.toString()
+			});
+		});
 
 		await createMultipleWishes(wishesToSave);
 
