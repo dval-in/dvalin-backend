@@ -1,12 +1,9 @@
 import axios from 'axios';
-import {
-	type GachaItem,
-	type GachaTypeList,
-	type HoyoConfigResponse,
-	type HoyoWishResponse
-} from '../types/wish';
+import { type GachaTypeList, type HoyoConfigResponse, type HoyoWishResponse } from '../types/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/wishes';
+import { Wish } from '@prisma/client';
+import { BKTree } from './BKTree';
 
 // last updated 3/04/2024
 /**
@@ -57,25 +54,35 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  *
  * @param authkey Authentication key for the API.
  * @param gachaTypeList List of gacha types to query.
- * @param providerId
+ * @param bkTree
  * @param uid
  * @returns A Promise with the wish history.
  */
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
+	bkTree: BKTree,
 	uid?: string
-): Promise<GachaItem[]> => {
+): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
-	const wishHistory: GachaItem[] = [];
-	let latestSavedWish: { id: string } = { id: '0' }; // yeah I know the type is awful please fix
+	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
+	let latestSavedWishId = '0';
+
 	if (uid) {
-		latestSavedWish = (await getLatestWishByUid(uid)) || { id: '0' };
+		const latestSavedWish = await getLatestWishByUid(uid);
+		if (latestSavedWish !== undefined) {
+			latestSavedWishId = latestSavedWish.uid;
+		}
 	}
 
 	for (const gachaType of gachaTypeList) {
 		let lastNewWishId = '0';
 		let hasMore = true;
+
+		let fourStarPity = 0;
+		let fiveStarPity = 0;
+		let lastFiveStarIndex: number | undefined = undefined;
+		let lastFourStarIndex: number | undefined = undefined;
 
 		while (hasMore) {
 			const response = await axios.get<HoyoWishResponse>(url, {
@@ -93,15 +100,41 @@ const getWishes = async (
 			const { data } = response;
 			if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
 				for (const wish of data.data.list) {
-					if (wish.id > latestSavedWish.id) {
-						wishHistory.push(wish);
+					if (wish.id > latestSavedWishId) {
+						fiveStarPity++;
+						fourStarPity++;
+
+						if (wish.rank_type === '4') {
+							if (lastFourStarIndex !== undefined) {
+								wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
+							}
+							lastFourStarIndex = wishHistory.length;
+							fourStarPity = 0;
+						} else if (wish.rank_type === '5') {
+							if (lastFiveStarIndex !== undefined) {
+								wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
+							}
+							lastFiveStarIndex = wishHistory.length;
+							fiveStarPity = 0;
+						}
+
+						wishHistory.push({
+							gachaType: wish.gacha_type,
+							time: new Date(wish.time),
+							name: bkTree.search(wish.name)[0].word,
+							itemType: wish.item_type,
+							rankType: wish.rank_type,
+							id: wish.id,
+							uid: wish.uid,
+							pity: '1'
+						});
 						lastNewWishId = wish.id;
 					} else {
 						hasMore = false;
 						break;
 					}
 				}
-				await randomDelay(100, 1000);
+				await randomDelay(100, 500);
 			} else {
 				hasMore = false;
 			}
