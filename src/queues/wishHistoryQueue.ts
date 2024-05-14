@@ -1,19 +1,20 @@
 import { Queue } from 'bullmq';
-import { GachaItem } from '../types/wish';
 import { logToConsole } from '../utils/log';
 import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
 import { WishHistoryQueueData } from '../types/queue';
 import { connection } from '../utils/queue';
+import { Wish } from '@prisma/client';
 
 export const WISH_HISTORY_QUEUE_NAME = 'wishHistory';
 export const WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION = 60 * 60 * 1000;
 
-export const wishHistoryQueue = new Queue<WishHistoryQueueData, GachaItem[], 'FETCH_WISH_HISTORY'>(
-	WISH_HISTORY_QUEUE_NAME,
-	{
-		connection
-	}
-);
+export const wishHistoryQueue = new Queue<
+	WishHistoryQueueData,
+	Omit<Wish, 'createdAt'>[],
+	'FETCH_WISH_HISTORY'
+>(WISH_HISTORY_QUEUE_NAME, {
+	connection
+});
 
 const scheduler = new ToadScheduler();
 

@@ -1,5 +1,4 @@
 import { Worker } from 'bullmq';
-import { GachaItem } from '../types/wish';
 import { getGachaConfigList, getWishes } from '../utils/hoyolab';
 import { logToConsole } from '../utils/log';
 import { createGenshinAccount, getGenshinAccountsByUser } from '../db/genshinAccount';
@@ -13,7 +12,7 @@ import { Wish } from '@prisma/client';
 
 export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
-	const worker = new Worker<WishHistoryQueueData, GachaItem[]>(
+	const worker = new Worker<WishHistoryQueueData, Omit<Wish, 'createdAt'>[]>(
 		WISH_HISTORY_QUEUE_NAME,
 		async (job) => {
 			const { authkey } = job.data;
@@ -25,7 +24,7 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 
 			const gachaTypeList = configResponse.data.gacha_type_list;
 
-			return await getWishes(authkey, gachaTypeList);
+			return await getWishes(authkey, gachaTypeList, bkTree);
 		},
 		{
 			connection
@@ -61,39 +60,7 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 			await createGenshinAccount(uid, job.data.userId);
 		}
 
-		const wishesToSave: Omit<Wish, 'createdAt'>[] = [];
-		let fourStarPity = 1;
-		let fiveStarPity = 1;
-
-		returnvalue.forEach((wish) => {
-			let pity = 1;
-
-			if (wish.rank_type === '4') {
-				pity = fourStarPity;
-				fourStarPity = 1;
-				fiveStarPity++;
-			} else if (wish.rank_type === '5') {
-				pity = fiveStarPity;
-				fiveStarPity = 1;
-				fourStarPity++;
-			} else {
-				fiveStarPity++;
-				fourStarPity++;
-			}
-
-			wishesToSave.push({
-				gachaType: wish.gacha_type,
-				time: new Date(wish.time),
-				name: bkTree.search(wish.name)[0].word,
-				itemType: wish.item_type,
-				rankType: wish.rank_type,
-				id: wish.id,
-				uid: wish.uid,
-				pity: pity.toString()
-			});
-		});
-
-		await createMultipleWishes(wishesToSave);
+		await createMultipleWishes(returnvalue);
 
 		wss.invalidateQuery(job.data.userId, 'fetchUserProfile');
 		wss.invalidateQuery(job.data.userId, 'fetchHoyoWishhistoryStatus');
