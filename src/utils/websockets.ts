@@ -4,6 +4,7 @@ import { logToConsole } from './log';
 import { session } from './session';
 import { RequestHandler } from 'express';
 import { WebSocketService } from '../services/websocket';
+import { handleAchievements } from '../handlers/achievement';
 
 const onlyForHandshake = (middleware: RequestHandler): RequestHandler => {
 	return (req, res, next) => {
@@ -32,6 +33,8 @@ export const setupWebsockets = (io: Server) => {
 			socket.emit('authenticationState', false);
 			logToConsole('WS', 'anonymous user connected');
 		}
+
+		socket.on('addAchievement', (data) => handleAchievements(socket, data));
 
 		socket.on('disconnect', () => {
 			if (req.user) {

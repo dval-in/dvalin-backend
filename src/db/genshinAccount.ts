@@ -4,12 +4,20 @@ const prisma = new PrismaClient();
 
 export const createGenshinAccount = async (
 	uid: string,
-	userId: string
+	userId: string,
+	name?: string,
+	server?: string,
+	ar?: number,
+	wl?: number
 ): Promise<GenshinAccount> => {
 	return prisma.genshinAccount.create({
 		data: {
 			uid,
-			userId
+			userId,
+			name,
+			server,
+			ar,
+			wl
 		}
 	});
 };

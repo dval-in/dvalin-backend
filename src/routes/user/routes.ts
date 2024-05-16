@@ -3,6 +3,8 @@ import { sendSuccessResponse } from '../../utils/sendResponse';
 import { getGenshinAccountsByUser } from '../../db/genshinAccount';
 import { getWishesByUid } from '../../db/wishes';
 import { Wish } from '@prisma/client';
+import { getAchievementsByUid } from '../../db/achievements';
+import { transformAchievement } from '../../utils/achievement';
 
 const convertToFrontendWishes = (wishes: Wish[]) => {
 	return wishes.map((wish) => ({
@@ -27,6 +29,7 @@ export class UserRoute {
 			const genshinAccount = await getGenshinAccountsByUser(req.user.userId);
 			let wishes = undefined;
 			let user = undefined;
+			let achievements = undefined;
 
 			if (genshinAccount !== undefined) {
 				const account = genshinAccount[0];
@@ -34,10 +37,10 @@ export class UserRoute {
 				const allWishes = await getWishesByUid(account.uid);
 
 				user = {
-					server: 'Europe',
-					ar: 60,
+					server: account.server || 'Europe',
+					ar: account.ar || 60,
 					uid: account.uid,
-					wl: 6
+					wl: account.wl || 6
 				};
 
 				if (allWishes !== undefined) {
@@ -71,13 +74,21 @@ export class UserRoute {
 							: undefined)
 					};
 				}
+
+				achievements = await getAchievementsByUid(account.uid);
+				if (achievements === undefined) {
+					achievements = [];
+				} else {
+					achievements = transformAchievement(achievements);
+				}
 			}
 
 			const userProfile = {
 				format: 'dvalin',
 				version: 1,
 				...(user !== undefined ? { user } : undefined),
-				...(wishes !== undefined ? { wishes } : undefined)
+				...(wishes !== undefined ? { wishes } : undefined),
+				...(achievements !== undefined ? { achievements } : undefined)
 			};
 
 			sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile });

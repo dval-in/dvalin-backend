@@ -38,11 +38,16 @@ model Auth {
 }
 
 model GenshinAccount {
-  uid    String  @id @unique
-  name   String?
-  wishes Wish[]
-  user   User    @relation(fields: [userId], references: [userId])
-  userId String  @db.Uuid
+  uid          String        @id @unique
+  name         String?
+  ar           Int?
+  server       String?
+  wl           Int?
+  wishes       Wish[]
+  achievements Achievement[]
+  character    Character[]
+  user         User          @relation(fields: [userId], references: [userId])
+  userId       String        @db.Uuid
 }
 
 model Wish {
@@ -56,4 +61,26 @@ model Wish {
   rankType       String         @map("rank_type")
   pity           String?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  wasImported    Boolean        @default(false)
+}
+
+model Achievement {
+  id                  Int            @id @unique
+  achievementCategory String
+  achieved            Boolean
+  preStage            Int?
+  GenshinAccount      GenshinAccount @relation(fields: [uid], references: [uid])
+  uid                 String
+}
+
+model Character {
+  id             String         @id @unique
+  level          Int?
+  constellation  Int?
+  ascension      Int?
+  talentAuto     Int?
+  talentSkill    Int?
+  talentBurst    Int?
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  uid            String
 }
