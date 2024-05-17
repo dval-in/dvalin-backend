@@ -5,6 +5,7 @@ import { getWishesByUid } from '../../db/wishes';
 import { Wish } from '@prisma/client';
 import { getAchievementsByUid } from '../../db/achievements';
 import { transformAchievement } from '../../utils/achievement';
+import { getCharactersByUid } from '../../db/character';
 
 const convertToFrontendWishes = (wishes: Wish[]) => {
 	return wishes.map((wish) => ({
@@ -30,6 +31,7 @@ export class UserRoute {
 			let wishes = undefined;
 			let user = undefined;
 			let achievements = undefined;
+			let characters = undefined;
 
 			if (genshinAccount !== undefined) {
 				const account = genshinAccount[0];
@@ -81,6 +83,8 @@ export class UserRoute {
 				} else {
 					achievements = transformAchievement(achievements);
 				}
+
+				characters = await getCharactersByUid(account.uid);
 			}
 
 			const userProfile = {
@@ -88,7 +92,8 @@ export class UserRoute {
 				version: 1,
 				...(user !== undefined ? { user } : undefined),
 				...(wishes !== undefined ? { wishes } : undefined),
-				...(achievements !== undefined ? { achievements } : undefined)
+				...(achievements !== undefined ? { achievements } : undefined),
+				...(characters !== undefined ? { characters } : undefined)
 			};
 
 			sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile });

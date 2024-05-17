@@ -74,7 +74,7 @@ model Achievement {
 }
 
 model Character {
-  id             String         @id @unique
+  id             String
   level          Int?
   constellation  Int?
   ascension      Int?
@@ -83,4 +83,6 @@ model Character {
   talentBurst    Int?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
   uid            String
+
+  @@id([id, uid])
 }

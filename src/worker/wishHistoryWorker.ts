@@ -9,6 +9,8 @@ import { WebSocketService } from '../services/websocket';
 import { createMultipleWishes } from '../db/wishes';
 import { BKTree } from '../utils/BKTree';
 import { Wish } from '@prisma/client';
+import { transformCharacterFromWishes } from '../utils/character';
+import { saveCharactersConstellation } from '../db/character';
 
 export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
@@ -61,6 +63,8 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 		}
 
 		await createMultipleWishes(returnvalue);
+		const characterUpdate = transformCharacterFromWishes(returnvalue);
+		await saveCharactersConstellation(characterUpdate, uid);
 
 		wss.invalidateQuery(job.data.userId, 'fetchUserProfile');
 		wss.invalidateQuery(job.data.userId, 'fetchHoyoWishhistoryStatus');
