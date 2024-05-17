@@ -1,6 +1,5 @@
 interface DataItem {
 	name: string;
-	icon: string;
 	rarity: number;
 }
 
