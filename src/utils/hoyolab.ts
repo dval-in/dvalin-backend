@@ -166,6 +166,12 @@ const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse |
 			return undefined;
 		}
 
+		response.data.data?.gacha_type_list.push({
+			id: '99999',
+			key: '500',
+			name: 'Chronicled Wish'
+		});
+
 		return response.data;
 	} catch (error) {
 		logToConsole('Utils', `getGachaConfigList failed for ${authkey}`);
