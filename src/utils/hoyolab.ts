@@ -134,6 +134,15 @@ const getWishes = async (
 						break;
 					}
 				}
+
+				//Update last 5 and 4* after list has been iterated to set their pity
+				if (lastFourStarIndex !== undefined) {
+					wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
+				}
+				if (lastFiveStarIndex !== undefined) {
+					wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
+				}
+
 				await randomDelay(100, 500);
 			} else {
 				hasMore = false;
