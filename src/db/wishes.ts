@@ -1,6 +1,7 @@
-import { PrismaClient, Wish } from '@prisma/client';
+import { Wish } from '@prisma/client';
+import { DBClient } from './prismaclient';
 
-const prisma = new PrismaClient();
+const prisma = DBClient.getInstance();
 
 export async function createMultipleWishes(wishes: Omit<Wish, 'createdAt'>[]) {
 	await prisma.wish.createMany({
