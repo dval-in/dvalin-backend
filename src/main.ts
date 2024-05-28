@@ -21,6 +21,7 @@ const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
 
 const app = express();
+app.use(express.json({ limit: '5mb' }));
 const server = createServer(app);
 const io = new Server(server, {
 	cors: {

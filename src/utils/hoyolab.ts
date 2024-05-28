@@ -126,7 +126,8 @@ const getWishes = async (
 							rankType: wish.rank_type,
 							id: wish.id,
 							uid: wish.uid,
-							pity: '1'
+							pity: '1',
+							wasImported: false
 						});
 						lastNewWishId = wish.id;
 					} else {

@@ -1,11 +1,12 @@
 import { type Express, type Request, type Response } from 'express';
-import { sendSuccessResponse } from '../../utils/sendResponse';
+import { sendErrorResponse, sendSuccessResponse } from '../../utils/sendResponse';
 import { getGenshinAccountsByUser } from '../../db/genshinAccount';
-import { getWishesByUid } from '../../db/wishes';
+import { createMultipleWishes, getWishesByUid } from '../../db/wishes';
 import { Wish } from '@prisma/client';
-import { getAchievementsByUid } from '../../db/achievements';
+import { getAchievementsByUid, saveAchievements } from '../../db/achievements';
 import { transformAchievement } from '../../utils/achievement';
-import { getCharactersByUid } from '../../db/character';
+import { getCharactersByUid, saveCharacter } from '../../db/character';
+import { isDvalinUserProfile, UserProfile } from '../../types/dvalin';
 
 const convertToFrontendWishes = (wishes: Wish[]) => {
 	return wishes.map((wish) => ({
@@ -14,6 +15,7 @@ const convertToFrontendWishes = (wishes: Wish[]) => {
 		key: wish.name,
 		date: wish.time,
 		pity: wish.pity,
+		rarity: wish.rankType,
 		banner: 'BalladInGoblets1'
 	}));
 };
@@ -97,6 +99,112 @@ export class UserRoute {
 			};
 
 			sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile });
+		});
+		this.app.post('/importsync', async (req: Request, res: Response) => {
+			if (req.user === undefined) {
+				return;
+			}
+
+			if (!isDvalinUserProfile(req.body)) {
+				return sendErrorResponse(res, 400, 'INVALID_FORMAT');
+			}
+			const userProfile: UserProfile = req.body;
+			if (!(userProfile.user && userProfile.user.uid)) {
+				return sendErrorResponse(res, 403, 'MISSING_UID');
+			}
+			const uid = userProfile.user.uid.toString();
+			if (userProfile.wishes) {
+				const wishes = userProfile.wishes;
+				const charbanner = wishes.CharacterEvent || [];
+				const weapbanner = wishes.WeaponEvent || [];
+				const standbanner = wishes.Standard || [];
+				const begbanner = wishes.Beginner || [];
+				const chronbanner = wishes.Chronicled || [];
+				const allWishes = [
+					...charbanner,
+					...weapbanner,
+					...standbanner,
+					...begbanner,
+					...chronbanner
+				];
+				const newlyFormatedWishes: Omit<Wish, 'createdAt'>[] = [];
+				allWishes.forEach((wish) => {
+					const newWishFormat: Omit<Wish, 'createdAt'> = {
+						id: wish.number.toString(),
+						uid: uid,
+						name: wish.key,
+						itemType: wish.type,
+						time: wish.date,
+						gachaType: wish.banner,
+						pity: wish.pity.toString(),
+						wasImported: true,
+						rankType: wish.rarity.toString()
+					};
+					newlyFormatedWishes.push(newWishFormat);
+				});
+				const currentWishes = await getWishesByUid(userProfile.user.uid.toString());
+				if (!currentWishes || currentWishes.length === 0) {
+					await createMultipleWishes(newlyFormatedWishes);
+				} else {
+					const newWishes = newlyFormatedWishes.filter(
+						(wish) => !currentWishes.some((w) => w.id === wish.id)
+					);
+					if (newWishes.length > 0) {
+						await createMultipleWishes(newWishes);
+					}
+				}
+			}
+			if (userProfile.achievements) {
+				const achievementCategories = userProfile.achievements;
+				const newAchievements = [];
+				for (const [categoryName, achievements] of Object.entries(achievementCategories)) {
+					for (const [id, achievement] of Object.entries(achievements)) {
+						newAchievements.push({
+							id: Number(id),
+							achieved: achievement.achieved,
+							preStage: Number(achievement.preStage) || null,
+							achievementCategory: categoryName
+						});
+					}
+				}
+				const currentAchievements = await getAchievementsByUid(uid);
+				if (!currentAchievements || currentAchievements.length === 0) {
+					await saveAchievements(newAchievements, uid);
+				} else {
+					const filteredAchievements = newAchievements.filter(
+						(achievement) => !currentAchievements.some((a) => a.id === achievement.id)
+					);
+					await saveAchievements(filteredAchievements, uid);
+				}
+			}
+
+			if (userProfile.characters) {
+				const characters = userProfile.characters;
+				const transformedCharacters = Object.entries(characters).map(([id, character]) => ({
+					id,
+					level: character.level || null,
+					constellation: character.constellation || null,
+					ascension: character.ascension || null,
+					talentAuto: character.talent.auto || null,
+					talentSkill: character.talent.skill || null,
+					talentBurst: character.talent.burst || null
+				}));
+
+				const currentCharacters = await getCharactersByUid(uid);
+				if (!currentCharacters || currentCharacters.length === 0) {
+					transformedCharacters.forEach(async (character) => {
+						await saveCharacter(character, uid);
+					});
+				} else {
+					const filteredCharacters = transformedCharacters.filter(
+						(character) => !currentCharacters.some((c) => c.id === character.id)
+					);
+					filteredCharacters.forEach(async (character) => {
+						await saveCharacter(character, uid);
+					});
+				}
+			}
+			sendSuccessResponse(res, { state: 'SUCCESS', data: {} });
 		});
 	}
 }

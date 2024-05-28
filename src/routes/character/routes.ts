@@ -11,11 +11,11 @@ export class CharacterRoute {
 				return;
 			}
 
-			const { uid, character } = req.body;
-			if (!uid || !character || typeof character !== 'object' || !('id' in character)) {
+			const { user, character } = req.body;
+			if (!user.uid || !character || typeof character !== 'object' || !('id' in character)) {
 				return sendErrorResponse(res, 400, 'MISSING_PARAMETERS');
 			}
-			await saveCharacter(character, uid);
+			await saveCharacter(character, user.uid);
 			sendSuccessResponse(res, { state: 'SUCCESS' });
 		});
 	}

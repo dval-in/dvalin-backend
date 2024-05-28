@@ -18,11 +18,12 @@ export const getCharactersByUid = async (uid: string) => {
 
 export const saveCharacter = async (characterData: Omit<Character, 'uid'>, uid: string) => {
 	const { id, ...restData } = characterData;
-
 	const upsertedCharacter = await prisma.character.upsert({
 		where: {
-			id: id,
-			uid: uid
+			id_uid: {
+				id: id,
+				uid: uid
+			}
 		},
 		update: restData,
 		create: {
@@ -42,8 +43,10 @@ export const saveCharactersConstellation = async (
 	const updates = characters.map((character) =>
 		prisma.character.upsert({
 			where: {
-				uid: uid,
-				id: character.id
+				id_uid: {
+					id: character.id,
+					uid: uid
+				}
 			},
 			update: {
 				constellation: character.constellation
