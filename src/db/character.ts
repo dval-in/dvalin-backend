@@ -16,18 +16,18 @@ export const getCharactersByUid = async (uid: string) => {
 	return characters;
 };
 
-export const saveCharacter = async (characterData: Omit<Character, 'uid'>, uid: string) => {
-	const { id, ...restData } = characterData;
+export const saveCharacter = async (characterData: Character) => {
+	const { key, uid, ...restData } = characterData;
 	const upsertedCharacter = await prisma.character.upsert({
 		where: {
-			id_uid: {
-				id: id,
+			id: {
+				key: key,
 				uid: uid
 			}
 		},
 		update: restData,
 		create: {
-			id: id,
+			key: key,
 			uid: uid,
 			...restData
 		}
@@ -37,14 +37,14 @@ export const saveCharacter = async (characterData: Omit<Character, 'uid'>, uid: 
 };
 
 export const saveCharactersConstellation = async (
-	characters: { id: string; constellation: number }[],
+	characters: { key: string; constellation: number }[],
 	uid: string
 ) => {
 	const updates = characters.map((character) =>
 		prisma.character.upsert({
 			where: {
-				id_uid: {
-					id: character.id,
+				id: {
+					key: character.key,
 					uid: uid
 				}
 			},
@@ -52,7 +52,7 @@ export const saveCharactersConstellation = async (
 				constellation: character.constellation
 			},
 			create: {
-				id: character.id,
+				key: character.key,
 				uid: uid,
 				constellation: character.constellation
 			}

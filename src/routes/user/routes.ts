@@ -6,7 +6,7 @@ import { Wish } from '@prisma/client';
 import { getAchievementsByUid, saveAchievements } from '../../db/achievements';
 import { transformAchievement } from '../../utils/achievement';
 import { getCharactersByUid, saveCharacter } from '../../db/character';
-import { isDvalinUserProfile, UserProfile } from '../../types/dvalin';
+import { isDvalinUserProfile, UserProfile } from '../../types/dvalin/dvalinFile';
 
 const convertToFrontendWishes = (wishes: Wish[]) => {
 	return wishes.map((wish) => ({
@@ -155,26 +155,24 @@ export class UserRoute {
 				}
 			}
 			if (userProfile.achievements) {
-				const achievementCategories = userProfile.achievements;
+				const achievements = userProfile.achievements;
 				const newAchievements = [];
-				for (const [categoryName, achievements] of Object.entries(achievementCategories)) {
-					for (const [id, achievement] of Object.entries(achievements)) {
-						newAchievements.push({
-							id: Number(id),
-							achieved: achievement.achieved,
-							preStage: Number(achievement.preStage) || null,
-							achievementCategory: categoryName
-						});
-					}
+				for (const [id, achievement] of Object.entries(achievements)) {
+					newAchievements.push({
+						id: Number(id),
+						uid: uid,
+						achieved: achievement.achieved
+					});
 				}
+
 				const currentAchievements = await getAchievementsByUid(uid);
 				if (!currentAchievements || currentAchievements.length === 0) {
-					await saveAchievements(newAchievements, uid);
+					await saveAchievements(newAchievements);
 				} else {
 					const filteredAchievements = newAchievements.filter(
 						(achievement) => !currentAchievements.some((a) => a.id === achievement.id)
 					);
-					await saveAchievements(filteredAchievements, uid);
+					await saveAchievements(filteredAchievements);
 				}
 			}
 
@@ -193,14 +191,14 @@ export class UserRoute {
 				const currentCharacters = await getCharactersByUid(uid);
 				if (!currentCharacters || currentCharacters.length === 0) {
 					transformedCharacters.forEach(async (character) => {
-						await saveCharacter(character, uid);
+						await saveCharacter({ ...character, uid });
 					});
 				} else {
 					const filteredCharacters = transformedCharacters.filter(
 						(character) => !currentCharacters.some((c) => c.id === character.id)
 					);
 					filteredCharacters.forEach(async (character) => {
-						await saveCharacter(character, uid);
+						await saveCharacter({ ...character, uid });
 					});
 				}
 			}

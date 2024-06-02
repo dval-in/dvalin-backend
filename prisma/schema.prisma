@@ -45,9 +45,10 @@ model GenshinAccount {
   wl           Int?
   wishes       Wish[]
   achievements Achievement[]
-  character    Character[]
+  characters   Character[]
   user         User          @relation(fields: [userId], references: [userId])
   userId       String        @db.Uuid
+  Weapon       Weapon[]
 }
 
 model Wish {
@@ -65,24 +66,37 @@ model Wish {
 }
 
 model Achievement {
-  id                  Int            @id @unique
-  achievementCategory String
-  achieved            Boolean
-  preStage            Int?
-  GenshinAccount      GenshinAccount @relation(fields: [uid], references: [uid])
-  uid                 String
-}
-
-model Character {
-  id             String
-  level          Int?
-  constellation  Int?
-  ascension      Int?
-  talentAuto     Int?
-  talentSkill    Int?
-  talentBurst    Int?
+  key            Int
+  achieved       Boolean
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
   uid            String
 
-  @@id([id, uid])
+  @@id([key, uid], name: "id")
+}
+
+model Character {
+  key                  String
+  level                Int            @default(1)
+  constellation        Int            @default(0)
+  ascension            Int            @default(0)
+  talentAuto           Int            @default(1)
+  talentSkill          Int            @default(1)
+  talentBurst          Int            @default(1)
+  manualConstellations Int?
+  genshinAccount       GenshinAccount @relation(fields: [uid], references: [uid])
+  uid                  String
+
+  @@id([key, uid], name: "id")
+}
+
+model Weapon {
+  key            String
+  level          Int            @default(1)
+  ascension      Int            @default(0)
+  refinement     Int            @default(1)
+  characterKey   String?
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  uid            String
+
+  @@id([key, uid], name: "id")
 }

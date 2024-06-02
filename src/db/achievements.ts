@@ -16,22 +16,22 @@ export const getAchievementsByUid = async (uid: string) => {
 	return achievements;
 };
 
-export const saveAchievements = async (achievements: Omit<Achievement, 'uid'>[], uid: string) => {
+export const saveAchievements = async (achievements: Achievement[]) => {
 	const upserts = achievements.map((achievement) =>
 		prisma.achievement.upsert({
 			where: {
-				uid: uid,
-				id: achievement.id
+				id: {
+					uid: achievement.uid,
+					key: achievement.key
+				}
 			},
 			update: {
 				achieved: achievement.achieved
 			},
 			create: {
-				uid: uid,
-				id: achievement.id,
-				achievementCategory: achievement.achievementCategory,
-				achieved: achievement.achieved,
-				preStage: achievement.preStage
+				uid: achievement.uid,
+				key: achievement.key,
+				achieved: achievement.achieved
 			}
 		})
 	);

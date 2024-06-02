@@ -3,21 +3,16 @@ import { GenshinAccount, PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const createGenshinAccount = async (
-	uid: string,
-	userId: string,
-	name?: string,
-	server?: string,
-	ar?: number,
-	wl?: number
+	genshinAccount: GenshinAccount
 ): Promise<GenshinAccount> => {
 	return prisma.genshinAccount.create({
 		data: {
-			uid,
-			userId,
-			name,
-			server,
-			ar,
-			wl
+			uid: genshinAccount.uid,
+			userId: genshinAccount.userId,
+			name: genshinAccount.name,
+			server: genshinAccount.server,
+			ar: genshinAccount.ar,
+			wl: genshinAccount.wl
 		}
 	});
 };
