@@ -18,16 +18,17 @@ const getDomain = (hostname: string): string => {
 export const session = expressSession({
 	name: 'dvalin-session',
 	cookie: {
-		maxAge: 7 * 24 * 60 * 60 * 1000, // ms
+		maxAge: 2 * 7 * 24 * 60 * 60 * 1000, // 2 weeks
 		domain: getDomain(new URL(config.BACKEND_URL).hostname),
 		sameSite: 'lax',
 		httpOnly: false
 	},
 	secret: config.COOKIE_SECRET,
-	resave: true,
-	saveUninitialized: true,
+	rolling: true,
+	resave: false,
+	saveUninitialized: false,
 	store: new PrismaSessionStore(new PrismaClient(), {
-		checkPeriod: 2 * 60 * 1000, // ms
+		checkPeriod: 2 * 60 * 1000, // 2 minutes
 		dbRecordIdIsSessionId: true,
 		dbRecordIdFunction: undefined
 	})
