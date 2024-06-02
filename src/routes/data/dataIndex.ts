@@ -26,7 +26,6 @@ export class DataIndex {
 				try {
 					this.index[type][file.name.replace('.json', '')] = {
 						name: data.name,
-						icon: data.pictures.icon,
 						rarity: data.rarity
 					};
 				} catch (error) {

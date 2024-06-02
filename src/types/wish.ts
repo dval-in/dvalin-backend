@@ -27,7 +27,8 @@ export type GachaTypeName =
 	| 'Permanent Wish'
 	| 'Character Event Wish'
 	| 'Novice Wishes'
-	| 'Weapon Event Wish';
+	| 'Weapon Event Wish'
+	| 'Chronicled Wish';
 
 export interface GachaItem {
 	uid: string;
