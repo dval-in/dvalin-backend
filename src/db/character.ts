@@ -28,11 +28,7 @@ export const saveCharacter = async (characterData: Character) => {
 			}
 		},
 		update: restData,
-		create: {
-			key: key,
-			uid: uid,
-			...restData
-		}
+		create: characterData
 	});
 
 	return upsertedCharacter;

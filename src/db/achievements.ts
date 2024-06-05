@@ -30,11 +30,7 @@ export const saveAchievements = async (achievements: Achievement[]) => {
 			update: {
 				achieved: achievement.achieved
 			},
-			create: {
-				uid: achievement.uid,
-				key: achievement.key,
-				achieved: achievement.achieved
-			}
+			create: achievement
 		})
 	);
 

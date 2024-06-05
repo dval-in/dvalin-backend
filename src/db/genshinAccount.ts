@@ -7,14 +7,7 @@ export const createGenshinAccount = async (
 	genshinAccount: GenshinAccount
 ): Promise<GenshinAccount> => {
 	return prisma.genshinAccount.create({
-		data: {
-			uid: genshinAccount.uid,
-			userId: genshinAccount.userId,
-			name: genshinAccount.name,
-			server: genshinAccount.server,
-			ar: genshinAccount.ar,
-			wl: genshinAccount.wl
-		}
+		data: genshinAccount
 	});
 };
 

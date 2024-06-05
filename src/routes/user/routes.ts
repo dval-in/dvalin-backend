@@ -4,7 +4,6 @@ import { getGenshinAccountsByUser } from '../../db/genshinAccount';
 import { createMultipleWishes, getWishesByUid } from '../../db/wishes';
 import { Wish } from '@prisma/client';
 import { getAchievementsByUid, saveAchievements } from '../../db/achievements';
-import { transformAchievement } from '../../utils/achievement';
 import { getCharactersByUid, saveCharacter } from '../../db/character';
 import { isDvalinUserProfile, UserProfile } from '../../types/dvalin/dvalinFile';
 import { getWeaponsByUid, saveWeapon } from '../../db/weapons';
@@ -83,12 +82,6 @@ export class UserRoute {
 				}
 
 				achievements = await getAchievementsByUid(account.uid);
-				if (achievements === undefined) {
-					achievements = [];
-				} else {
-					achievements = transformAchievement(achievements);
-				}
-
 				characters = await getCharactersByUid(account.uid);
 				weapons = await getCharactersByUid(account.uid);
 			}
