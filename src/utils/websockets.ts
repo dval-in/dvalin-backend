@@ -1,10 +1,12 @@
-import passport from 'passport';
+import passport, { use } from 'passport';
 import { Server } from 'socket.io';
 import { logToConsole } from './log';
 import { session } from './session';
 import { RequestHandler } from 'express';
 import { WebSocketService } from '../services/websocket';
 import { handleAchievements } from '../handlers/achievement';
+import { getUserById } from '../db/user';
+import { getGenshinAccountsByUser } from '../db/genshinAccount';
 
 const onlyForHandshake = (middleware: RequestHandler): RequestHandler => {
 	return (req, res, next) => {
@@ -34,7 +36,21 @@ export const setupWebsockets = (io: Server) => {
 			logToConsole('WS', 'anonymous user connected');
 		}
 
-		socket.on('addAchievement', (data) => handleAchievements(socket, data));
+		socket.on('addAchievement', async (data) => {
+			const req = socket.request as unknown as Express.Request;
+			const user = req.user;
+			if (user === undefined) {
+				socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+				return;
+			}
+			const accounts = await getGenshinAccountsByUser(user.userId);
+			if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
+				socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+				return;
+			}
+
+			handleAchievements(socket, data);
+		});
 
 		socket.on('disconnect', () => {
 			if (req.user) {

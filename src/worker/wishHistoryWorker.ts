@@ -11,6 +11,8 @@ import { BKTree } from '../utils/BKTree';
 import { Wish } from '@prisma/client';
 import { transformCharacterFromWishes } from '../utils/character';
 import { saveCharactersConstellation } from '../db/character';
+import { getNonRefinedWeapons, saveWeaponsRefinement } from '../db/weapons';
+import { transformWeaponFromWishes } from '../utils/weapons';
 
 export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
@@ -51,20 +53,56 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 
 		const genshinAccounts = await getGenshinAccountsByUser(job.data.userId);
 		const uid = returnvalue[0].uid;
+		let genshinAccount;
 
 		if (genshinAccounts !== undefined) {
 			const prefilter = genshinAccounts.filter((account) => account.uid === uid);
 
 			if (prefilter.length === 0) {
-				await createGenshinAccount(uid, job.data.userId);
+				genshinAccount = await createGenshinAccount({
+					uid,
+					userId: job.data.userId,
+					wl: 1,
+					ar: 1,
+					name: 'Traveler',
+					server: 'Europe',
+					autoRefine3: false,
+					autoRefine4: false,
+					autoRefine5: false,
+					preferedLanguage: 'en'
+				});
+			} else {
+				genshinAccount = prefilter[0];
 			}
 		} else {
-			await createGenshinAccount(uid, job.data.userId);
+			genshinAccount = await createGenshinAccount({
+				uid,
+				userId: job.data.userId,
+				wl: 1,
+				ar: 1,
+				name: 'Traveler',
+				server: 'Europe',
+				autoRefine3: false,
+				autoRefine4: false,
+				autoRefine5: false,
+				preferedLanguage: 'en'
+			});
 		}
 
 		await createMultipleWishes(returnvalue);
-		const characterUpdate = transformCharacterFromWishes(returnvalue);
+		const charWish = returnvalue.filter((wish) => wish.itemType === 'Character');
+		const weaponWish = returnvalue.filter((wish) => wish.itemType === 'Weapon');
+		const currentUnrefinedWeapons = await getNonRefinedWeapons(uid);
+		const characterUpdate = transformCharacterFromWishes(charWish);
+		const weaponUpdate = transformWeaponFromWishes(
+			currentUnrefinedWeapons,
+			weaponWish,
+			genshinAccount.autoRefine3,
+			genshinAccount.autoRefine4,
+			genshinAccount.autoRefine5
+		);
 		await saveCharactersConstellation(characterUpdate, uid);
+		await saveWeaponsRefinement(weaponUpdate, uid);
 
 		wss.invalidateQuery(job.data.userId, 'fetchUserProfile');
 		wss.invalidateQuery(job.data.userId, 'fetchHoyoWishhistoryStatus');

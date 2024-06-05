@@ -1,6 +1,7 @@
 import { IAchievements } from './achievement';
 import { IArtifact } from './artifact';
 import { ICharacters } from './character';
+import { Config } from './config';
 import { IFurnishings } from './furnishing';
 import { IMaterials } from './material';
 import { IUser } from './user';
@@ -10,6 +11,7 @@ import { IWishes } from './wish';
 export interface UserProfile {
 	format: 'dvalin';
 	version: number;
+	config: Config;
 	user?: IUser;
 	achievements?: IAchievements;
 	artifacts?: IArtifact[];

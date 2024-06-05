@@ -1,7 +1,3 @@
 export type IAchievements = {
-	[key in number]: IAchievement;
-};
-
-export type IAchievement = {
-	achieved: boolean;
+	[key in number]: boolean;
 };

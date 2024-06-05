@@ -1,19 +1,19 @@
-import { saveCharacter } from '../../db/character';
 import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../utils/sendResponse';
 import { getGenshinAccountsByUser } from '../../db/genshinAccount';
+import { saveWeapon } from '../../db/weapons';
 
 export class CharacterRoute {
 	constructor(private readonly app: Express) {}
 
 	setupRoutes(): void {
-		this.app.post('/character', async (req: Request, res: Response) => {
+		this.app.post('/weapon', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
 				return;
 			}
 
-			const { user, character } = req.body;
-			if (!character || typeof character !== 'object' || !('key' in character)) {
+			const { user, weapon } = req.body;
+			if (!weapon || typeof weapon !== 'object' || !('key' in weapon)) {
 				return sendErrorResponse(res, 400, 'MISSING_PARAMETERS');
 			}
 
@@ -23,7 +23,7 @@ export class CharacterRoute {
 			if (uid === undefined) {
 				return sendErrorResponse(res, 403, 'NO_ACCOUNT_FOUND');
 			}
-			await saveCharacter({ ...character, uid: uid });
+			await saveWeapon({ ...weapon, uid: uid });
 			sendSuccessResponse(res, { state: 'SUCCESS' });
 		});
 	}

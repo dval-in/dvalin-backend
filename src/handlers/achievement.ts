@@ -8,7 +8,9 @@ const handleAchievements = (socket: Socket, data: unknown) => {
 		return;
 	}
 
-	saveAchievements(data.achievements)
+	let dataArray: Achievement[] = Array.isArray(data) ? data : [data];
+
+	saveAchievements(dataArray)
 		.then(() => {
 			socket.emit('achievementSaved', { message: 'Achievements saved successfully' });
 		})
@@ -18,12 +20,6 @@ const handleAchievements = (socket: Socket, data: unknown) => {
 };
 
 const isAchievementData = (data: unknown): data is Achievement => {
-	return (
-		typeof data === 'object' &&
-		data !== null &&
-		'key' in data &&
-		'uid' in data &&
-		Array.isArray(data.achievements)
-	);
+	return typeof data === 'object' && data !== null && 'key' in data && 'uid' in data;
 };
 export { handleAchievements };

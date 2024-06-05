@@ -1,7 +1,7 @@
 export interface IUser {
-	server?: ServerKey;
+	server: ServerKey;
 	ar: number;
-	uid?: number;
+	uid: number;
 	wl: number;
 }
 

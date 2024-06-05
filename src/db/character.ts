@@ -1,6 +1,8 @@
-import { Character, PrismaClient } from '@prisma/client';
+import { Character } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { DBClient } from './prismaClient';
+
+const prisma = DBClient.getInstance();
 
 export const getCharactersByUid = async (uid: string) => {
 	const characters = await prisma.character.findMany({

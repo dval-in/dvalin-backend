@@ -12,4 +12,5 @@ export type ICharacter = {
 		skill: number;
 		burst: number;
 	};
+	manualConstellations: number; // constellation added by the user
 };

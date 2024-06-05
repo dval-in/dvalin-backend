@@ -1,6 +1,8 @@
-import { Achievement, PrismaClient } from '@prisma/client';
+import { Achievement } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { DBClient } from './prismaClient';
+
+const prisma = DBClient.getInstance();
 
 export const getAchievementsByUid = async (uid: string) => {
 	const achievements = await prisma.achievement.findMany({
