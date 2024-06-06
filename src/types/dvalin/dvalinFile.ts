@@ -9,7 +9,7 @@ import { IWeapons } from './weapon';
 import { IWishes } from './wish';
 
 export interface UserProfile {
-	format: 'dvalin';
+	format: 'dvalin' | 'paimon';
 	version: number;
 	config: Config;
 	user?: IUser;

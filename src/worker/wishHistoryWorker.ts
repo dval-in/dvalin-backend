@@ -8,11 +8,12 @@ import { connection } from '../utils/queue';
 import { WebSocketService } from '../services/websocket';
 import { createMultipleWishes } from '../db/wishes';
 import { BKTree } from '../utils/BKTree';
-import { Wish } from '@prisma/client';
+import { Config, Wish } from '@prisma/client';
 import { transformCharacterFromWishes } from '../utils/character';
 import { saveCharactersConstellation } from '../db/character';
 import { getNonRefinedWeapons, saveWeaponsRefinement } from '../db/weapons';
 import { transformWeaponFromWishes } from '../utils/weapons';
+import { getConfigFromUid } from '../db/config';
 
 export const setupWishHistoryWorker = (bkTree: BKTree) => {
 	const wss = WebSocketService.getInstance();
@@ -61,15 +62,7 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 			if (prefilter.length === 0) {
 				genshinAccount = await createGenshinAccount({
 					uid,
-					userId: job.data.userId,
-					wl: 1,
-					ar: 1,
-					name: 'Traveler',
-					server: 'Europe',
-					autoRefine3: false,
-					autoRefine4: false,
-					autoRefine5: false,
-					preferedLanguage: 'en'
+					userId: job.data.userId
 				});
 			} else {
 				genshinAccount = prefilter[0];
@@ -77,19 +70,13 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 		} else {
 			genshinAccount = await createGenshinAccount({
 				uid,
-				userId: job.data.userId,
-				wl: 1,
-				ar: 1,
-				name: 'Traveler',
-				server: 'Europe',
-				autoRefine3: false,
-				autoRefine4: false,
-				autoRefine5: false,
-				preferedLanguage: 'en'
+				userId: job.data.userId
 			});
 		}
 
 		await createMultipleWishes(returnvalue);
+		// in this case cannot be null
+		const config = await getConfigFromUid(uid);
 		const charWish = returnvalue.filter((wish) => wish.itemType === 'Character');
 		const weaponWish = returnvalue.filter((wish) => wish.itemType === 'Weapon');
 		const currentUnrefinedWeapons = await getNonRefinedWeapons(uid);
@@ -97,9 +84,9 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 		const weaponUpdate = transformWeaponFromWishes(
 			currentUnrefinedWeapons,
 			weaponWish,
-			genshinAccount.autoRefine3,
-			genshinAccount.autoRefine4,
-			genshinAccount.autoRefine5
+			config?.autoRefine3 || false,
+			config?.autoRefine4 || false,
+			config?.autoRefine5 || false
 		);
 		await saveCharactersConstellation(characterUpdate, uid);
 		await saveWeaponsRefinement(weaponUpdate, uid);

@@ -38,21 +38,18 @@ model Auth {
 }
 
 model GenshinAccount {
-  uid              String        @id @unique
-  name             String        @default("Traveler")
-  ar               Int           @default(1)
-  server           String        @default("Europe")
-  wl               Int           @default(1)
-  autoRefine3      Boolean       @default(false)
-  autoRefine4      Boolean       @default(false)
-  autoRefine5      Boolean       @default(false)
-  preferedLanguage String        @default("en")
-  wishes           Wish[]
-  achievements     Achievement[]
-  characters       Character[]
-  user             User          @relation(fields: [userId], references: [userId])
-  userId           String        @db.Uuid
-  Weapon           Weapon[]
+  uid          String        @id @unique
+  name         String        @default("Traveler")
+  ar           Int           @default(1)
+  server       String        @default("Europe")
+  wl           Int           @default(1)
+  config       Config?
+  wishes       Wish[]
+  achievements Achievement[]
+  characters   Character[]
+  user         User          @relation(fields: [userId], references: [userId])
+  userId       String        @db.Uuid
+  Weapon       Weapon[]
 }
 
 model Wish {
@@ -94,7 +91,7 @@ model Character {
 }
 
 model Weapon {
-  id             String         @id @unique
+  id             String         @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   key            String
   level          Int            @default(1)
   ascension      Int            @default(0)
@@ -102,4 +99,13 @@ model Weapon {
   characterKey   String?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
   uid            String
+}
+
+model Config {
+  uid              String         @id @unique
+  autoRefine3      Boolean        @default(false)
+  autoRefine4      Boolean        @default(false)
+  autoRefine5      Boolean        @default(false)
+  preferedLanguage String         @default("en")
+  genshinAccount   GenshinAccount @relation(fields: [uid], references: [uid])
 }

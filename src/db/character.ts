@@ -50,9 +50,8 @@ export const saveCharactersConstellation = async (
 				constellation: character.constellation
 			},
 			create: {
-				key: character.key,
-				uid: uid,
-				constellation: character.constellation
+				...character,
+				uid: uid
 			}
 		})
 	);

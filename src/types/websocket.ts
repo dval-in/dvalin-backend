@@ -1,1 +1,1 @@
-export type QueryKey = 'fetchHoyoWishhistoryStatus' | 'fetchUserProfile';
+export type QueryKey = 'fetchHoyoWishhistoryStatus' | 'fetchUserProfile' | 'userSyncStatus';

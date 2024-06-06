@@ -4,11 +4,19 @@ import { DBClient } from './prismaClient';
 const prisma = DBClient.getInstance();
 
 export const createGenshinAccount = async (
-	genshinAccount: GenshinAccount
+	genshinAccount: Partial<GenshinAccount> & { uid: string; userId: string }
 ): Promise<GenshinAccount> => {
-	return prisma.genshinAccount.create({
+	const createdAccount = await prisma.genshinAccount.create({
 		data: genshinAccount
 	});
+
+	await prisma.config.create({
+		data: {
+			uid: createdAccount.uid
+		}
+	});
+
+	return createdAccount;
 };
 
 export const getGenshinAccountByUid = async (uid: string): Promise<GenshinAccount | undefined> => {
