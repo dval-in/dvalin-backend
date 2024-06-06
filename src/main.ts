@@ -59,7 +59,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-	if (dynamicDataRoute.isInitialised) {
+	if (dynamicDataRoute.isInitialised && wishHistoryRoute.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });
@@ -77,7 +77,7 @@ dynamicDataRoute.getDataIndex().then((data) => {
 	indexes.forEach((key) => bkTree.insert(key));
 });
 
-setupWorkers(bkTree);
+setupWorkers(bkTree, wishHistoryRoute);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

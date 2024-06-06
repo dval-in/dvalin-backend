@@ -49,7 +49,7 @@ model Wish {
   id             String         @id @unique
   createdAt      DateTime       @default(now())
   uid            String
-  gachaType      String         @map("gacha_type")
+  gachaType      Int         @map("gacha_type")
   time           DateTime       @map("wish_time")
   name           String
   itemType       String         @map("item_type")
