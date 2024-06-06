@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { logToConsole } from './log';
 import { bannerdata } from '../worker/bannerDataWorker';
+import { Banner, RawBanners } from '../types/banner';
 
-export const getBannerData = async (): Promise<Banners | undefined> => {
+export const getBannerData = async (): Promise<Banner[] | undefined> => {
 	try {
 		const response = await axios.get(
 			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/EN/banners.json`
@@ -12,13 +13,36 @@ export const getBannerData = async (): Promise<Banners | undefined> => {
 			return undefined;
 		}
 
-		return response.data as Banners;
+		return parseBannerDates(response.data as RawBanners);
 	} catch (e) {
-		logToConsole('Utils', `queryGitHubFile failed for banner file`);
+		logToConsole('Utils', `Failed to get banner data: ${e}`);
 		return undefined;
 	}
 };
 
-export const getBannerId(time: String) => String {
-	bannerdata.key
-}
+const parseBannerDates = (banners: RawBanners): Banner[] => {
+	const result: Banner[] = [];
+
+	for (const key in banners) {
+		if (banners.hasOwnProperty(key)) {
+			const { id, bannerType, startTime, endTime } = banners[key];
+			result.push({
+				id,
+				bannerType: bannerType,
+				startTime: new Date(startTime),
+				endTime: new Date(endTime)
+			});
+		}
+	}
+
+	result.sort((a, b) => b.endTime.getTime() - a.endTime.getTime());
+	return result;
+};
+
+// from utc time to bannerid
+export const getBannerIdFromTime = (gachaType: number, time: Date): string | undefined => {
+	return bannerdata!.find(
+		(banner) =>
+			banner.bannerType === gachaType && banner.startTime <= time && banner.endTime >= time
+	)?.id;
+};

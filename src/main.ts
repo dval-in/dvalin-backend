@@ -62,7 +62,7 @@ const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 
 app.get('/', (req, res) => {
-	if (dynamicDataRoute.isInitialised) {
+	if (dynamicDataRoute.isInitialised && wishHistoryRoute.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });

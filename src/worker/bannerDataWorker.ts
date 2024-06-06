@@ -1,12 +1,18 @@
 import { logToConsole } from '../utils/log';
 import { getBannerData } from '../utils/bannerIdentifier';
+import { Banner } from '../types/banner';
+import { WishHistoryRoute } from '../routes/wish/routes';
 
-const setupBannerWorker = () => {
+const setupBannerWorker = (wishHistoryRoute: WishHistoryRoute) => {
 	const bannerservice = new BannerService();
-	bannerservice.initialise();
+	bannerservice.initialise().then(() => {
+		if (bannerdata) {
+			wishHistoryRoute.isInitialised = true;
+		}
+	});
 };
 
-let bannerdata: any;
+let bannerdata: Banner[] | undefined;
 
 class BannerService {
 	private updateInterval = 60 * 60 * 100;
@@ -19,11 +25,30 @@ class BannerService {
 		this.startUpdates();
 	}
 
-	private async updateBannerData() {
-		bannerdata = await getBannerData();
-		if (!bannerdata) {
-			logToConsole('bannerDataWorker', 'failed: update bannerdata');
+	private async updateBannerData(): Promise<void> {
+		const maxRetries = 5;
+		let attempts = 0;
+
+		for (attempts; attempts < maxRetries; attempts++) {
+			const data = await getBannerData();
+
+			if (data !== undefined) {
+				bannerdata = data;
+				break;
+			}
+
+			logToConsole('bannerDataWorker', `Attempt ${attempts} failed`);
+
+			if (attempts >= maxRetries) {
+				logToConsole('bannerDataWorker', 'All attempts failed: update bannerdata');
+			} else {
+				await this.delay(2000);
+			}
 		}
+	}
+
+	private delay(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
 	private async startUpdates() {
