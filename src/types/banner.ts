@@ -5,7 +5,7 @@ export interface RawBanner {
 	featured: string[];
 	startTime: string;
 	endTime: string;
-	bannerType: number;
+	bannerType: string;
 }
 
 export type RawBanners = {
@@ -14,7 +14,7 @@ export type RawBanners = {
 
 export type Banner = {
 	id: string;
-	bannerType: number;
+	bannerType: string;
 	startTime: Date;
 	endTime: Date;
 };

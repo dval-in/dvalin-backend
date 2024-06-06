@@ -40,9 +40,20 @@ const parseBannerDates = (banners: RawBanners): Banner[] => {
 };
 
 // from utc time to bannerid
-export const getBannerIdFromTime = (gachaType: number, time: Date): string | undefined => {
-	return bannerdata!.find(
-		(banner) =>
-			banner.bannerType === gachaType && banner.startTime <= time && banner.endTime >= time
-	)?.id;
+export const getBannerIdFromTime = (gachaType: string, time: Date): string => {
+	try {
+		const found = bannerdata!.find(
+			(banner) =>
+				banner.bannerType === gachaType &&
+				banner.startTime <= time &&
+				banner.endTime >= time
+		);
+		if (!found) {
+			throw new Error('banner not found in banner data');
+		}
+		return found.id;
+	} catch (e) {
+		logToConsole('Utils', 'Failed to find bannerid in banner');
+		return 'BANNERNOTFOUND';
+	}
 };
