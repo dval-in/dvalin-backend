@@ -120,10 +120,9 @@ const getWishes = async (
 						}
 
 						const time = serverTimeToUTC(wish.uid, wish.time);
-						const gachaType = parseInt(wish.gacha_type, 10);
 
 						wishHistory.push({
-							gachaType: gachaType,
+							gachaType: wish.gacha_type,
 							time: time,
 							name: bkTree.search(wish.name)[0].word,
 							itemType: wish.item_type,
@@ -131,7 +130,7 @@ const getWishes = async (
 							id: wish.id,
 							uid: wish.uid,
 							pity: '1',
-							bannerId: getBannerIdFromTime(gachaType, time)
+							bannerId: getBannerIdFromTime(wish.gacha_type, time)
 						});
 						lastNewWishId = wish.id;
 					} else {

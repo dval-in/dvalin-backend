@@ -6,6 +6,7 @@ import {
 	WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION,
 	wishHistoryQueue
 } from '../../queues/wishHistoryQueue';
+import { bannerdata } from '../../worker/bannerDataWorker';
 
 export class WishHistoryRoute {
 	public isInitialised: boolean = false;
