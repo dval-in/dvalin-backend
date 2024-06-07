@@ -1,21 +1,31 @@
 import { logToConsole } from '../utils/log';
 import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner } from '../types/banner';
-import { WishHistoryRoute } from '../routes/wish/routes';
+import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
+import { wishHistoryQueue } from '../queues/wishHistoryQueue';
 
-const setupBannerWorker = (wishHistoryRoute: WishHistoryRoute) => {
-	const bannerservice = new BannerService();
-	bannerservice.initialise().then(() => {
-		if (bannerdata) {
-			wishHistoryRoute.isInitialised = true;
-		}
-	});
+const setupBannerService = (): BannerService => {
+	const bannerService = new BannerService();
+	(async () => {
+		await wishHistoryQueue.pause();
+
+		await bannerService.initialise().then(async () => {
+			if (bannerdata) {
+				bannerService.isInitialised = true;
+				await wishHistoryQueue.resume();
+			}
+		});
+	})();
+
+	return bannerService;
 };
 
 let bannerdata: Banner[] | undefined;
 
 class BannerService {
+	public isInitialised: boolean = false;
 	private updateInterval = 60 * 60 * 100;
+	private scheduler = new ToadScheduler();
 
 	constructor() {}
 
@@ -52,10 +62,14 @@ class BannerService {
 	}
 
 	private async startUpdates() {
-		setInterval(async () => {
-			await this.updateBannerData();
-		}, this.updateInterval);
+		const task = new AsyncTask('Banner Data Service', () => {
+			return this.updateBannerData();
+		});
+		const job = new SimpleIntervalJob({ hours: 12 }, task);
+		this.scheduler.addSimpleIntervalJob(job);
+
+		setInterval(async () => {}, this.updateInterval);
 	}
 }
 
-export { bannerdata, setupBannerWorker };
+export { bannerdata, setupBannerService };

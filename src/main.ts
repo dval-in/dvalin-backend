@@ -16,6 +16,7 @@ import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './handlers/dataStructure/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
+import { setupBannerService } from './services/bannerData';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -43,6 +44,7 @@ config.DEBUG && logToConsole('Server', 'Debug mode enabled');
 setupSession(app);
 setupPassport(app);
 setupWebsockets(io);
+const bannerService = setupBannerService();
 
 app.use((req, res, next) => {
 	const isExcluded =
@@ -62,7 +64,7 @@ const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 
 app.get('/', (req, res) => {
-	if (dynamicDataRoute.isInitialised && wishHistoryRoute.isInitialised) {
+	if (dynamicDataRoute.isInitialised && bannerService.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });

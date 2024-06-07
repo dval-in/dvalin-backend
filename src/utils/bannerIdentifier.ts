@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { logToConsole } from './log';
-import { bannerdata } from '../worker/bannerDataWorker';
+import { bannerdata } from '../services/bannerData';
 import { Banner, RawBanners } from '../types/banner';
 
 export const getBannerData = async (): Promise<Banner[] | undefined> => {
@@ -13,7 +13,7 @@ export const getBannerData = async (): Promise<Banner[] | undefined> => {
 			return undefined;
 		}
 
-		return parseBannerDates(response.data as RawBanners);
+		return parseBannerDates(response.data);
 	} catch (e) {
 		logToConsole('Utils', `Failed to get banner data: ${e}`);
 		return undefined;
@@ -49,7 +49,7 @@ export const getBannerIdFromTime = (gachaType: string, time: Date): string => {
 				banner.endTime >= time
 		);
 		if (!found) {
-			throw new Error('banner not found in banner data');
+			return 'BANNERNOTFOUND';
 		}
 		return found.id;
 	} catch (e) {
