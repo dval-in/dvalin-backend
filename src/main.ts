@@ -16,6 +16,7 @@ import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './utils/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
+import { setupBannerService } from './services/bannerData';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -45,6 +46,7 @@ app.use(
 setupSession(app);
 setupPassport(app);
 setupWebsockets(io);
+const bannerService = setupBannerService();
 
 app.use((req, res, next) => {
 	const isExcluded =
@@ -59,7 +61,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/', (req, res) => {
-	if (dynamicDataRoute.isInitialised && wishHistoryRoute.isInitialised) {
+	if (dynamicDataRoute.isInitialised && bannerService.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });
@@ -77,7 +79,7 @@ dynamicDataRoute.getDataIndex().then((data) => {
 	indexes.forEach((key) => bkTree.insert(key));
 });
 
-setupWorkers(bkTree, wishHistoryRoute);
+setupWorkers(bkTree);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

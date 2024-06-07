@@ -6,20 +6,15 @@ import {
 	WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION,
 	wishHistoryQueue
 } from '../../queues/wishHistoryQueue';
-import { bannerdata } from '../../worker/bannerDataWorker';
+import { bannerdata } from '../../services/bannerData';
 
 export class WishHistoryRoute {
-	public isInitialised: boolean = false;
 	constructor(private readonly app: Express) {}
 
 	setupRoutes(): void {
 		this.app.get('/wishhistory', async (req, res) => {
 			if (req.user === undefined) {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
-			}
-
-			if (bannerdata === undefined) {
-				return sendErrorResponse(res, 503, 'SERVER_NOT_READY');
 			}
 
 			const runningJob = await wishHistoryQueue.getJob(req.user.userId + 'wish');
