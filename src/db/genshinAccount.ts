@@ -7,12 +7,12 @@ export const createGenshinAccount = async (
 	genshinAccount: Partial<GenshinAccount> & { uid: string; userId: string }
 ): Promise<GenshinAccount> => {
 	const createdAccount = await prisma.genshinAccount.create({
-		data: genshinAccount
-	});
-
-	await prisma.config.create({
 		data: {
-			uid: createdAccount.uid
+			...genshinAccount,
+			config: { create: {} }
+		},
+		include: {
+			config: true
 		}
 	});
 

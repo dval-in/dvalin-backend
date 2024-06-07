@@ -16,6 +16,8 @@ import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './utils/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
+import { DataIndex } from './routes/data/dataIndex';
+import { Index } from './types/dataIndex';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -76,9 +78,8 @@ const bkTree = new BKTree(optimizedLevenshteinDistance);
 dynamicDataRoute.getDataIndex().then((data) => {
 	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
 	indexes.forEach((key) => bkTree.insert(key));
+	setupWorkers(bkTree, data);
 });
-
-setupWorkers(bkTree);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

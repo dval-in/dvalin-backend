@@ -24,9 +24,7 @@ export const saveWeapon = async (weaponData: Weapon) => {
 			id
 		},
 		update: restData,
-		create: {
-			...restData
-		}
+		create: restData
 	});
 
 	return upsertedWeapon;

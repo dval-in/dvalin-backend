@@ -25,3 +25,12 @@ export type IMappedWish = {
 	name: string;
 	rarity: number;
 };
+
+export type PaimonWish = {
+	type: 'Character' | 'Weapon';
+	code: string;
+	id: string;
+	time: string;
+	pity: number;
+	rate?: string;
+};

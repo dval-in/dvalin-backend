@@ -6,13 +6,6 @@ import { RequestHandler } from 'express';
 import { WebSocketService } from '../services/websocket';
 import { handleAchievements } from '../handlers/achievement';
 import { getGenshinAccountsByUser } from '../db/genshinAccount';
-import { User } from '@prisma/client';
-
-declare module 'socket.io' {
-	interface Socket {
-		user?: User;
-	}
-}
 
 const onlyForHandshake = (middleware: RequestHandler): RequestHandler => {
 	return (req, res, next) => {

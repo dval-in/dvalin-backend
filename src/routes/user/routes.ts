@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../utils/sendResponse';
-import { getUserProfile } from '../../utils/sync';
+import { getUserProfile } from '../../services/userProfile';
 import { importSyncQueue } from '../../queues/importSyncQueue';
 
 export class UserRoute {
@@ -39,7 +39,8 @@ export class UserRoute {
 				},
 				{
 					jobId: userId + 'importSync',
-					removeOnFail: true
+					removeOnFail: true,
+					removeOnComplete: 5 * 60 * 1000
 				}
 			);
 

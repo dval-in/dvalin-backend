@@ -1,3 +1,4 @@
+import { Config } from '@prisma/client';
 import { DBClient } from './prismaClient';
 
 const prisma = DBClient.getInstance();
@@ -8,5 +9,6 @@ export const getConfigFromUid = async (uid: string) => {
 			uid
 		}
 	});
-	return config;
+	// Config is created on Account creation
+	return config as Config;
 };

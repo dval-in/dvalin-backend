@@ -84,9 +84,9 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 		const weaponUpdate = transformWeaponFromWishes(
 			currentUnrefinedWeapons,
 			weaponWish,
-			config?.autoRefine3 || false,
-			config?.autoRefine4 || false,
-			config?.autoRefine5 || false
+			config.autoRefine3,
+			config.autoRefine4,
+			config.autoRefine5
 		);
 		await saveCharactersConstellation(characterUpdate, uid);
 		await saveWeaponsRefinement(weaponUpdate, uid);

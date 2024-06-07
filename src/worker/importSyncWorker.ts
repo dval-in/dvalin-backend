@@ -5,20 +5,18 @@ import { WebSocketService } from '../services/websocket';
 import { BKTree } from '../utils/BKTree';
 import { UserProfile } from '../types/dvalin/dvalinFile';
 import { IMPORT_SYNC_QUEUE_NAME, importSyncQueue } from '../queues/importSyncQueue';
-import { importSync } from '../utils/sync';
+import { importSync } from '../services/importSync';
+import { Index } from '../types/dataIndex';
 
-export const setupImportSyncWorker = (bkTree: BKTree) => {
+export const setupImportSyncWorker = (bkTree: BKTree, dataIndex: Index) => {
 	const wss = WebSocketService.getInstance();
 	const worker = new Worker<UserProfile & { userId: string }>(
 		IMPORT_SYNC_QUEUE_NAME,
 		async (job) => {
 			const userProfile = job.data;
-			if (!userProfile) {
-				throw new Error('User profile is undefined');
-			}
 			const isPaimon = userProfile.format === 'paimon';
 
-			return await importSync(userProfile, isPaimon, bkTree);
+			return await importSync(userProfile, isPaimon, bkTree, dataIndex);
 		},
 		{
 			connection
