@@ -1,9 +1,13 @@
 import axios from 'axios';
-import { type GachaTypeList, type HoyoConfigResponse, type HoyoWishResponse } from '../types/wish';
+import {
+	type GachaTypeList,
+	type HoyoConfigResponse,
+	type HoyoWishResponse
+} from '../types/models/wish';
 import { logToConsole } from './log';
-import { getLatestWishByUid } from '../db/wishes';
+import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { BKTree } from './BKTree';
+import { BKTree } from '../handlers/BKTree';
 
 // last updated 3/04/2024
 /**

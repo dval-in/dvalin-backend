@@ -1,10 +1,16 @@
 import expressSession from 'express-session';
-import { config } from './envManager';
+import { config } from '../config/config';
 import { PrismaSessionStore } from '@quixo3/prisma-session-store';
 import { PrismaClient } from '@prisma/client';
 import type { Express } from 'express';
 import { logToConsole } from './log';
 
+/**
+ * Extracts the domain from a given hostname.
+ *
+ * @param {string} hostname - The hostname from which to extract the domain.
+ * @returns {string} - The extracted domain.
+ */
 const getDomain = (hostname: string): string => {
 	if (hostname === 'localhost') {
 		return hostname;
@@ -15,6 +21,9 @@ const getDomain = (hostname: string): string => {
 	return `${splitHostname[1]}.${splitHostname[0]}`;
 };
 
+/**
+ * Express session configuration.
+ */
 export const session = expressSession({
 	name: 'dvalin-session',
 	cookie: {
@@ -34,11 +43,14 @@ export const session = expressSession({
 	})
 });
 
-export const setupSession = (app: Express) => {
-	logToConsole(
-		'Express-Session',
-		`Cookiedomain: ${getDomain(new URL(config.BACKEND_URL).hostname)}`
-	);
+/**
+ * Sets up the session middleware
+ *
+ * @param {Express} app - The Express application instance.
+ */
+export const setupSession = (app: Express): void => {
+	const domain = getDomain(new URL(config.BACKEND_URL).hostname);
+	logToConsole('Express-Session', `Cookiedomain: ${domain}`);
 
 	app.use(session);
 };

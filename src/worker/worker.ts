@@ -1,9 +1,9 @@
-import { Index } from '../types/dataIndex';
-import { BKTree } from '../utils/BKTree';
-import { setupImportSyncWorker } from './importSyncWorker';
-import { setupWishHistoryWorker } from './wishHistoryWorker';
+import { Index } from '../types/models/dataIndex';
+import { BKTree } from '../handlers/BKTree';
+import { setupUserProfileSyncWorker } from './userProfileSync.worker';
+import { setupWishWorker } from './wish.worker';
 
 export const setupWorkers = (bkTree: BKTree, dataIndex: Index) => {
-	setupWishHistoryWorker(bkTree);
-	setupImportSyncWorker(bkTree, dataIndex);
+	setupWishWorker(bkTree);
+	setupUserProfileSyncWorker(bkTree, dataIndex);
 };

@@ -1,23 +1,21 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { config } from './utils/envManager';
+import { config } from './config/config';
 import cors from 'cors';
 import { setupPassport } from './utils/passport';
-import { AuthRoute } from './routes/auth/routes';
-import { DynamicDataRoute } from './routes/data/routes';
-import { WishHistoryRoute } from './routes/wish/routes';
+import { AuthRoute } from './routes/auth/auth.routes';
+import { DynamicDataRoute } from './routes/data/data.routes';
+import { WishRoute } from './routes/wish/wish.routes';
 import { logToConsole } from './utils/log';
-import { sendErrorResponse, sendSuccessResponse } from './utils/sendResponse';
-import { UserRoute } from './routes/user/routes';
+import { sendErrorResponse, sendSuccessResponse } from './handlers/response.handler';
+import { UserRoute } from './routes/user/user.routes';
 import { createServer } from 'node:http';
-import { setupWebsockets } from './utils/websockets';
+import { setupWebsockets } from './handlers/websocket/websocket.handler';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
-import { BKTree } from './utils/BKTree';
+import { BKTree } from './handlers/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
-import { DataIndex } from './routes/data/dataIndex';
-import { Index } from './types/dataIndex';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -31,11 +29,6 @@ const io = new Server(server, {
 		credentials: true
 	}
 });
-
-const authRoute = new AuthRoute(app);
-const dynamicDataRoute = new DynamicDataRoute(app);
-const userRoute = new UserRoute(app);
-const wishHistoryRoute = new WishHistoryRoute(app);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
@@ -61,6 +54,11 @@ app.use((req, res, next) => {
 	sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
 });
 
+const authRoute = new AuthRoute(app);
+const dynamicDataRoute = new DynamicDataRoute(app);
+const userRoute = new UserRoute(app);
+const wishRoute = new WishRoute(app);
+
 app.get('/', (req, res) => {
 	if (dynamicDataRoute.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
@@ -72,7 +70,7 @@ app.get('/', (req, res) => {
 authRoute.setupRoutes();
 dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
-wishHistoryRoute.setupRoutes();
+wishRoute.setupRoutes();
 
 const bkTree = new BKTree(optimizedLevenshteinDistance);
 dynamicDataRoute.getDataIndex().then((data) => {

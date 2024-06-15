@@ -1,5 +1,13 @@
-const optimizedLevenshteinDistance = (s1: string, s2: string, maxDistanceAllowed = 3) => {
-	// Early exit if the difference in lengths is greater than the maximum allowed edit distance
+/**
+ * Calculates the Levenshtein distance between two strings with an optimized approach.
+ * Early exits if the difference in lengths is greater than the maximum allowed edit distance.
+ *
+ * @param {string} s1 - The first string.
+ * @param {string} s2 - The second string.
+ * @param {number} maxDistanceAllowed - The maximum allowed edit distance (default is 3).
+ * @returns {number} - The Levenshtein distance between the two strings.
+ */
+const optimizedLevenshteinDistance = (s1: string, s2: string, maxDistanceAllowed = 3): number => {
 	if (Math.abs(s1.length - s2.length) > maxDistanceAllowed) {
 		return Math.abs(s1.length - s2.length);
 	}
@@ -22,12 +30,10 @@ const optimizedLevenshteinDistance = (s1: string, s2: string, maxDistanceAllowed
 
 			currentRow[i] = Math.min(insertCost, deleteCost, replaceCost);
 		}
-
-		// Swap the rows for the next iteration
 		[previousRow, currentRow] = [currentRow, previousRow];
 	}
 
-	return previousRow[s1.length]; // The last element of previousRow now contains the answer
+	return previousRow[s1.length];
 };
 
 export { optimizedLevenshteinDistance };
