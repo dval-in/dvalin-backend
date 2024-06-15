@@ -10,13 +10,13 @@ export const handleCharacters = async (
 	const transformedCharacters = Object.entries(userProfile.characters).map(
 		([key, character]) => ({
 			key,
-			level: character.level || 1,
-			constellation: character.constellation || 0,
-			ascension: character.ascension || 0,
-			talentAuto: character.talent.auto || 1,
-			talentSkill: character.talent.skill || 1,
-			talentBurst: character.talent.burst || 1,
-			manualConstellations: character.manualConstellations || null
+			level: character.level,
+			constellation: character.constellation,
+			ascension: character.ascension,
+			talentAuto: character.talent.auto,
+			talentSkill: character.talent.skill,
+			talentBurst: character.talent.burst,
+			manualConstellations: character.manualConstellations
 		})
 	);
 

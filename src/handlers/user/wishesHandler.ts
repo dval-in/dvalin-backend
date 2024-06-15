@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { getWishesByUid, createMultipleWishes } from '../../db/wishes';
 import { BKTree } from '../../utils/BKTree';
 import { UserProfile } from '../../types/dvalin/dvalinFile';
-import { IMappedWish, PaimonWish } from '../../types/dvalin/wish';
+import { PaimonWish } from '../../types/dvalin/wish';
 import { Index } from '../../types/dataIndex';
 import { getGenshinAccountByUid } from '../../db/genshinAccount';
 
@@ -25,7 +25,7 @@ export const handleWishes = async (
 	];
 
 	const newlyFormatedWishes = isPaimon
-		? formatPaimonWishes(allWishes as unknown as PaimonWish[], uid, bktree, dataIndex)
+		? formatPaimonWishes(allWishes, uid, bktree, dataIndex)
 		: formatRegularWishes(allWishes, uid);
 
 	const currentWishes = await getWishesByUid(uid);
@@ -47,13 +47,17 @@ export const handleWishes = async (
 	}
 };
 
+const isPaimonWish = (wish: any): wish is PaimonWish => {
+	return (wish as PaimonWish).type !== undefined && (wish as PaimonWish).code !== undefined;
+};
+
 const formatPaimonWishes = (
-	wishes: PaimonWish[],
+	wishes: any[],
 	uid: string,
 	bktree: BKTree,
 	dataIndex: Index
 ): Omit<Wish, 'createdAt'>[] => {
-	return wishes.map((wish) => ({
+	return wishes.filter(isPaimonWish).map((wish) => ({
 		id: randomUUID(),
 		uid,
 		name: bktree.search(wish.id)[0].word,
@@ -75,7 +79,7 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	}
 };
 
-const formatRegularWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
+const formatRegularWishes = (wishes: any[], uid: string): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => ({
 		id: wish.number.toString() || randomUUID(),
 		uid,
