@@ -88,16 +88,8 @@ const processUserProfileSync = async (
 	bkTree: BKTree,
 	dataIndex: Index
 ): Promise<Result<string, Error>> => {
-	try {
-		const isPaimon = userProfile.format === 'paimon';
-		const result = await userProfileService.syncUserProfile(
-			userProfile,
-			isPaimon,
-			bkTree,
-			dataIndex
-		);
-		return ok(result);
-	} catch (error) {
-		return err(new Error('Failed to sync user profile'));
-	}
+	const isPaimon = userProfile.format === 'paimon';
+	return userProfileService.syncUserProfile(userProfile, isPaimon, bkTree, dataIndex);
 };
+
+export { processUserProfileSync };

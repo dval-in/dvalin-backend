@@ -76,27 +76,15 @@ export class UserProfileService {
 		}
 
 		const uid = userProfile.user.uid.toString();
-		const wishesResult = await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
-		if (wishesResult.isErr()) {
-			return err(wishesResult.error);
+		try {
+			await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
+			await handleAchievements(userProfile, uid);
+			await handleCharacters(userProfile, uid);
+			await handleWeapons(userProfile, uid);
+			return ok(userProfile.userId);
+		} catch (error) {
+			return err(new Error('Failed to sync user profile'));
 		}
-
-		const achievementsResult = await handleAchievements(userProfile, uid);
-		if (achievementsResult.isErr()) {
-			return err(achievementsResult.error);
-		}
-
-		const charactersResult = await handleCharacters(userProfile, uid);
-		if (charactersResult.isErr()) {
-			return err(charactersResult.error);
-		}
-
-		const weaponsResult = await handleWeapons(userProfile, uid);
-		if (weaponsResult.isErr()) {
-			return err(weaponsResult.error);
-		}
-
-		return ok(userProfile.userId);
 	}
 
 	private formatWishesByType(allWishes: Wish[] | undefined) {
