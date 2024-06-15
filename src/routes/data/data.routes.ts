@@ -5,6 +5,7 @@ import { logToConsole } from '../../utils/log';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
 import { isDataTypeKey } from '../../types/models/fileReference';
 import { isLanguageKey } from '../../types/models/language';
+import { Result } from 'neverthrow';
 
 export class DynamicDataRoute {
 	public isInitialised: boolean = false;
@@ -54,13 +55,11 @@ export class DynamicDataRoute {
 				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
-			const data = await queryGitHubFile(language, dataType, name);
-
-			if (data === undefined) {
-				return sendErrorResponse(res, 404, 'NOT_FOUND');
-			}
-
-			sendSuccessResponse(res, data);
+			const result = await queryGitHubFile(language, dataType, name);
+			result.match(
+				(data) => sendSuccessResponse(res, data),
+				(error) => sendErrorResponse(res, 404, 'NOT_FOUND')
+			);
 		});
 	}
 

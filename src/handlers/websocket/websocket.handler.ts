@@ -6,6 +6,7 @@ import { RequestHandler } from 'express';
 import { WebSocketService } from '../../services/websocket.service';
 import { handleAchievements } from './achievement.handler';
 import { getGenshinAccountsByUser } from '../../db/models/genshinAccount';
+import { Result } from 'neverthrow';
 
 /**
  * Middleware to apply another middleware only for handshake requests.
@@ -71,13 +72,29 @@ export const setupWebsockets = (io: Server): void => {
 				return;
 			}
 
-			const accounts = await getGenshinAccountsByUser(user.userId);
-			if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
-				socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
-				return;
-			}
+			const accountsResult: Result<any, Error> = await getGenshinAccountsByUser(user.userId);
 
-			handleAchievements(socket, data);
+			await accountsResult.match(
+				async (accounts) => {
+					if (!accounts || accounts.filter((e: any) => e.uid === data.uid).length === 0) {
+						socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+						return;
+					}
+
+					const achievementResult = await handleAchievements(socket, data);
+					await achievementResult.match(
+						async () => {
+							socket.emit('achievementAdded', { success: true });
+						},
+						async (error) => {
+							socket.emit('error', { code: 500, message: error.message });
+						}
+					);
+				},
+				async (error) => {
+					socket.emit('error', { code: 500, message: error.message });
+				}
+			);
 		});
 
 		socket.on('disconnect', () => {

@@ -1,50 +1,65 @@
 import { GenshinAccount } from '@prisma/client';
 import { DBClient } from '../prismaClient';
+import { err, ok, Result } from 'neverthrow';
 
 const prisma = DBClient.getInstance();
 
 export const createGenshinAccount = async (
 	genshinAccount: Partial<GenshinAccount> & { uid: string; userId: string }
-): Promise<GenshinAccount> => {
-	const createdAccount = await prisma.genshinAccount.create({
-		data: {
-			...genshinAccount,
-			config: { create: {} }
-		},
-		include: {
-			config: true
-		}
-	});
+): Promise<Result<GenshinAccount, Error>> => {
+	try {
+		const createdAccount = await prisma.genshinAccount.create({
+			data: {
+				...genshinAccount,
+				config: { create: {} }
+			},
+			include: {
+				config: true
+			}
+		});
 
-	return createdAccount;
+		return ok(createdAccount);
+	} catch (error) {
+		return err(new Error('Failed to create Genshin account'));
+	}
 };
 
-export const getGenshinAccountByUid = async (uid: string): Promise<GenshinAccount | undefined> => {
-	const account = await prisma.genshinAccount.findUnique({
-		where: {
-			uid
+export const getGenshinAccountByUid = async (
+	uid: string
+): Promise<Result<GenshinAccount, Error>> => {
+	try {
+		const account = await prisma.genshinAccount.findUnique({
+			where: {
+				uid
+			}
+		});
+
+		if (!account) {
+			return err(new Error('Genshin account not found'));
 		}
-	});
 
-	if (!account) {
-		return undefined;
+		return ok(account);
+	} catch (error) {
+		return err(new Error('Failed to retrieve Genshin account'));
 	}
-
-	return account;
 };
 
 export const getGenshinAccountsByUser = async (
 	userId: string
-): Promise<GenshinAccount[] | undefined> => {
-	const accounts = await prisma.genshinAccount.findMany({
-		where: {
-			userId
+): Promise<Result<GenshinAccount[], Error>> => {
+	try {
+		const accounts = await prisma.genshinAccount.findMany({
+			where: {
+				userId
+			}
+		});
+
+		if (accounts.length === 0) {
+			return err(new Error('No Genshin accounts found for user'));
 		}
-	});
 
-	if (accounts.length === 0) {
-		return undefined;
+		return ok(accounts);
+	} catch (error) {
+		return err(new Error('Failed to retrieve Genshin accounts'));
 	}
-
-	return accounts;
 };

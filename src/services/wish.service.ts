@@ -12,37 +12,40 @@ import { getNonRefinedWeapons, saveWeaponsRefinement } from '../db/models/weapon
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler';
 import { getConfigFromUid } from '../db/models/config';
 import { Wish } from '@prisma/client';
-import { InvalidAuthKeyError, MissingAuthKeyError, MissingUserError } from '../utils/errors';
+import { Result, ok, err } from 'neverthrow';
 
 class WishService {
-	private _wss?: WebSocketService;
+	private _wss?: Result<WebSocketService, Error>;
 
-	private get wss(): WebSocketService {
+	private getWss(): Result<WebSocketService, Error> {
 		if (!this._wss) {
 			this._wss = WebSocketService.getInstance();
 		}
 		return this._wss;
 	}
 
-	async checkOrCreateJob(userId: string, authkey: string | null) {
+	async checkOrCreateJob(
+		userId: string,
+		authkey: string | null
+	): Promise<Result<{ state: string }, Error>> {
 		if (!userId) {
-			throw new MissingUserError();
+			return err(new Error('Missing user ID'));
 		}
 
 		const runningJob = await wishQueue.getJob(userId + 'wish');
 
 		if (runningJob !== undefined) {
-			return { state: 'CREATED' };
+			return ok({ state: 'CREATED' });
 		}
 
 		if (!authkey) {
-			throw new MissingAuthKeyError();
+			return err(new Error('Missing auth key'));
 		}
 
 		const configResponse = await getGachaConfigList(authkey);
 
-		if (configResponse === undefined || configResponse.data === null) {
-			throw new InvalidAuthKeyError();
+		if (configResponse.isErr() || configResponse.value.data === null) {
+			return err(new Error('Invalid auth key'));
 		}
 
 		await wishQueue.add(
@@ -51,12 +54,12 @@ class WishService {
 			{ jobId: userId + 'wish', removeOnFail: true }
 		);
 
-		return { state: 'CREATED' };
+		return ok({ state: 'CREATED' });
 	}
 
-	async getJobStatus(userId: string) {
+	async getJobStatus(userId: string): Promise<Result<{ state: string; data?: any }, Error>> {
 		if (!userId) {
-			throw new MissingUserError();
+			return err(new Error('Missing user ID'));
 		}
 
 		const runningJob = await wishQueue.getJob(userId + 'wish');
@@ -67,42 +70,55 @@ class WishService {
 			const finishedOn = runningJob.finishedOn;
 
 			if (isCompleted && finishedOn !== undefined) {
-				return {
+				return ok({
 					state: 'COMPLETED_RATE_LIMIT',
 					data: {
 						completedTimestamp: finishedOn,
 						rateLimitDuration: WISH_QUEUE_RATE_LIMIT_DURATION
 					}
-				};
+				});
 			}
 
 			if (isActive) {
-				return { state: 'ACTIVE' };
+				return ok({ state: 'ACTIVE' });
 			}
 
 			const queueJobCount = await wishQueue.count();
-			return { state: 'QUEUED', data: { count: queueJobCount } };
+			return ok({ state: 'QUEUED', data: { count: queueJobCount } });
 		}
 
-		return { state: 'NO_JOB' };
+		return ok({ state: 'NO_JOB' });
 	}
 
-	async processWishJob(data: WishQueueData, bkTree: BKTree): Promise<Omit<Wish, 'createdAt'>[]> {
+	async processWishJob(
+		data: WishQueueData,
+		bkTree: BKTree
+	): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> {
 		const { authkey } = data;
 		const configResponse = await getGachaConfigList(authkey);
 
-		if (configResponse === undefined || configResponse.data === null) {
-			throw new Error('Failed to fetch gacha configuration list');
+		if (configResponse.isErr() || configResponse.value.data === null) {
+			return err(new Error('Failed to fetch gacha configuration list'));
 		}
 
-		const gachaTypeList = configResponse.data.gacha_type_list;
-		return await getWishes(authkey, gachaTypeList, bkTree);
+		const gachaTypeList = configResponse.value.data.gacha_type_list;
+		const wishesResult = await getWishes(authkey, gachaTypeList, bkTree);
+
+		return wishesResult.isErr() ? err(wishesResult.error) : ok(wishesResult.value);
 	}
 
-	async handleCompletedJob(jobData: WishQueueData, returnvalue: Omit<Wish, 'createdAt'>[]) {
+	async handleCompletedJob(
+		jobData: WishQueueData,
+		returnvalue: Omit<Wish, 'createdAt'>[]
+	): Promise<Result<void, Error>> {
 		const { userId } = jobData;
 
-		const genshinAccounts = await getGenshinAccountsByUser(userId);
+		const genshinAccountsResult = await getGenshinAccountsByUser(userId);
+		if (genshinAccountsResult.isErr()) {
+			return err(genshinAccountsResult.error);
+		}
+
+		const genshinAccounts = genshinAccountsResult.value;
 		const uid = returnvalue[0].uid;
 		let genshinAccount;
 
@@ -110,20 +126,41 @@ class WishService {
 			const prefilter = genshinAccounts.filter((account) => account.uid === uid);
 
 			if (prefilter.length === 0) {
-				genshinAccount = await createGenshinAccount({ uid, userId });
+				const createResult = await createGenshinAccount({ uid, userId });
+				if (createResult.isErr()) {
+					return err(createResult.error);
+				}
+				genshinAccount = createResult.value;
 			} else {
 				genshinAccount = prefilter[0];
 			}
 		} else {
-			genshinAccount = await createGenshinAccount({ uid, userId });
+			const createResult = await createGenshinAccount({ uid, userId });
+			if (createResult.isErr()) {
+				return err(createResult.error);
+			}
+			genshinAccount = createResult.value;
 		}
 
-		await createMultipleWishes(returnvalue);
+		const createWishesResult = await createMultipleWishes(returnvalue);
+		if (createWishesResult.isErr()) {
+			return err(createWishesResult.error);
+		}
 
-		const config = await getConfigFromUid(uid);
+		const configResult = await getConfigFromUid(uid);
+		if (configResult.isErr()) {
+			return err(configResult.error);
+		}
+
+		const config = configResult.value;
 		const charWish = returnvalue.filter((wish) => wish.itemType === 'Character');
 		const weaponWish = returnvalue.filter((wish) => wish.itemType === 'Weapon');
-		const currentUnrefinedWeapons = await getNonRefinedWeapons(uid);
+		const currentUnrefinedWeaponsResult = await getNonRefinedWeapons(uid);
+		if (currentUnrefinedWeaponsResult.isErr()) {
+			return err(currentUnrefinedWeaponsResult.error);
+		}
+
+		const currentUnrefinedWeapons = currentUnrefinedWeaponsResult.value;
 		const characterUpdate = transformCharacterFromWishes(charWish);
 		const weaponUpdate = transformWeaponFromWishes(
 			currentUnrefinedWeapons,
@@ -133,23 +170,42 @@ class WishService {
 			config.autoRefine5
 		);
 
-		await saveCharactersConstellation(characterUpdate, uid);
-		await saveWeaponsRefinement(weaponUpdate, uid);
+		const saveCharactersResult = await saveCharactersConstellation(characterUpdate, uid);
+		if (saveCharactersResult.isErr()) {
+			return err(saveCharactersResult.error);
+		}
 
-		this.wss.invalidateQuery(userId, 'fetchUserProfile');
-		this.wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
-		this.wss.sendToastMessage(userId, 'server.wish_.success', 'success');
+		const saveWeaponsResult = await saveWeaponsRefinement(weaponUpdate, uid);
+		if (saveWeaponsResult.isErr()) {
+			return err(saveWeaponsResult.error);
+		}
+
+		const wssResult = this.getWss();
+		if (wssResult.isErr()) {
+			return err(wssResult.error);
+		}
+
+		const wss = wssResult.value;
+		wss.invalidateQuery(userId, 'fetchUserProfile');
+		wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
+		wss.sendToastMessage(userId, 'server.wish_.success', 'success');
+
+		return ok(undefined);
 	}
 
-	async handleJobFailure(jobData: WishQueueData, error: Error) {
+	async handleJobFailure(jobData: WishQueueData, error: Error): Promise<void> {
 		const { userId } = jobData;
 		logToConsole(
 			'WishWorker',
 			`failed: ${userId} (${error.message}), remaining: ${await wishQueue.getWaitingCount()}`
 		);
 
-		this.wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
-		this.wss.sendToastMessage(userId, 'server.wish_.error', 'error');
+		const wssResult = this.getWss();
+		if (wssResult.isOk()) {
+			const wss = wssResult.value;
+			wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
+			wss.sendToastMessage(userId, 'server.wish_.error', 'error');
+		}
 	}
 }
 

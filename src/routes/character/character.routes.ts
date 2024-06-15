@@ -1,7 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
 import { characterService } from '../../services/character.service';
-import { MissingParametersError, NoAccountFoundError } from '../../utils/errors';
 
 export class CharacterRoute {
 	constructor(private readonly app: Express) {}
@@ -14,18 +13,19 @@ export class CharacterRoute {
 
 			const { user, character } = req.body;
 
-			try {
-				await characterService.saveCharacterForUser(user.id, character);
-				sendSuccessResponse(res, { state: 'SUCCESS' });
-			} catch (error) {
-				if (error instanceof MissingParametersError) {
-					sendErrorResponse(res, 400, error.message);
-				} else if (error instanceof NoAccountFoundError) {
-					sendErrorResponse(res, 403, error.message);
-				} else {
-					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+			const response = await characterService.saveCharacterForUser(user.id, character);
+			response.match(
+				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
+				(error) => {
+					if (error.message === 'Missing parameters') {
+						sendErrorResponse(res, 400, error.message);
+					} else if (error.message === 'No account found') {
+						sendErrorResponse(res, 403, error.message);
+					} else {
+						sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+					}
 				}
-			}
+			);
 		});
 	}
 }

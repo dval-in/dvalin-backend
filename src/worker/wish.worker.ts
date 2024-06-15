@@ -7,17 +7,26 @@ import { connection } from '../config/redis.config';
 import { WebSocketService } from '../services/websocket.service';
 import { BKTree } from '../handlers/BKTree';
 import { Wish } from '@prisma/client';
+import { Result, ok, err } from 'neverthrow';
 
 export const setupWishWorker = (bkTree: BKTree) => {
-	const wss = WebSocketService.getInstance();
+	const wssResult = WebSocketService.getInstance();
+	if (wssResult.isErr()) {
+		console.error('Failed to get WebSocketService instance:', wssResult.error.message);
+		return;
+	}
+	const wss = wssResult.value;
+
 	const worker = new Worker<WishQueueData, Omit<Wish, 'createdAt'>[]>(
 		WISH_QUEUE_NAME,
 		async (job) => {
-			try {
-				return await wishService.processWishJob(job.data, bkTree);
-			} catch (error) {
-				throw new Error('Failed to fetch gacha configuration list');
-			}
+			const result = await processWishJobWithResult(job.data, bkTree);
+			return result.match(
+				(data) => data,
+				(error) => {
+					throw error;
+				}
+			);
 		},
 		{ connection }
 	);
@@ -50,4 +59,26 @@ export const setupWishWorker = (bkTree: BKTree) => {
 	worker.on('error', (err) => {
 		console.error(err);
 	});
+};
+
+/**
+ * Processes the wish job and returns a Result type.
+ *
+ * @param {WishQueueData} data - The wish queue data.
+ * @param {BKTree} bkTree - The BKTree instance.
+ * @returns {Promise<Result<Omit<Wish, 'createdAt'>[], Error>>} - The result of the operation.
+ */
+const processWishJobWithResult = async (
+	data: WishQueueData,
+	bkTree: BKTree
+): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
+	try {
+		const result = await wishService.processWishJob(data, bkTree);
+		if (result.isErr()) {
+			return err(result.error);
+		}
+		return ok(result.value);
+	} catch (error) {
+		return err(new Error('Failed to fetch gacha configuration list'));
+	}
 };

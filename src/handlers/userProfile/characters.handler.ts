@@ -1,11 +1,12 @@
 import { getCharactersByUid, saveCharacter } from '../../db/models/character';
 import { UserProfile } from '../../types/frontend/dvalinFile';
+import { err, ok, Result } from 'neverthrow';
 
 export const handleCharacters = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
-) => {
-	if (!userProfile.characters) return;
+): Promise<Result<void, Error>> => {
+	if (!userProfile.characters) return ok(undefined);
 
 	const transformedCharacters = Object.entries(userProfile.characters).map(
 		([key, character]) => ({
@@ -20,7 +21,14 @@ export const handleCharacters = async (
 		})
 	);
 
-	const currentCharacters = await getCharactersByUid(uid);
+	const currentCharactersResult = await getCharactersByUid(uid);
+
+	if (currentCharactersResult.isErr()) {
+		return err(currentCharactersResult.error);
+	}
+
+	const currentCharacters = currentCharactersResult.value;
+
 	const filteredCharacters = currentCharacters
 		? transformedCharacters.filter(
 				(character) => !currentCharacters.some((c) => c.key === character.key)
@@ -28,6 +36,11 @@ export const handleCharacters = async (
 		: transformedCharacters;
 
 	for (const character of filteredCharacters) {
-		await saveCharacter({ ...character, uid });
+		const saveResult = await saveCharacter({ ...character, uid });
+		if (saveResult.isErr()) {
+			return err(saveResult.error);
+		}
 	}
+
+	return ok(undefined);
 };

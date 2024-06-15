@@ -4,6 +4,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
+import { Result, ok, err } from 'neverthrow';
 
 const setupGoogleOAuth = (app: Express): void => {
 	app.get('/auth/google', passport.authenticate('google'));
@@ -25,15 +26,30 @@ const setupGoogleOAuth = (app: Express): void => {
 			},
 			async (req, accessToken, refreshToken, profile, cb) => {
 				if (req.user === undefined) {
-					let user = await getUserByAuth(profile.id, 'Google');
+					const userResult = await getUserByAuth(profile.id, 'Google');
+					if (userResult.isErr()) {
+						return cb(userResult.error, undefined);
+					}
 
+					let user = userResult.value;
 					if (user === undefined) {
-						user = await createUser(profile.id, 'Google');
+						const createUserResult = await createUser(profile.id, 'Google');
+						if (createUserResult.isErr()) {
+							return cb(createUserResult.error, undefined);
+						}
+						user = createUserResult.value;
 					}
 
 					cb(null, user);
 				} else {
-					await createAuth(profile.id, 'Google', req.user.userId);
+					const createAuthResult = await createAuth(
+						profile.id,
+						'Google',
+						req.user.userId
+					);
+					if (createAuthResult.isErr()) {
+						return cb(createAuthResult.error, undefined);
+					}
 
 					cb(null, req.user);
 				}

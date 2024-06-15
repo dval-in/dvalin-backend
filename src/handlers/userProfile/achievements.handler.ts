@@ -1,11 +1,12 @@
 import { getAchievementsByUid, saveAchievements } from '../../db/models/achievements';
 import { UserProfile } from '../../types/frontend/dvalinFile';
+import { err, ok, Result } from 'neverthrow';
 
 export const handleAchievements = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
-) => {
-	if (!userProfile.achievements) return;
+): Promise<Result<void, Error>> => {
+	if (!userProfile.achievements) return ok(undefined);
 
 	const newAchievements = Object.entries(userProfile.achievements).map(([key, achieved]) => ({
 		key: Number(key),
@@ -13,13 +14,28 @@ export const handleAchievements = async (
 		achieved
 	}));
 
-	const currentAchievements = await getAchievementsByUid(uid);
+	const currentAchievementsResult = await getAchievementsByUid(uid);
+
+	if (currentAchievementsResult.isErr()) {
+		return err(currentAchievementsResult.error);
+	}
+
+	const currentAchievements = currentAchievementsResult.value;
+
 	if (!currentAchievements || currentAchievements.length === 0) {
-		await saveAchievements(newAchievements);
+		const saveResult = await saveAchievements(newAchievements);
+		if (saveResult.isErr()) {
+			return err(saveResult.error);
+		}
 	} else {
 		const filteredAchievements = newAchievements.filter(
 			(achievement) => !currentAchievements.some((a) => a.key === achievement.key)
 		);
-		await saveAchievements(filteredAchievements);
+		const saveResult = await saveAchievements(filteredAchievements);
+		if (saveResult.isErr()) {
+			return err(saveResult.error);
+		}
 	}
+
+	return ok(undefined);
 };

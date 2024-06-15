@@ -14,12 +14,11 @@ export class UserRoute {
 				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
-			try {
-				const userProfile = await this.userProfileService.getUserProfile(req.user.userId);
-				sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile });
-			} catch (error) {
-				sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
-			}
+			const userProfileResult = await this.userProfileService.getUserProfile(req.user.userId);
+			userProfileResult.match(
+				(userProfile) => sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile }),
+				(error) => sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR')
+			);
 		});
 
 		this.app.post('/user/sync', async (req: Request, res: Response) => {

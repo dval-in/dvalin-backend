@@ -2,22 +2,32 @@ import axios from 'axios';
 import { Index } from '../types/models/dataIndex';
 import { queryGitHubFolder } from '../utils/github';
 import { logToConsole } from '../utils/log';
+import { Result, ok, err } from 'neverthrow';
 
 class DataService {
 	private readonly index: Index = { Character: {}, Weapon: {} };
 
-	async initialize(): Promise<void> {
-		await this.fetchData('Character');
-		await this.fetchData('Weapon');
-	}
-
-	async fetchData(type: 'Character' | 'Weapon'): Promise<void> {
-		const files = await queryGitHubFolder('EN', type);
-
-		if (files === undefined) {
-			return logToConsole('dataindex', 'Cant query github');
+	async initialize(): Promise<Result<void, Error>> {
+		const characterResult = await this.fetchData('Character');
+		if (characterResult.isErr()) {
+			return err(new Error('Failed to initialize Character data'));
 		}
 
+		const weaponResult = await this.fetchData('Weapon');
+		if (weaponResult.isErr()) {
+			return err(new Error('Failed to initialize Weapon data'));
+		}
+
+		return ok(undefined);
+	}
+
+	async fetchData(type: 'Character' | 'Weapon'): Promise<Result<void, Error>> {
+		const filesResult = await queryGitHubFolder('EN', type);
+		if (filesResult.isErr()) {
+			return err(new Error(`Cannot query GitHub folder for ${type}`));
+		}
+
+		const files = filesResult.value;
 		for (const file of files.filter((f: { name: string }) => f.name !== 'index.json')) {
 			try {
 				const fileResponse = await axios.get(file.download_url);
@@ -28,12 +38,14 @@ class DataService {
 						rarity: data.rarity
 					};
 				} catch (error) {
-					console.error(`[server] missing field in file: ${file.name}`, error);
+					console.error(`[server] Missing field in file: ${file.name}`, error);
 				}
 			} catch (fileError) {
-				console.error(`[server] Failed to fetch ${type} file: ${file.name}`);
+				console.error(`[server] Failed to fetch ${type} file: ${file.name}`, fileError);
+				return err(new Error(`Failed to fetch ${type} file: ${file.name}`));
 			}
 		}
+		return ok(undefined);
 	}
 
 	getIndex(): Index {

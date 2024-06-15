@@ -5,6 +5,7 @@ import { Profile } from 'passport-google-oauth20';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
+import { Result, ok, err } from 'neverthrow';
 
 const setupMicrosoftOAuth = (app: Express): void => {
 	app.get('/auth/microsoft', passport.authenticate('microsoft'));
@@ -19,7 +20,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 		}
 	);
 	passport.use(
-		<passport.Strategy>new MicrosoftStrategy(
+		new MicrosoftStrategy(
 			{
 				clientID: config.MICROSOFT_CLIENT_ID,
 				clientSecret: config.MICROSOFT_CLIENT_SECRET,
@@ -35,15 +36,30 @@ const setupMicrosoftOAuth = (app: Express): void => {
 				cb: (err?: Error | null, user?: Express.User, info?: object) => void
 			) => {
 				if (req.user === undefined) {
-					let user = await getUserByAuth(profile.id, 'Microsoft');
+					const userResult = await getUserByAuth(profile.id, 'Microsoft');
+					if (userResult.isErr()) {
+						return cb(userResult.error, undefined);
+					}
 
+					let user = userResult.value;
 					if (user === undefined) {
-						user = await createUser(profile.id, 'Microsoft');
+						const createUserResult = await createUser(profile.id, 'Microsoft');
+						if (createUserResult.isErr()) {
+							return cb(createUserResult.error, undefined);
+						}
+						user = createUserResult.value;
 					}
 
 					cb(null, user);
 				} else {
-					await createAuth(profile.id, 'Microsoft', req.user.userId);
+					const createAuthResult = await createAuth(
+						profile.id,
+						'Microsoft',
+						req.user.userId
+					);
+					if (createAuthResult.isErr()) {
+						return cb(createAuthResult.error, undefined);
+					}
 
 					cb(null, req.user);
 				}

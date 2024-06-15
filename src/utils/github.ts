@@ -3,7 +3,7 @@ import { GithubFile } from '../types/models/github';
 import { LanguageKey } from '../types/models/language';
 import { DataTypeKey } from '../types/models/fileReference';
 import { logToConsole } from './log';
-import { GitHubAPIError } from './errors';
+import { err, ok, Result } from 'neverthrow';
 
 /**
  * Queries a specified folder within a GitHub repository for its contents,
@@ -11,32 +11,29 @@ import { GitHubAPIError } from './errors';
  *
  * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
  * @param {DataTypeKey} folder - The name of the folder whose contents are being queried.
- * @returns {Promise<GithubFile[]>} - A promise that resolves to an array of objects,
- *          each containing the `name` and `download_url` of a file within the specified folder.
+ * @returns {Promise<Result<GithubFile[], Error>>} - A promise that resolves to a result object containing either the data or an error message.
  */
 export const queryGitHubFolder = async (
 	language: LanguageKey,
 	folder: DataTypeKey
-): Promise<GithubFile[] | undefined> => {
-	try {
-		const response = await axios.get<GithubFile[]>(
-			`https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`
-		);
+): Promise<Result<GithubFile[], Error>> => {
+	const url = `https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`;
 
+	try {
+		const response = await axios.get<GithubFile[]>(url);
 		if (response.status !== 200) {
-			throw new GitHubAPIError(`Failed to fetch folder contents: ${response.statusText}`);
+			logToConsole(
+				'Utils',
+				`queryGitHubFolder failed for ${language}/${folder}: ${response.statusText}`
+			);
+			return err(new Error(`Failed to fetch folder contents: ${response.statusText}`));
 		}
 
-		return response.data.filter((file: GithubFile) => file.name !== 'index.json');
+		const filteredData = response.data.filter((file: GithubFile) => file.name !== 'index.json');
+		return ok(filteredData);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-		logToConsole(
-			'Utils',
-			`queryGitHubFolder failed for ${language}/${folder}: ${errorMessage}`
-		);
-		throw new GitHubAPIError(
-			`queryGitHubFolder failed for ${language}/${folder}: ${errorMessage}`
-		);
+		logToConsole('Utils', `queryGitHubFolder failed for ${language}/${folder}: ${error}`);
+		return err(new Error('Failed to fetch folder contents'));
 	}
 };
 
@@ -46,31 +43,31 @@ export const queryGitHubFolder = async (
  * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
  * @param {string} folder - The name of the folder where the file is located.
  * @param {DataTypeKey} fileName - The name of the file to query, without the `.json` extension.
- * @returns {Promise<object>} - A promise that resolves to the content of the requested file.
+ * @returns {Promise<Result<object, Error>>} - A promise that resolves to a result object containing either the data or an error message.
  */
 export const queryGitHubFile = async (
 	language: LanguageKey,
 	folder: string,
 	fileName: DataTypeKey
-): Promise<object | undefined> => {
-	try {
-		const response = await axios.get(
-			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`
-		);
+): Promise<Result<object, Error>> => {
+	const url = `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`;
 
+	try {
+		const response = await axios.get(url);
 		if (response.status !== 200) {
-			throw new GitHubAPIError(`Failed to fetch file: ${response.statusText}`);
+			logToConsole(
+				'Utils',
+				`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${response.statusText}`
+			);
+			return err(new Error(`Failed to fetch file: ${response.statusText}`));
 		}
 
-		return response.data;
+		return ok(response.data);
 	} catch (error) {
-		const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 		logToConsole(
 			'Utils',
-			`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${errorMessage}`
+			`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${error}`
 		);
-		throw new GitHubAPIError(
-			`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${errorMessage}`
-		);
+		return err(new Error('Failed to fetch file'));
 	}
 };

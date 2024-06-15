@@ -3,6 +3,7 @@ import { User as PrismaUser } from '@prisma/client';
 import type { Express } from 'express';
 import { getUserById } from '../db/models/user';
 import { SessionUser } from '../types/models/auth';
+import { Result } from 'neverthrow';
 
 /**
  * Initializes Passport and sets up session handling, serialization, and deserialization.
@@ -23,16 +24,12 @@ export const setupPassport = (app: Express): void => {
 
 	passport.deserializeUser<SessionUser>(
 		async (sessionUser: SessionUser, cb: (err: Error | null, user?: PrismaUser) => void) => {
-			try {
-				const prismaUser = await getUserById(sessionUser.userId);
-				if (prismaUser) {
-					cb(null, prismaUser);
-				} else {
-					cb(new Error('Invalid User'));
-				}
-			} catch (error) {
-				cb(error as Error);
-			}
+			const result: Result<PrismaUser, Error> = await getUserById(sessionUser.userId);
+
+			result.match(
+				(prismaUser) => cb(null, prismaUser),
+				(error) => cb(error)
+			);
 		}
 	);
 };

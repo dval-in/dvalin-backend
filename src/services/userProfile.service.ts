@@ -11,14 +11,25 @@ import { handleCharacters } from '../handlers/userProfile/characters.handler';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler';
 import { handleWishes } from '../handlers/userProfile/wishes.handler';
 import { handleAchievements } from '../handlers/userProfile/achievements.handler';
+import { Result, ok, err } from 'neverthrow';
 
 export class UserProfileService {
-	async getUserProfile(userId: string): Promise<UserProfile | {}> {
-		const genshinAccounts = await getGenshinAccountsByUser(userId);
-		if (!genshinAccounts?.length) return {};
+	async getUserProfile(userId: string): Promise<Result<UserProfile | {}, Error>> {
+		const genshinAccountsResult = await getGenshinAccountsByUser(userId);
+		if (genshinAccountsResult.isErr()) {
+			return err(genshinAccountsResult.error);
+		}
+
+		const genshinAccounts = genshinAccountsResult.value;
+		if (!genshinAccounts?.length) return ok({});
 
 		const account = genshinAccounts[0];
-		const allWishes = await getWishesByUid(account.uid);
+		const allWishesResult = await getWishesByUid(account.uid);
+		if (allWishesResult.isErr()) {
+			return err(allWishesResult.error);
+		}
+
+		const allWishes = allWishesResult.value;
 
 		const user = {
 			server: account.server,
@@ -28,19 +39,30 @@ export class UserProfileService {
 		};
 
 		const wishes = this.formatWishesByType(allWishes);
-		const achievements = await getAchievementsByUid(account.uid);
-		const characters = await getCharactersByUid(account.uid);
-		const weapons = await getWeaponsByUid(account.uid);
+		const achievementsResult = await getAchievementsByUid(account.uid);
+		if (achievementsResult.isErr()) {
+			return err(achievementsResult.error);
+		}
 
-		return {
+		const charactersResult = await getCharactersByUid(account.uid);
+		if (charactersResult.isErr()) {
+			return err(charactersResult.error);
+		}
+
+		const weaponsResult = await getWeaponsByUid(account.uid);
+		if (weaponsResult.isErr()) {
+			return err(weaponsResult.error);
+		}
+
+		return ok({
 			format: 'dvalin',
 			version: 1,
 			user,
 			wishes,
-			achievements,
-			characters,
-			weapons
-		};
+			achievements: achievementsResult.value,
+			characters: charactersResult.value,
+			weapons: weaponsResult.value
+		});
 	}
 
 	async syncUserProfile(
@@ -48,18 +70,33 @@ export class UserProfileService {
 		isPaimon: boolean,
 		bkTree: BKTree,
 		dataIndex: Index
-	) {
+	): Promise<Result<string, Error>> {
 		if (!userProfile || !userProfile.user?.uid) {
-			throw new Error('User profile is missing UID');
+			return err(new Error('User profile is missing UID'));
 		}
 
 		const uid = userProfile.user.uid.toString();
-		await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
-		await handleAchievements(userProfile, uid);
-		await handleCharacters(userProfile, uid);
-		await handleWeapons(userProfile, uid);
+		const wishesResult = await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
+		if (wishesResult.isErr()) {
+			return err(wishesResult.error);
+		}
 
-		return userProfile.userId;
+		const achievementsResult = await handleAchievements(userProfile, uid);
+		if (achievementsResult.isErr()) {
+			return err(achievementsResult.error);
+		}
+
+		const charactersResult = await handleCharacters(userProfile, uid);
+		if (charactersResult.isErr()) {
+			return err(charactersResult.error);
+		}
+
+		const weaponsResult = await handleWeapons(userProfile, uid);
+		if (weaponsResult.isErr()) {
+			return err(weaponsResult.error);
+		}
+
+		return ok(userProfile.userId);
 	}
 
 	private formatWishesByType(allWishes: Wish[] | undefined) {

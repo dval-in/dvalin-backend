@@ -1,21 +1,31 @@
 import { saveCharacter } from '../db/models/character';
 import { getGenshinAccountsByUser } from '../db/models/genshinAccount';
-import { MissingParametersError, NoAccountFoundError } from '../utils/errors';
+import { Result, ok, err } from 'neverthrow';
 
 class CharacterService {
-	async saveCharacterForUser(userId: string, character: any) {
+	async saveCharacterForUser(userId: string, character: any): Promise<Result<void, Error>> {
 		if (!character || typeof character !== 'object' || !('key' in character)) {
-			throw new MissingParametersError();
+			return err(new Error('Missing parameters'));
 		}
 
-		const accounts = await getGenshinAccountsByUser(userId);
+		const accountsResult = await getGenshinAccountsByUser(userId);
+		if (accountsResult.isErr()) {
+			return err(accountsResult.error);
+		}
+
+		const accounts = accountsResult.value;
 		const uid = accounts?.[0]?.uid;
 
 		if (uid === undefined) {
-			throw new NoAccountFoundError();
+			return err(new Error('No account found'));
 		}
 
-		await saveCharacter({ ...character, uid });
+		const saveCharacterResult = await saveCharacter({ ...character, uid });
+		if (saveCharacterResult.isErr()) {
+			return err(saveCharacterResult.error);
+		}
+
+		return ok(undefined);
 	}
 }
 

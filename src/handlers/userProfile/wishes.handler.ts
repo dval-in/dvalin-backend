@@ -6,6 +6,7 @@ import { UserProfile } from '../../types/frontend/dvalinFile';
 import { PaimonWish } from '../../types/frontend/wish';
 import { Index } from '../../types/models/dataIndex';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
+import { Result, ok, err } from 'neverthrow';
 
 export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
@@ -13,8 +14,8 @@ export const handleWishes = async (
 	isPaimon: boolean,
 	bktree: BKTree,
 	dataIndex: Index
-) => {
-	if (!userProfile.wishes) return;
+): Promise<Result<void, Error>> => {
+	if (!userProfile.wishes) return ok(undefined);
 
 	const allWishes = [
 		...(userProfile.wishes.CharacterEvent || []),
@@ -24,27 +25,33 @@ export const handleWishes = async (
 		...(userProfile.wishes.Chronicled || [])
 	];
 
-	const newlyFormatedWishes = isPaimon
+	const newlyFormattedWishes = isPaimon
 		? formatPaimonWishes(allWishes, uid, bktree, dataIndex)
 		: formatRegularWishes(allWishes, uid);
 
-	const currentWishes = await getWishesByUid(uid);
+	const currentWishesResult = await getWishesByUid(uid);
+	if (currentWishesResult.isErr()) {
+		return err(new Error('Failed to retrieve current wishes'));
+	}
+	const currentWishes = currentWishesResult.value;
+
 	if (!currentWishes || currentWishes.length === 0) {
 		if (isPaimon) {
-			throw new Error('Paimon import requires initial import on Dvalin website');
+			return err(new Error('Paimon import requires initial import on Dvalin website'));
 		}
-		// make sure dvalin user has an existing uid
-		const account = await getGenshinAccountByUid(uid);
-		if (!account) {
-			throw new Error('User does not have a Genshin account');
+		const accountResult = await getGenshinAccountByUid(uid);
+		if (accountResult.isErr()) {
+			return err(new Error('User does not have a Genshin account'));
 		}
-		await createMultipleWishes(newlyFormatedWishes);
+		await createMultipleWishes(newlyFormattedWishes);
 	} else {
-		const newWishes = filterNewWishes(newlyFormatedWishes, currentWishes, isPaimon);
+		const newWishes = filterNewWishes(newlyFormattedWishes, currentWishes, isPaimon);
 		if (newWishes.length > 0) {
 			await createMultipleWishes(newWishes);
 		}
 	}
+
+	return ok(undefined);
 };
 
 const isPaimonWish = (wish: any): wish is PaimonWish => {

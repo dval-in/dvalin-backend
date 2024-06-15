@@ -1,5 +1,6 @@
 import { Server } from 'socket.io';
 import { QueryKey } from '../types/models/websocket';
+import { Result, ok, err } from 'neverthrow';
 
 export class WebSocketService {
 	private static instance: WebSocketService | undefined = undefined;
@@ -9,20 +10,22 @@ export class WebSocketService {
 		this.io = io;
 	}
 
-	public static setupInstance(io?: Server): void {
+	public static setupInstance(io?: Server): Result<void, Error> {
 		if (!this.instance && io !== undefined) {
 			this.instance = new WebSocketService(io);
+			return ok(undefined);
 		} else if (!this.instance) {
-			throw new Error('Websocket requires Socket.IO Server');
+			return err(new Error('Websocket requires Socket.IO Server'));
 		}
+		return ok(undefined);
 	}
 
-	public static getInstance(): WebSocketService {
+	public static getInstance(): Result<WebSocketService, Error> {
 		if (!this.instance) {
-			throw new Error('No instance setup');
+			return err(new Error('No instance setup'));
 		}
 
-		return this.instance;
+		return ok(this.instance);
 	}
 
 	public invalidateQuery(userId: string, queryKey: QueryKey): void {

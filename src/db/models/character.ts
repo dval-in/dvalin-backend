@@ -1,59 +1,74 @@
 import { Character } from '@prisma/client';
-
 import { DBClient } from '../prismaClient';
+import { err, ok, Result } from 'neverthrow';
 
 const prisma = DBClient.getInstance();
 
-export const getCharactersByUid = async (uid: string) => {
-	const characters = await prisma.character.findMany({
-		where: {
-			uid
+export const getCharactersByUid = async (uid: string): Promise<Result<Character[], Error>> => {
+	try {
+		const characters = await prisma.character.findMany({
+			where: {
+				uid
+			}
+		});
+
+		if (characters.length === 0) {
+			return err(new Error('No characters found'));
 		}
-	});
 
-	if (characters.length === 0) {
-		return undefined;
+		return ok(characters);
+	} catch (error) {
+		return err(new Error('Failed to retrieve characters'));
 	}
-
-	return characters;
 };
 
-export const saveCharacter = async (characterData: Character) => {
-	const { key, uid, ...restData } = characterData;
-	const upsertedCharacter = await prisma.character.upsert({
-		where: {
-			id: {
-				key: key,
-				uid: uid
-			}
-		},
-		update: restData,
-		create: characterData
-	});
+export const saveCharacter = async (
+	characterData: Character
+): Promise<Result<Character, Error>> => {
+	try {
+		const { key, uid, ...restData } = characterData;
+		const upsertedCharacter = await prisma.character.upsert({
+			where: {
+				id: {
+					key: key,
+					uid: uid
+				}
+			},
+			update: restData,
+			create: characterData
+		});
 
-	return upsertedCharacter;
+		return ok(upsertedCharacter);
+	} catch (error) {
+		return err(new Error('Failed to save character'));
+	}
 };
 
 export const saveCharactersConstellation = async (
 	characters: { key: string; constellation: number }[],
 	uid: string
-) => {
-	const updates = characters.map((character) =>
-		prisma.character.upsert({
-			where: {
-				id: {
-					key: character.key,
+): Promise<Result<void, Error>> => {
+	try {
+		const updates = characters.map((character) =>
+			prisma.character.upsert({
+				where: {
+					id: {
+						key: character.key,
+						uid: uid
+					}
+				},
+				update: {
+					constellation: character.constellation
+				},
+				create: {
+					...character,
 					uid: uid
 				}
-			},
-			update: {
-				constellation: character.constellation
-			},
-			create: {
-				...character,
-				uid: uid
-			}
-		})
-	);
-	await prisma.$transaction(updates);
+			})
+		);
+		await prisma.$transaction(updates);
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to save characters constellation'));
+	}
 };
