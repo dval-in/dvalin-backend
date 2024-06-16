@@ -38,6 +38,8 @@ app.use(
 	})
 );
 
+config.DEBUG && logToConsole('Server', 'Debug mode enabled');
+
 setupSession(app);
 setupPassport(app);
 setupWebsockets(io);

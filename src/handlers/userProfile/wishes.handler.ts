@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { getWishesByUid, createMultipleWishes } from '../../db/models/wishes';
 import { BKTree } from '../BKTree';
 import { UserProfile } from '../../types/frontend/dvalinFile';
-import { PaimonWish } from '../../types/frontend/wish';
+import { IMappedWish, PaimonWish } from '../../types/frontend/wish';
 import { Index } from '../../types/models/dataIndex';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
@@ -54,12 +54,19 @@ export const handleWishes = async (
 	return ok(undefined);
 };
 
-const isPaimonWish = (wish: any): wish is PaimonWish => {
-	return (wish as PaimonWish).type !== undefined && (wish as PaimonWish).code !== undefined;
+const isPaimonWish = (wish: unknown): wish is PaimonWish => {
+	return (
+		typeof wish === 'object' &&
+		wish !== null &&
+		'type' in wish &&
+		'code' in wish &&
+		wish.type !== undefined &&
+		wish.code !== undefined
+	);
 };
 
 const formatPaimonWishes = (
-	wishes: any[],
+	wishes: unknown[],
 	uid: string,
 	bktree: BKTree,
 	dataIndex: Index
@@ -86,7 +93,7 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	}
 };
 
-const formatRegularWishes = (wishes: any[], uid: string): Omit<Wish, 'createdAt'>[] => {
+const formatRegularWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => ({
 		id: wish.number.toString() || randomUUID(),
 		uid,

@@ -5,7 +5,6 @@ import { Profile } from 'passport-google-oauth20';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
-import { Result, ok, err } from 'neverthrow';
 
 const setupMicrosoftOAuth = (app: Express): void => {
 	app.get('/auth/microsoft', passport.authenticate('microsoft'));

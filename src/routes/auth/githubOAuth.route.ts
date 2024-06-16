@@ -4,7 +4,6 @@ import passport from 'passport';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
-import { Result, ok, err } from 'neverthrow';
 
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));

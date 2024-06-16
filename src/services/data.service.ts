@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { Index } from '../types/models/dataIndex';
 import { queryGitHubFolder } from '../utils/github';
-import { logToConsole } from '../utils/log';
 import { Result, ok, err } from 'neverthrow';
 
 class DataService {

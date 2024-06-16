@@ -1,38 +1,49 @@
-import { type Express } from 'express';
+import {
+	Strategy as DiscordStrategy,
+	Profile,
+	VerifyCallback
+} from '@oauth-everything/passport-discord';
+import { Request, type Express } from 'express';
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
 
-const setupGoogleOAuth = (app: Express): void => {
-	app.get('/auth/google', passport.authenticate('google'));
+const setupDiscordOAuth = (app: Express): void => {
+	app.get('/auth/discord', passport.authenticate('discord'));
 	app.get(
-		'/auth/google/callback',
-		passport.authenticate('google', { failureRedirect: config.FRONTEND_URL + '/login' }),
+		'/auth/discord/callback',
+		passport.authenticate('discord', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
+
 	passport.use(
-		new GoogleStrategy(
+		new DiscordStrategy(
 			{
-				clientID: config.GOOGLE_CLIENT_ID,
-				clientSecret: config.GOOGLE_CLIENT_SECRET,
-				callbackURL: config.BACKEND_URL + '/auth/google/callback',
-				scope: ['profile'],
+				clientID: config.DISCORD_CLIENT_ID,
+				clientSecret: config.DISCORD_CLIENT_SECRET,
+				callbackURL: config.BACKEND_URL + '/auth/discord/callback',
+				scope: ['identify'],
 				passReqToCallback: true
 			},
-			async (req, accessToken, refreshToken, profile, cb) => {
+			async (
+				req: Request,
+				accessToken: string,
+				refreshToken: string,
+				profile: Profile,
+				cb: VerifyCallback
+			) => {
 				if (req.user === undefined) {
-					const userResult = await getUserByAuth(profile.id, 'Google');
+					const userResult = await getUserByAuth(profile.id, 'Discord');
 					if (userResult.isErr()) {
 						return cb(userResult.error, undefined);
 					}
 
 					let user = userResult.value;
 					if (user === undefined) {
-						const createUserResult = await createUser(profile.id, 'Google');
+						const createUserResult = await createUser(profile.id, 'Discord');
 						if (createUserResult.isErr()) {
 							return cb(createUserResult.error, undefined);
 						}
@@ -43,7 +54,7 @@ const setupGoogleOAuth = (app: Express): void => {
 				} else {
 					const createAuthResult = await createAuth(
 						profile.id,
-						'Google',
+						'Discord',
 						req.user.userId
 					);
 					if (createAuthResult.isErr()) {
@@ -57,4 +68,4 @@ const setupGoogleOAuth = (app: Express): void => {
 	);
 };
 
-export { setupGoogleOAuth };
+export { setupDiscordOAuth };

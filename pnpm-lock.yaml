@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@oauth-everything/passport-discord':
+        specifier: ^1.0.2
+        version: 1.0.2
       '@prisma/client':
         specifier: ^5.14.0
         version: 5.14.0(prisma@5.14.0)
@@ -457,6 +460,15 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@oauth-everything/oauth2-types@1.0.2':
+    resolution: {integrity: sha512-fGddJhO8bnvljIhSTMuOSWFilkJ67TDqqgB1/qPVCu6s8swju7qWYZm2Qyit0miBebTtCf1jQ6hcz+GPA7glJw==}
+
+  '@oauth-everything/passport-discord@1.0.2':
+    resolution: {integrity: sha512-N+n8ICOADti8vJUBLb9FEHeroMb7Cdvu18moM0BgJIxXb1ZzxiYy02MyiMVyqFZGh/Tw7xJA2z9c7o0nQVQZ7g==}
+
+  '@oauth-everything/profile@1.0.0':
+    resolution: {integrity: sha512-OmCuBPhjaLHh9MST9P5jRuVBZaP0z7hBk8nH4Yt7Id5kNM1AXGd5uud6CP7W2zuhKl2nk0KsYmeMT7SkzN6VWg==}
 
   '@paralleldrive/cuid2@2.2.2':
     resolution: {integrity: sha512-ZOBkgDwEdoYVlSeRbYYXs0S9MejQofiVYoTbKzy/6GQa39/q5tQU2IX46+shYnUkpEl3wc+J6wRlar7r2EK2xA==}
@@ -2420,6 +2432,20 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
+
+  '@oauth-everything/oauth2-types@1.0.2':
+    dependencies:
+      '@types/express': 4.17.21
+      '@types/passport-oauth2': 1.4.15
+
+  '@oauth-everything/passport-discord@1.0.2':
+    dependencies:
+      '@oauth-everything/oauth2-types': 1.0.2
+      '@oauth-everything/profile': 1.0.0
+      '@types/passport-oauth2': 1.4.15
+      passport-oauth2: 1.8.0
+
+  '@oauth-everything/profile@1.0.0': {}
 
   '@paralleldrive/cuid2@2.2.2':
     dependencies:

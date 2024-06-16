@@ -5,7 +5,6 @@ import { logToConsole } from '../../utils/log';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
 import { isDataTypeKey } from '../../types/models/fileReference';
 import { isLanguageKey } from '../../types/models/language';
-import { Result } from 'neverthrow';
 
 export class DynamicDataRoute {
 	public isInitialised: boolean = false;
