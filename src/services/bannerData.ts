@@ -6,6 +6,7 @@ import { wishHistoryQueue } from '../queues/wishHistoryQueue';
 
 const setupBannerService = (): BannerService => {
 	const bannerService = new BannerService();
+
 	(async () => {
 		await wishHistoryQueue.pause();
 

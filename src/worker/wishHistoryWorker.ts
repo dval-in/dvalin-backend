@@ -27,7 +27,8 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 			return await getWishes(authkey, gachaTypeList, bkTree);
 		},
 		{
-			connection
+			connection,
+			autorun: false
 		}
 	);
 
