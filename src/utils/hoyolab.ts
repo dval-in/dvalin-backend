@@ -4,6 +4,7 @@ import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/wishes';
 import { Wish } from '@prisma/client';
 import { BKTree } from './BKTree';
+import { getBannerIdFromTime } from './bannerIdentifier';
 
 // last updated 3/04/2024
 /**
@@ -118,15 +119,18 @@ const getWishes = async (
 							fiveStarPity = 0;
 						}
 
+						const time = serverTimeToUTC(wish.uid, wish.time);
+
 						wishHistory.push({
 							gachaType: wish.gacha_type,
-							time: new Date(wish.time),
+							time: time,
 							name: bkTree.search(wish.name)[0].word,
 							itemType: wish.item_type,
 							rankType: wish.rank_type,
 							id: wish.id,
 							uid: wish.uid,
-							pity: '1'
+							pity: '1',
+							bannerId: getBannerIdFromTime(wish.gacha_type, time)
 						});
 						lastNewWishId = wish.id;
 					} else {

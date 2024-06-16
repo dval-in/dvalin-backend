@@ -6,6 +6,7 @@ import {
 	WISH_HISTORY_QUEUE_RATE_LIMIT_DURATION,
 	wishHistoryQueue
 } from '../../queues/wishHistoryQueue';
+import { bannerdata } from '../../services/bannerData';
 
 export class WishHistoryRoute {
 	constructor(private readonly app: Express) {}
