@@ -47,7 +47,7 @@ const setupGoogleOAuth = (app: Express): void => {
 						req.user.userId
 					);
 					if (createAuthResult.isErr()) {
-						return cb(createAuthResult.error, undefined);
+						return cb(createAuthResult.error, req.user);
 					}
 
 					cb(null, req.user);

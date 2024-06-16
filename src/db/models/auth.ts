@@ -81,21 +81,3 @@ export const getAuthsByUser = async (userId: string): Promise<Result<Auth[], Err
 		return err(new Error('Failed to retrieve auths by user'));
 	}
 };
-
-export const getUserById = async (id: string): Promise<Result<Auth, Error>> => {
-	try {
-		const user = await prisma.auth.findUnique({
-			where: {
-				id
-			}
-		});
-
-		if (!user) {
-			return err(new Error('User not found'));
-		}
-
-		return ok(user);
-	} catch (error) {
-		return err(new Error('Failed to retrieve user by id'));
-	}
-};

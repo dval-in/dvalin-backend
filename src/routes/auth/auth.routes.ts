@@ -21,17 +21,6 @@ export class AuthRoute {
 			});
 		});
 
-		this.app.get('/auth/status', async (req, res) => {
-			if (req.user === undefined) {
-				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
-			}
-			const providers = await authService.getUserInfo(req.user.userId);
-			if (providers.isErr()) {
-				return sendErrorResponse(res, 404, 'USER_NOT_FOUND');
-			}
-			sendSuccessResponse(res, { user: req.user, providers: providers.value });
-		});
-
 		this.app.get('/auth/logout', (req, res) => {
 			authService.logout(req, res);
 		});

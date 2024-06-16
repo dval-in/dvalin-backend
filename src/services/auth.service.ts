@@ -15,18 +15,6 @@ class AuthService {
 		});
 	}
 
-	async getUserInfo(userId: string) {
-		const userResult = await getAuthsByUser(userId);
-		if (userResult.isErr()) {
-			logToConsole(
-				'AuthService',
-				`Failed to retrieve user by id: ${userResult.error.message}`
-			);
-			return err(new Error('No user found for this id'));
-		}
-		return ok(userResult.value);
-	}
-
 	getProviders() {
 		return ['github', 'google', 'microsoft', 'discord'];
 	}
