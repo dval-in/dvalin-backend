@@ -12,7 +12,6 @@ import { Result, ok, err } from 'neverthrow';
  */
 const handleAchievements = async (socket: Socket, data: unknown): Promise<Result<void, Error>> => {
 	if (!isAchievementData(data)) {
-		socket.emit('error', { code: 422, message: 'MISSING_ACHIEVEMENTS' });
 		return err(new Error('Invalid achievement data'));
 	}
 
@@ -20,10 +19,8 @@ const handleAchievements = async (socket: Socket, data: unknown): Promise<Result
 
 	try {
 		await saveAchievements(dataArray);
-		socket.emit('achievementSaved', { message: 'Achievements saved successfully' });
 		return ok(undefined);
 	} catch (error) {
-		socket.emit('error', { code: 500, message: 'INTERNAL_SERVER_ERROR' });
 		return err(new Error('Failed to save achievements'));
 	}
 };

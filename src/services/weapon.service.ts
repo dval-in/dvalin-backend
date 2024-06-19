@@ -1,11 +1,12 @@
 import { saveWeapon } from '../db/models/weapons';
 import { getGenshinAccountsByUser } from '../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
+import { Weapon } from '@prisma/client';
 
 class WeaponService {
-	async saveWeaponForUser(userId: string, weapon: any): Promise<Result<void, Error>> {
-		if (!weapon || typeof weapon !== 'object' || !('key' in weapon)) {
-			return err(new Error('Missing parameters'));
+	async saveWeaponForUser(userId: string, weapon: unknown): Promise<Result<void, Error>> {
+		if (!isWeapon(weapon)) {
+			return err(new Error('Invalid weapon data'));
 		}
 
 		const accountsResult = await getGenshinAccountsByUser(userId);
@@ -30,3 +31,7 @@ class WeaponService {
 }
 
 export const weaponService = new WeaponService();
+
+export const isWeapon = (obj: any): obj is Weapon => {
+	return typeof obj === 'object' && obj !== null && 'key' in obj && typeof obj.key === 'string';
+};

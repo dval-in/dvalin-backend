@@ -28,10 +28,7 @@ export const handleAchievements = async (
 			return err(saveResult.error);
 		}
 	} else {
-		const filteredAchievements = newAchievements.filter(
-			(achievement) => !currentAchievements.some((a) => a.key === achievement.key)
-		);
-		const saveResult = await saveAchievements(filteredAchievements);
+		const saveResult = await saveAchievements(newAchievements);
 		if (saveResult.isErr()) {
 			return err(saveResult.error);
 		}

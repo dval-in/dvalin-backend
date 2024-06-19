@@ -1,4 +1,4 @@
-import { getWeaponsByUid, saveWeapon } from '../../db/models/weapons';
+import { getWeaponsByUid, saveWeapon, saveWeapons } from '../../db/models/weapons';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { err, ok, Result } from 'neverthrow';
 
@@ -14,27 +14,13 @@ export const handleWeapons = async (
 		refinement: weapon.refinement,
 		level: weapon.level,
 		ascension: weapon.ascension,
-		characterKey: weapon.characterKey || null
+		characterKey: weapon.characterKey || null,
+		uid
 	}));
 
-	const currentWeaponsResult = await getWeaponsByUid(uid);
-
-	if (currentWeaponsResult.isErr()) {
-		return err(currentWeaponsResult.error);
+	const result = await saveWeapons(transformedWeapons);
+	if (result.isErr()) {
+		return err(result.error);
 	}
-
-	const currentWeapons = currentWeaponsResult.value;
-
-	const filteredWeapons = currentWeapons
-		? transformedWeapons.filter((weapon) => !currentWeapons.some((c) => c.id === weapon.id))
-		: transformedWeapons;
-
-	for (const weapon of filteredWeapons) {
-		const saveResult = await saveWeapon({ ...weapon, uid });
-		if (saveResult.isErr()) {
-			return err(saveResult.error);
-		}
-	}
-
 	return ok(undefined);
 };

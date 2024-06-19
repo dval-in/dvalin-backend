@@ -1,5 +1,5 @@
 import { Index } from '../types/models/dataIndex';
-import { BKTree } from '../handlers/BKTree';
+import { BKTree } from '../handlers/dataStructure/BKTree';
 import { setupUserProfileSyncWorker } from './userProfileSync.worker';
 import { setupWishWorker } from './wish.worker';
 

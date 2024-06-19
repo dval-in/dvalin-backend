@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Index } from '../types/models/dataIndex';
 import { queryGitHubFolder } from '../utils/github';
 import { Result, ok, err } from 'neverthrow';
+import { logToConsole } from '../utils/log';
 
 class DataService {
 	private readonly index: Index = { Character: {}, Weapon: {} };
@@ -31,16 +32,16 @@ class DataService {
 			try {
 				const fileResponse = await axios.get(file.download_url);
 				const data = fileResponse.data;
-				try {
-					this.index[type][file.name.replace('.json', '')] = {
-						name: data.name,
-						rarity: data.rarity
-					};
-				} catch (error) {
-					console.error(`[server] Missing field in file: ${file.name}`, error);
-				}
+
+				this.index[type][file.name.replace('.json', '')] = {
+					name: data.name,
+					rarity: data.rarity
+				};
 			} catch (fileError) {
-				console.error(`[server] Failed to fetch ${type} file: ${file.name}`, fileError);
+				logToConsole(
+					`DataService`,
+					`[server] Failed to fetch ${type} file: ${file.name}` + fileError
+				);
 				return err(new Error(`Failed to fetch ${type} file: ${file.name}`));
 			}
 		}

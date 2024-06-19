@@ -72,11 +72,11 @@ export const setupWebsockets = (io: Server): void => {
 				return;
 			}
 
-			const accountsResult: Result<any, Error> = await getGenshinAccountsByUser(user.userId);
+			const accountsResult = await getGenshinAccountsByUser(user.userId);
 
 			await accountsResult.match(
 				async (accounts) => {
-					if (!accounts || accounts.filter((e: any) => e.uid === data.uid).length === 0) {
+					if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
 						socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
 						return;
 					}

@@ -3,7 +3,7 @@ import { GachaTypeList, HoyoConfigResponse, HoyoWishResponse } from '../types/mo
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { BKTree } from '../handlers/BKTree';
+import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 
 /**
@@ -43,7 +43,7 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
 			break;
 
 		default:
-			console.error(`Unhandled UID prefix {${prefix}} for {${date}}`);
+			logToConsole('Hoyolab.utils', `Unhandled UID prefix {${prefix}} for {${date}}`);
 			break;
 	}
 	return utcDate;

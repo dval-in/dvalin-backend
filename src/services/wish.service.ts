@@ -5,7 +5,7 @@ import { WishQueueData } from '../types/models/queue';
 import { WISH_QUEUE_RATE_LIMIT_DURATION, wishQueue } from '../queues/wish.queue';
 import { WebSocketService } from './websocket.service';
 import { createMultipleWishes } from '../db/models/wishes';
-import { BKTree } from '../handlers/BKTree';
+import { BKTree } from '../handlers/dataStructure/BKTree';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler';
 import { saveCharactersConstellation } from '../db/models/character';
 import { getNonRefinedWeapons, saveWeaponsRefinement } from '../db/models/weapons';
@@ -57,7 +57,7 @@ class WishService {
 		return ok({ state: 'CREATED' });
 	}
 
-	async getJobStatus(userId: string): Promise<Result<{ state: string; data?: any }, Error>> {
+	async getJobStatus(userId: string): Promise<Result<{ state: string; data?: unknown }, Error>> {
 		if (!userId) {
 			return err(new Error('Missing user ID'));
 		}

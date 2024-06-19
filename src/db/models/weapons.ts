@@ -39,6 +39,27 @@ export const saveWeapon = async (weaponData: Weapon): Promise<Result<Weapon, Err
 	}
 };
 
+export const saveWeapons = async (weapons: Weapon[]): Promise<Result<void, Error>> => {
+	try {
+		const updates = weapons.map((weapon) =>
+			prisma.weapon.upsert({
+				where: {
+					id: weapon.id
+				},
+				update: weapon,
+				create: {
+					...weapon
+				}
+			})
+		);
+
+		await prisma.$transaction(updates);
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to save weapons'));
+	}
+};
+
 export const saveWeaponsRefinement = async (
 	weapons: { id: string; refinement: number }[],
 	uid: string

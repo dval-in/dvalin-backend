@@ -8,7 +8,7 @@ class AuthService {
 		req.logout(() => {
 			req.session.destroy((err: any) => {
 				if (err) {
-					console.error('Session destroy error:', err);
+					logToConsole('AuthService', 'Session destroy error:' + err);
 				}
 				res.redirect(config.FRONTEND_URL);
 			});

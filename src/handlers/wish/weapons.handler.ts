@@ -8,6 +8,10 @@ const transformWeaponFromWishes = (
 	autoRefine4: boolean,
 	autoRefine5: boolean
 ): Weapon[] => {
+	if (!autoRefine3 && !autoRefine4 && !autoRefine5) {
+		return currentUnrefinedWeapon;
+	}
+
 	const finalWeapons: Weapon[] = [];
 	wishes.forEach((wish) => {
 		if (

@@ -1,7 +1,7 @@
 import { Wish } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { getWishesByUid, createMultipleWishes } from '../../db/models/wishes';
-import { BKTree } from '../BKTree';
+import { BKTree } from '../dataStructure/BKTree';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { IMappedWish, PaimonWish } from '../../types/frontend/wish';
 import { Index } from '../../types/models/dataIndex';
@@ -71,17 +71,20 @@ const formatPaimonWishes = (
 	bktree: BKTree,
 	dataIndex: Index
 ): Omit<Wish, 'createdAt'>[] => {
-	return wishes.filter(isPaimonWish).map((wish) => ({
-		id: randomUUID(),
-		uid,
-		name: bktree.search(wish.id)[0].word,
-		itemType: wish.type,
-		time: new Date(wish.time),
-		gachaType: wish.code,
-		pity: wish.pity.toString(),
-		wasImported: true,
-		rankType: wish.rate ? '3' : getRarity(bktree.search(wish.id)[0].word, wish.type, dataIndex)
-	}));
+	return wishes.filter(isPaimonWish).map((wish) => {
+		const searchResult = bktree.search(wish.id)[0].word;
+		return {
+			id: randomUUID(),
+			uid,
+			name: searchResult,
+			itemType: wish.type,
+			time: new Date(wish.time),
+			gachaType: wish.code,
+			pity: wish.pity.toString(),
+			wasImported: true,
+			rankType: wish.rate ? '3' : getRarity(searchResult, wish.type, dataIndex)
+		};
+	});
 };
 
 const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index): string => {
@@ -117,8 +120,33 @@ const filterNewWishes = (
 			(acc, wish) => Math.min(acc, wish.time.getTime()),
 			Infinity
 		);
-		return newWishes.filter((wish) => wish.time.getTime() < firstWishSave);
+
+		const wishMap = new Map<string, Omit<Wish, 'createdAt'>>();
+		const pq = new PriorityQueue(
+			(a: Omit<Wish, 'createdAt'>, b: Omit<Wish, 'createdAt'>) =>
+				a.time.getTime() - b.time.getTime()
+		);
+
+		currentWishes.forEach((wish) => {
+			const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}-${wish.pity}`;
+			wishMap.set(key, wish);
+			pq.enqueue(wish);
+		});
+
+		return newWishes.filter((wish) => {
+			const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}-${wish.pity}`;
+			return wish.time.getTime() < firstWishSave && !wishMap.has(key);
+		});
 	} else {
-		return newWishes.filter((wish) => !currentWishes.some((w) => w.id === wish.id));
+		const wishSet = new Set<string>(
+			currentWishes.map(
+				(wish) => `${wish.name}-${wish.time.getTime()}-${wish.gachaType}-${wish.pity}`
+			)
+		);
+
+		return newWishes.filter((wish) => {
+			const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}-${wish.pity}`;
+			return !wishSet.has(key);
+		});
 	}
 };

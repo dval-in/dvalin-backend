@@ -1,4 +1,4 @@
-import { getCharactersByUid, saveCharacter } from '../../db/models/character';
+import { saveCharacters } from '../../db/models/character';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { err, ok, Result } from 'neverthrow';
 
@@ -17,30 +17,14 @@ export const handleCharacters = async (
 			talentAuto: character.talent.auto,
 			talentSkill: character.talent.skill,
 			talentBurst: character.talent.burst,
-			manualConstellations: character.manualConstellations
+			manualConstellations: character.manualConstellations,
+			uid
 		})
 	);
 
-	const currentCharactersResult = await getCharactersByUid(uid);
-
-	if (currentCharactersResult.isErr()) {
-		return err(currentCharactersResult.error);
+	const result = await saveCharacters(transformedCharacters);
+	if (result.isErr()) {
+		return err(result.error);
 	}
-
-	const currentCharacters = currentCharactersResult.value;
-
-	const filteredCharacters = currentCharacters
-		? transformedCharacters.filter(
-				(character) => !currentCharacters.some((c) => c.key === character.key)
-			)
-		: transformedCharacters;
-
-	for (const character of filteredCharacters) {
-		const saveResult = await saveCharacter({ ...character, uid });
-		if (saveResult.isErr()) {
-			return err(saveResult.error);
-		}
-	}
-
 	return ok(undefined);
 };

@@ -44,6 +44,29 @@ export const saveCharacter = async (
 	}
 };
 
+export const saveCharacters = async (characters: Character[]): Promise<Result<void, Error>> => {
+	try {
+		const updates = characters.map((character) =>
+			prisma.character.upsert({
+				where: {
+					id: {
+						key: character.key,
+						uid: character.uid
+					}
+				},
+				update: character,
+				create: {
+					...character
+				}
+			})
+		);
+		await prisma.$transaction(updates);
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to save characters'));
+	}
+};
+
 export const saveCharactersConstellation = async (
 	characters: { key: string; constellation: number }[],
 	uid: string

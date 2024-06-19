@@ -3,6 +3,7 @@
 import { z } from 'zod';
 
 import dotenv from 'dotenv';
+import { logToConsole } from '../utils/log';
 
 dotenv.config();
 
@@ -49,7 +50,7 @@ const validatedConfig = configSchema.safeParse({
 });
 
 if (!validatedConfig.success) {
-	console.error('Configuration validation failed', validatedConfig.error);
+	logToConsole('Config', 'Configuration validation failed : ' + validatedConfig.error);
 	throw new Error('Configuration validation failed');
 }
 

@@ -6,7 +6,7 @@ import { getWeaponsByUid } from '../db/models/weapons';
 import { Wish } from '@prisma/client';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import { Index } from '../types/models/dataIndex';
-import { BKTree } from '../handlers/BKTree';
+import { BKTree } from '../handlers/dataStructure/BKTree';
 import { handleCharacters } from '../handlers/userProfile/characters.handler';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler';
 import { handleWishes } from '../handlers/userProfile/wishes.handler';
@@ -76,15 +76,28 @@ export class UserProfileService {
 		}
 
 		const uid = userProfile.user.uid.toString();
-		try {
-			await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
-			await handleAchievements(userProfile, uid);
-			await handleCharacters(userProfile, uid);
-			await handleWeapons(userProfile, uid);
-			return ok(userProfile.userId);
-		} catch (error) {
-			return err(new Error('Failed to sync user profile'));
+
+		const wishResult = await handleWishes(userProfile, uid, isPaimon, bkTree, dataIndex);
+		if (wishResult.isErr()) {
+			return err(new Error('Failed to handle wishes'));
 		}
+
+		const achievementResult = await handleAchievements(userProfile, uid);
+		if (achievementResult.isErr()) {
+			return err(new Error('Failed to handle achievements'));
+		}
+
+		const characterResult = await handleCharacters(userProfile, uid);
+		if (characterResult.isErr()) {
+			return err(new Error('Failed to handle characters'));
+		}
+
+		const weaponResult = await handleWeapons(userProfile, uid);
+		if (weaponResult.isErr()) {
+			return err(new Error('Failed to handle weapons'));
+		}
+
+		return ok(userProfile.userId);
 	}
 
 	private formatWishesByType(allWishes: Wish[] | undefined) {

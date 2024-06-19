@@ -14,7 +14,7 @@ import { setupWebsockets } from './handlers/websocket/websocket.handler';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
-import { BKTree } from './handlers/BKTree';
+import { BKTree } from './handlers/dataStructure/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
 
 const port = config.BACKEND_PORT;
