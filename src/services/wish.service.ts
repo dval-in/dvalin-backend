@@ -57,7 +57,17 @@ class WishService {
 		return ok({ state: 'CREATED' });
 	}
 
-	async getJobStatus(userId: string): Promise<Result<{ state: string; data?: unknown }, Error>> {
+	async getJobStatus(userId: string): Promise<
+		Result<
+			{
+				state: string;
+				data?:
+					| { completedTimestamp: number; rateLimitDuration: number }
+					| { count: number };
+			},
+			Error
+		>
+	> {
 		if (!userId) {
 			return err(new Error('Missing user ID'));
 		}
