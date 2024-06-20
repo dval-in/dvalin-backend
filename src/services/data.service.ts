@@ -35,7 +35,10 @@ class DataService {
 
 				this.index[type][file.name.replace('.json', '')] = {
 					name: data.name,
-					rarity: data.rarity
+					rarity: data.rarity,
+					element: data.element,
+					weaponType: data.weaponType,
+					type: data.type
 				};
 			} catch (fileError) {
 				logToConsole(
