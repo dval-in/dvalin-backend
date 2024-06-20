@@ -1,17 +1,17 @@
 import axios from 'axios';
-import { type GachaTypeList, type HoyoConfigResponse, type HoyoWishResponse } from '../types/wish';
+import { GachaTypeList, HoyoConfigResponse, HoyoWishResponse } from '../types/models/wish';
 import { logToConsole } from './log';
-import { getLatestWishByUid } from '../db/wishes';
+import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { BKTree } from './BKTree';
+import { BKTree } from '../handlers/dataStructure/BKTree';
+import { err, ok, Result } from 'neverthrow';
 
-// last updated 3/04/2024
 /**
- * converts a time returned by server into utc time:
+ * Converts a time returned by server into UTC time.
  *
- * @param uid genshin uid
- * @param date the time that should be converted into utc
- * @returns utc taime
+ * @param uid Genshin UID.
+ * @param date The time that should be converted into UTC.
+ * @returns UTC time.
  */
 const serverTimeToUTC = (uid: string, date: string): Date => {
 	const prefix = uid.length === 9 ? uid.substring(0, 1) : uid.substring(0, 2);
@@ -43,7 +43,7 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
 			break;
 
 		default:
-			console.error(`Unhandled UID prefix {${prefix}} for {${date}}`);
+			logToConsole('Hoyolab.utils', `Unhandled UID prefix {${prefix}} for {${date}}`);
 			break;
 	}
 	return utcDate;
@@ -54,22 +54,26 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  *
  * @param authkey Authentication key for the API.
  * @param gachaTypeList List of gacha types to query.
- * @param bkTree
- * @param uid
- * @returns A Promise with the wish history.
+ * @param bkTree BKTree instance.
+ * @param uid Optional UID.
+ * @returns A Promise with the result containing the wish history or an error message.
  */
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	bkTree: BKTree,
 	uid?: string
-): Promise<Omit<Wish, 'createdAt'>[]> => {
+): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 	let latestSavedWishId = '0';
 
 	if (uid) {
-		const latestSavedWish = await getLatestWishByUid(uid);
+		const latestSavedWishResult = await getLatestWishByUid(uid);
+		if (latestSavedWishResult.isErr()) {
+			return err(new Error('Failed to retrieve latest saved wish'));
+		}
+		const latestSavedWish = latestSavedWishResult.value;
 		if (latestSavedWish !== undefined) {
 			latestSavedWishId = latestSavedWish.uid;
 		}
@@ -85,81 +89,87 @@ const getWishes = async (
 		let lastFourStarIndex: number | undefined = undefined;
 
 		while (hasMore) {
-			const response = await axios.get<HoyoWishResponse>(url, {
-				params: {
-					authkey,
-					authkey_ver: 1,
-					lang: 'en-us',
-					page: 1,
-					size: 20,
-					end_id: lastNewWishId,
-					gacha_type: gachaType.key
-				}
-			});
-
-			const { data } = response;
-			if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
-				for (const wish of data.data.list) {
-					if (wish.id > latestSavedWishId) {
-						fiveStarPity++;
-						fourStarPity++;
-
-						if (wish.rank_type === '4') {
-							if (lastFourStarIndex !== undefined) {
-								wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
-							}
-							lastFourStarIndex = wishHistory.length;
-							fourStarPity = 0;
-						} else if (wish.rank_type === '5') {
-							if (lastFiveStarIndex !== undefined) {
-								wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
-							}
-							lastFiveStarIndex = wishHistory.length;
-							fiveStarPity = 0;
-						}
-
-						wishHistory.push({
-							gachaType: wish.gacha_type,
-							time: new Date(wish.time),
-							name: bkTree.search(wish.name)[0].word,
-							itemType: wish.item_type,
-							rankType: wish.rank_type,
-							id: wish.id,
-							uid: wish.uid,
-							pity: '1'
-						});
-						lastNewWishId = wish.id;
-					} else {
-						hasMore = false;
-						break;
+			try {
+				const response = await axios.get<HoyoWishResponse>(url, {
+					params: {
+						authkey,
+						authkey_ver: 1,
+						lang: 'en-us',
+						page: 1,
+						size: 20,
+						end_id: lastNewWishId,
+						gacha_type: gachaType.key
 					}
-				}
+				});
 
-				//Update last 5 and 4* after list has been iterated to set their pity
-				if (lastFourStarIndex !== undefined) {
-					wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
-				}
-				if (lastFiveStarIndex !== undefined) {
-					wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
-				}
+				const { data } = response;
+				if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
+					for (const wish of data.data.list) {
+						if (wish.id > latestSavedWishId) {
+							fiveStarPity++;
+							fourStarPity++;
 
-				await randomDelay(100, 500);
-			} else {
-				hasMore = false;
+							if (wish.rank_type === '4') {
+								if (lastFourStarIndex !== undefined) {
+									wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
+								}
+								lastFourStarIndex = wishHistory.length;
+								fourStarPity = 0;
+							} else if (wish.rank_type === '5') {
+								if (lastFiveStarIndex !== undefined) {
+									wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
+								}
+								lastFiveStarIndex = wishHistory.length;
+								fiveStarPity = 0;
+							}
+
+							wishHistory.push({
+								gachaType: wish.gacha_type,
+								time: new Date(wish.time),
+								name: bkTree.search(wish.name)[0].word,
+								itemType: wish.item_type,
+								rankType: wish.rank_type,
+								id: wish.id,
+								uid: wish.uid,
+								pity: '1',
+								wasImported: false
+							});
+							lastNewWishId = wish.id;
+						} else {
+							hasMore = false;
+							break;
+						}
+					}
+
+					//Update last 5 and 4* after list has been iterated to set their pity
+					if (lastFourStarIndex !== undefined) {
+						wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
+					}
+					if (lastFiveStarIndex !== undefined) {
+						wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
+					}
+
+					await randomDelay(100, 500);
+				} else {
+					hasMore = false;
+				}
+			} catch (error) {
+				logToConsole('Utils', `getWishes failed for gachaType: ${gachaType.key}`);
+				return err(new Error('Failed to fetch wishes'));
 			}
 		}
 	}
 
-	return wishHistory;
+	return ok(wishHistory);
 };
 
 /**
  * Fetches the Gacha configuration list.
  *
  * @param authkey Authentication key for the API.
- * @returns The Gacha configuration list.
+ * @returns The Gacha configuration list result.
  */
-const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse | undefined> => {
+const getGachaConfigList = async (authkey: string): Promise<Result<HoyoConfigResponse, Error>> => {
 	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getConfigList';
 
 	try {
@@ -172,7 +182,7 @@ const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse |
 		});
 
 		if (response.status !== 200) {
-			return undefined;
+			return err(new Error('Failed to fetch config list'));
 		}
 
 		response.data.data?.gacha_type_list.push({
@@ -181,10 +191,10 @@ const getGachaConfigList = async (authkey: string): Promise<HoyoConfigResponse |
 			name: 'Chronicled Wish'
 		});
 
-		return response.data;
+		return ok(response.data);
 	} catch (error) {
 		logToConsole('Utils', `getGachaConfigList failed for ${authkey}`);
-		return undefined;
+		return err(new Error('Failed to fetch config list'));
 	}
 };
 

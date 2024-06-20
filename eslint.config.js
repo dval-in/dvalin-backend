@@ -8,7 +8,7 @@ export default tseslint.config(
 		ignores: [
 			'.github/*',
 			'.husky/*',
-			'.node_modules/*',
+			'node_modules/*',
 			'dist/*',
 			'.DS_Store',
 			'.env*',

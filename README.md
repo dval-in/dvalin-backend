@@ -1,8 +1,8 @@
 # Dvalin - Backend
 
-### How to use
+## How to use
 
-#### Requirements:
+### Requirements
 
 -   [Node 20](https://nodejs.org/)
 -   [Pnpm 9](https://pnpm.io/)
@@ -13,7 +13,7 @@
     -   Optional: Google
     -   Optional: Microsoft
 
-#### Steps:
+### Steps
 
 1. [Clone the repository](https://docs.github.com/articles/cloning-a-repository)
 2. Install dependencies (`pnpm install`)

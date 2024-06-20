@@ -38,11 +38,18 @@ model Auth {
 }
 
 model GenshinAccount {
-  uid    String  @id @unique
-  name   String?
-  wishes Wish[]
-  user   User    @relation(fields: [userId], references: [userId])
-  userId String  @db.Uuid
+  uid          String        @id @unique
+  name         String        @default("Traveler")
+  ar           Int           @default(1)
+  server       String        @default("Europe")
+  wl           Int           @default(1)
+  config       Config?
+  wishes       Wish[]
+  achievements Achievement[]
+  characters   Character[]
+  user         User          @relation(fields: [userId], references: [userId])
+  userId       String        @db.Uuid
+  Weapon       Weapon[]
 }
 
 model Wish {
@@ -56,4 +63,49 @@ model Wish {
   rankType       String         @map("rank_type")
   pity           String?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  wasImported    Boolean        @default(false)
+}
+
+model Achievement {
+  key            Int
+  achieved       Boolean
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  uid            String
+
+  @@id([key, uid], name: "id")
+}
+
+model Character {
+  key                  String
+  level                Int            @default(1)
+  constellation        Int            @default(0)
+  ascension            Int            @default(0)
+  talentAuto           Int            @default(1)
+  talentSkill          Int            @default(1)
+  talentBurst          Int            @default(1)
+  manualConstellations Int?
+  genshinAccount       GenshinAccount @relation(fields: [uid], references: [uid])
+  uid                  String
+
+  @@id([key, uid], name: "id")
+}
+
+model Weapon {
+  id             String         @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  key            String
+  level          Int            @default(1)
+  ascension      Int            @default(0)
+  refinement     Int            @default(1)
+  characterKey   String?
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  uid            String
+}
+
+model Config {
+  uid              String         @id @unique
+  autoRefine3      Boolean        @default(false)
+  autoRefine4      Boolean        @default(false)
+  autoRefine5      Boolean        @default(false)
+  preferedLanguage String         @default("en")
+  genshinAccount   GenshinAccount @relation(fields: [uid], references: [uid])
 }

@@ -1,26 +1,27 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import { config } from './utils/envManager';
+import { config } from './config/config';
 import cors from 'cors';
 import { setupPassport } from './utils/passport';
-import { AuthRoute } from './routes/auth/routes';
-import { DynamicDataRoute } from './routes/data/routes';
-import { WishHistoryRoute } from './routes/wish/routes';
+import { AuthRoute } from './routes/auth/auth.routes';
+import { DynamicDataRoute } from './routes/data/data.routes';
+import { WishRoute } from './routes/wish/wish.routes';
 import { logToConsole } from './utils/log';
-import { sendErrorResponse, sendSuccessResponse } from './utils/sendResponse';
-import { UserRoute } from './routes/user/routes';
+import { sendErrorResponse, sendSuccessResponse } from './handlers/response.handler';
+import { UserRoute } from './routes/user/user.routes';
 import { createServer } from 'node:http';
-import { setupWebsockets } from './utils/websockets';
+import { setupWebsockets } from './handlers/websocket/websocket.handler';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
-import { BKTree } from './utils/BKTree';
+import { BKTree } from './handlers/dataStructure/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
 
 const app = express();
+app.use(express.json({ limit: '5mb' }));
 const server = createServer(app);
 const io = new Server(server, {
 	cors: {
@@ -29,11 +30,6 @@ const io = new Server(server, {
 	}
 });
 
-const authRoute = new AuthRoute(app);
-const dynamicDataRoute = new DynamicDataRoute(app);
-const userRoute = new UserRoute(app);
-const wishHistoryRoute = new WishHistoryRoute(app);
-
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(
 	cors({
@@ -41,6 +37,8 @@ app.use(
 		credentials: true
 	})
 );
+
+config.DEBUG && logToConsole('Server', 'Debug mode enabled');
 
 setupSession(app);
 setupPassport(app);
@@ -58,6 +56,11 @@ app.use((req, res, next) => {
 	sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
 });
 
+const authRoute = new AuthRoute(app);
+const dynamicDataRoute = new DynamicDataRoute(app);
+const userRoute = new UserRoute(app);
+const wishRoute = new WishRoute(app);
+
 app.get('/', (req, res) => {
 	if (dynamicDataRoute.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
@@ -69,15 +72,14 @@ app.get('/', (req, res) => {
 authRoute.setupRoutes();
 dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
-wishHistoryRoute.setupRoutes();
+wishRoute.setupRoutes();
 
 const bkTree = new BKTree(optimizedLevenshteinDistance);
 dynamicDataRoute.getDataIndex().then((data) => {
 	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
 	indexes.forEach((key) => bkTree.insert(key));
+	setupWorkers(bkTree, data);
 });
-
-setupWorkers(bkTree);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);
