@@ -77,9 +77,10 @@ const bkTree = new BKTree(optimizedLevenshteinDistance);
 dynamicDataRoute.getDataIndex().then((data) => {
 	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
 	indexes.forEach((key) => bkTree.insert(key));
+	bkTree.isInitialised = true;
 });
 
-setupWorkers(bkTree);
+setupWorkers(bkTree, bannerService);
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

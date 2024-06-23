@@ -9,8 +9,16 @@ import { WebSocketService } from '../services/websocket';
 import { createMultipleWishes } from '../db/wishes';
 import { BKTree } from '../utils/BKTree';
 import { Wish } from '@prisma/client';
+import { BannerService } from '../services/bannerData';
 
-export const setupWishHistoryWorker = (bkTree: BKTree) => {
+
+const waitForInitialization = async (bkTree: BKTree, bannerService: BannerService) => {
+	while (!bkTree.isInitialised || !bannerService.isInitialised) {
+		await new Promise(resolve => setTimeout(resolve, 100));
+	}
+};
+
+export const setupWishHistoryWorker = (bkTree: BKTree, bannerService: BannerService) => {
 	const wss = WebSocketService.getInstance();
 	const worker = new Worker<WishHistoryQueueData, Omit<Wish, 'createdAt'>[]>(
 		WISH_HISTORY_QUEUE_NAME,
@@ -82,5 +90,9 @@ export const setupWishHistoryWorker = (bkTree: BKTree) => {
 
 	worker.on('error', (err) => {
 		console.error(err);
+	});
+
+	waitForInitialization(bkTree, bannerService).then(() => {
+		worker.run();
 	});
 };
