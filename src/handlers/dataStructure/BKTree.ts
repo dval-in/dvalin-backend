@@ -9,6 +9,7 @@ interface SearchResult {
 }
 
 class BKTree {
+	public isInitialised: boolean = false;
 	private root: BKTreeNode | null = null;
 	private distanceFunction: (a: string, b: string) => number;
 

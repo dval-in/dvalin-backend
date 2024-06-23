@@ -2,18 +2,14 @@ import { logToConsole } from '../utils/log';
 import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner } from '../types/banner';
 import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
-import { wishHistoryQueue } from '../queues/wishHistoryQueue';
 
 const setupBannerService = (): BannerService => {
 	const bannerService = new BannerService();
 
 	(async () => {
-		await wishHistoryQueue.pause();
-
 		await bannerService.initialise().then(async () => {
 			if (bannerdata) {
 				bannerService.isInitialised = true;
-				await wishHistoryQueue.resume();
 			}
 		});
 	})();
@@ -73,4 +69,4 @@ class BannerService {
 	}
 }
 
-export { bannerdata, setupBannerService };
+export { bannerdata, setupBannerService , BannerService};
