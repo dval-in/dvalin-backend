@@ -2,6 +2,7 @@ import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
 import { UserProfileService } from '../../services/userProfile.service';
 import { syncUserProfileQueue } from '../../queues/syncUserProfile.queue';
+import { createGenshinAccount, getGenshinAccountByUid } from '../../db/models/genshinAccount';
 
 export class UserRoute {
 	private userProfileService = new UserProfileService();
@@ -13,11 +14,42 @@ export class UserRoute {
 			if (req.user === undefined) {
 				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
-
 			const userProfileResult = await this.userProfileService.getUserProfile(req.user.userId);
 			userProfileResult.match(
 				(userProfile) => sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile }),
-				(error) => sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR')
+				(error) => {
+					if (error.message.includes('No Genshin accounts')) {
+						return sendErrorResponse(res, 404, 'NO_GENSHIN_ACCOUNTS');
+					}
+					console.error(error);
+					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				}
+			);
+		});
+
+		this.app.post('/user/create', async (req: Request, res: Response) => {
+			if (req.user === undefined) {
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
+			}
+			const data = req.body;
+			const { userId } = req.user;
+			if (!data || !userId) {
+				return sendErrorResponse(res, 400, 'MISSING_USER_PROFILE');
+			}
+
+			const uid = data.uid;
+			const isUidExist = await getGenshinAccountByUid(uid);
+			if (isUidExist.isOk()) {
+				return sendErrorResponse(res, 400, 'UID_ALREADY_EXISTS');
+			}
+			const config = data.config;
+			const result = await this.userProfileService.createNewUser(uid, config, userId);
+			result.match(
+				(genshinAccount) =>
+					sendSuccessResponse(res, { state: 'SUCCESS', data: genshinAccount }),
+				(error) => {
+					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				}
 			);
 		});
 
@@ -54,6 +86,26 @@ export class UserRoute {
 			} catch (error) {
 				sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 			}
+		});
+
+		this.app.post('/user/config', async (req: Request, res: Response) => {
+			if (req.user === undefined) {
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
+			}
+
+			const { userId } = req.user;
+			const { config } = req.body;
+			if (!config || !userId) {
+				return sendErrorResponse(res, 400, 'MISSING_CONFIG');
+			}
+			const result = await this.userProfileService.updateConfig(userId, config);
+			result.match(
+				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
+				(error) => {
+					console.error(error);
+					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				}
+			);
 		});
 	}
 }

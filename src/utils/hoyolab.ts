@@ -5,6 +5,7 @@ import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
+import { ServerKey } from '../types/frontend/user';
 
 /**
  * Converts a time returned by server into UTC time.
@@ -209,4 +210,27 @@ const randomDelay = async (min: number, max: number): Promise<void> => {
 	await new Promise((resolve) => setTimeout(resolve, duration));
 };
 
-export { getWishes, getGachaConfigList, serverTimeToUTC };
+const getServer = (uid: string): ServerKey => {
+	const prefix = uid.length === 9 ? uid.substring(0, 1) : uid.substring(0, 2);
+	switch (prefix) {
+		case '1':
+		case '2':
+		case '3':
+		case '5':
+			return 'China';
+		case '9':
+			return 'HK-TW';
+		case '8':
+		case '18':
+			return 'Asia';
+		case '6':
+			return 'America';
+		case '7':
+			return 'Europe';
+		default:
+			logToConsole('Hoyolab.utils', `Unhandled UID prefix {${prefix}}`);
+			return 'Europe';
+	}
+};
+
+export { getWishes, getGachaConfigList, serverTimeToUTC, getServer };

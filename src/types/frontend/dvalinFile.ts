@@ -13,6 +13,7 @@ export interface UserProfile {
 	version: number;
 	config: Config;
 	user?: IUser;
+	auth: string[];
 	achievements?: IAchievements;
 	artifacts?: IArtifact[];
 	characters?: ICharacters;

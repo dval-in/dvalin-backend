@@ -45,7 +45,7 @@ export const getUserById = async (userId: string): Promise<Result<User, Error>> 
 export const getUserByAuth = async (
 	providerId: string,
 	provider: Provider
-): Promise<Result<User, Error>> => {
+): Promise<Result<User | undefined, Error>> => {
 	try {
 		const user = await prisma.user.findFirst({
 			where: {
@@ -59,7 +59,7 @@ export const getUserByAuth = async (
 		});
 
 		if (!user) {
-			return err(new Error('User not found'));
+			return ok(undefined);
 		}
 
 		return ok(user);

@@ -15,7 +15,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 			failureRedirect: config.FRONTEND_URL + '/login'
 		}),
 		(req, res) => {
-			res.redirect(config.FRONTEND_URL);
+			res.redirect(config.FRONTEND_URL + '/settings/firstlogin');
 		}
 	);
 	passport.use(

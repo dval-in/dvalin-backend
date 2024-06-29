@@ -43,6 +43,8 @@ model GenshinAccount {
   ar           Int           @default(1)
   server       String        @default("Europe")
   wl           Int           @default(1)
+  signature    String?
+  namecard     String        @default("Traveler")
   config       Config?
   wishes       Wish[]
   achievements Achievement[]
