@@ -21,3 +21,18 @@ export const getConfigFromUid = async (uid: string): Promise<Result<Config, Erro
 		return err(new Error('Failed to retrieve config'));
 	}
 };
+
+export const updateConfig = async (config: Config): Promise<Result<Config, Error>> => {
+	try {
+		const updatedConfig = await prisma.config.update({
+			where: {
+				uid: config.uid
+			},
+			data: config
+		});
+
+		return ok(updatedConfig);
+	} catch (error) {
+		return err(new Error('Failed to update config'));
+	}
+};

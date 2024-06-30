@@ -10,6 +10,7 @@ import {
 } from '../queues/syncUserProfile.queue';
 import { UserProfileService } from '../services/userProfile.service';
 import { Index } from '../types/models/dataIndex';
+import { PaimonFile } from '../types/frontend/paimonFIle';
 
 const userProfileService = new UserProfileService();
 
@@ -24,17 +25,11 @@ export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => 
 	}
 	const wss = wssResult.value;
 
-	const worker = new Worker<UserProfile & { userId: string }>(
+	const worker = new Worker<(UserProfile | PaimonFile) & { userId: string }>(
 		SYNC_USER_PROFILE_QUEUE_NAME,
 		async (job) => {
 			const userProfile = job.data;
-			const isPaimon = userProfile.format === 'paimon';
-			const result = await userProfileService.syncUserProfile(
-				userProfile,
-				isPaimon,
-				bkTree,
-				dataIndex
-			);
+			const result = await userProfileService.syncUserProfile(userProfile, bkTree, dataIndex);
 			return result.match(
 				(data) => data,
 				(error) => {

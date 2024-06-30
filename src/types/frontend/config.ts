@@ -1,10 +1,7 @@
 export type Config = {
-	autoRefine: {
-		// decide if wishes will automatically refine weapon
-		'3': boolean;
-		'4': boolean;
-		'5': boolean;
-	};
+	autoRefine3: boolean;
+	autoRefine4: boolean;
+	autoRefine5: boolean;
 	preferedLanguage: langKey;
 };
 

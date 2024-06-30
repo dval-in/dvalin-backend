@@ -8,7 +8,7 @@ import { createMultipleWishes } from '../db/models/wishes';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler';
 import { saveCharactersConstellation } from '../db/models/character';
-import { getNonRefinedWeapons, saveWeaponsRefinement } from '../db/models/weapons';
+import { getNonRefinedWeapons, saveWeapons, saveWeaponsRefinement } from '../db/models/weapons';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler';
 import { getConfigFromUid } from '../db/models/config';
 import { Wish } from '@prisma/client';
@@ -110,10 +110,13 @@ class WishService {
 		if (configResponse.isErr() || configResponse.value.data === null) {
 			return err(new Error('Failed to fetch gacha configuration list'));
 		}
-
+		const uidResult = await getGenshinAccountsByUser(data.userId);
+		if (uidResult.isErr()) {
+			return err(uidResult.error);
+		}
+		const uid = uidResult.value[0].uid;
 		const gachaTypeList = configResponse.value.data.gacha_type_list;
-		const wishesResult = await getWishes(authkey, gachaTypeList, bkTree);
-
+		const wishesResult = await getWishes(authkey, gachaTypeList, bkTree, uid);
 		return wishesResult.isErr() ? err(wishesResult.error) : ok(wishesResult.value);
 	}
 
@@ -166,12 +169,12 @@ class WishService {
 		const charWish = returnvalue.filter((wish) => wish.itemType === 'Character');
 		const weaponWish = returnvalue.filter((wish) => wish.itemType === 'Weapon');
 		const currentUnrefinedWeaponsResult = await getNonRefinedWeapons(uid);
+
 		if (currentUnrefinedWeaponsResult.isErr()) {
 			return err(currentUnrefinedWeaponsResult.error);
 		}
-
 		const currentUnrefinedWeapons = currentUnrefinedWeaponsResult.value;
-		const characterUpdate = transformCharacterFromWishes(charWish);
+		const characterUpdate = transformCharacterFromWishes(charWish, uid);
 		const weaponUpdate = transformWeaponFromWishes(
 			currentUnrefinedWeapons,
 			weaponWish,
@@ -185,7 +188,7 @@ class WishService {
 			return err(saveCharactersResult.error);
 		}
 
-		const saveWeaponsResult = await saveWeaponsRefinement(weaponUpdate, uid);
+		const saveWeaponsResult = await saveWeapons(weaponUpdate);
 		if (saveWeaponsResult.isErr()) {
 			return err(saveWeaponsResult.error);
 		}

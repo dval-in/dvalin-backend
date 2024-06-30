@@ -24,7 +24,9 @@ export const setupPassport = (app: Express): void => {
 
 	passport.deserializeUser<SessionUser>(
 		async (sessionUser: SessionUser, cb: (err: Error | null, user?: PrismaUser) => void) => {
-			const result: Result<PrismaUser, Error> = await getUserById(sessionUser.userId);
+			const result: Result<PrismaUser | undefined, Error> = await getUserById(
+				sessionUser.userId
+			);
 
 			result.match(
 				(prismaUser) => cb(null, prismaUser),

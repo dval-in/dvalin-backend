@@ -29,17 +29,13 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 			}
 		});
 
-		if (wishes.length === 0) {
-			return err(new Error('No wishes found'));
-		}
-
 		return ok(wishes);
 	} catch (error) {
 		return err(new Error('Failed to retrieve wishes'));
 	}
 };
 
-export const getLatestWishByUid = async (uid: string): Promise<Result<Wish, Error>> => {
+export const getLatestWishByUid = async (uid: string): Promise<Result<Wish | undefined, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			where: {
@@ -51,7 +47,7 @@ export const getLatestWishByUid = async (uid: string): Promise<Result<Wish, Erro
 		});
 
 		if (!wish) {
-			return err(new Error('No latest wish found'));
+			return ok(undefined);
 		}
 
 		return ok(wish);

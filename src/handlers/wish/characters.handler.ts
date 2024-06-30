@@ -3,10 +3,12 @@ import { Wish } from '@prisma/client';
 interface CharacterConstellation {
 	key: string;
 	constellation: number;
+	uid: string;
 }
 
 const transformCharacterFromWishes = (
-	wishes: Omit<Wish, 'createdAt'>[]
+	wishes: Omit<Wish, 'createdAt'>[],
+	uid: string
 ): CharacterConstellation[] => {
 	const constellationCountMap: Map<string, number> = new Map();
 
@@ -15,7 +17,11 @@ const transformCharacterFromWishes = (
 		constellationCountMap.set(wish.name, count);
 	}
 
-	return Array.from(constellationCountMap, ([key, constellation]) => ({ key, constellation }));
+	return Array.from(constellationCountMap, ([key, constellation]) => ({
+		key,
+		constellation,
+		uid
+	}));
 };
 
 export { transformCharacterFromWishes };

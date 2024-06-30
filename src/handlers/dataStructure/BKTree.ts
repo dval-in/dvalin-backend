@@ -57,7 +57,12 @@ class BKTree {
 			searchRecursive(this.root);
 		}
 
-		return results.sort((a, b) => a.distance - b.distance);
+		return results.sort((a, b) => {
+			if (a.distance === b.distance) {
+				return compareWordsByQueryOrder(betterQuery, a.word, b.word);
+			}
+			return a.distance - b.distance;
+		});
 	}
 }
 
@@ -67,6 +72,30 @@ const toPascalCase = (input: string) => {
 		.split(/[-\s]/)
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
 		.join('');
+};
+
+const compareWordsByQueryOrder = (query: string, word1: string, word2: string): number => {
+	const maxLength = Math.max(word1.length, word2.length);
+	for (let i = 0; i < maxLength; i++) {
+		const char1 = word1[i] || '';
+		const char2 = word2[i] || '';
+
+		if (char1 !== char2) {
+			const index1 = query.indexOf(char1.toLowerCase());
+			const index2 = query.indexOf(char2.toLowerCase());
+
+			if (index1 !== -1 && index2 !== -1) {
+				return index1 - index2;
+			} else if (index1 !== -1) {
+				return -1;
+			} else if (index2 !== -1) {
+				return 1;
+			} else {
+				return char1.localeCompare(char2);
+			}
+		}
+	}
+	return 0;
 };
 
 export { BKTree };

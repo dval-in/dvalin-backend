@@ -1,4 +1,4 @@
-import { getWeaponsByUid, saveWeapon, saveWeapons } from '../../db/models/weapons';
+import { saveWeapons } from '../../db/models/weapons';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { err, ok, Result } from 'neverthrow';
 

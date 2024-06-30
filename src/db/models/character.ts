@@ -12,10 +12,6 @@ export const getCharactersByUid = async (uid: string): Promise<Result<Character[
 			}
 		});
 
-		if (characters.length === 0) {
-			return err(new Error('No characters found'));
-		}
-
 		return ok(characters);
 	} catch (error) {
 		return err(new Error('Failed to retrieve characters'));
@@ -44,7 +40,9 @@ export const saveCharacter = async (
 	}
 };
 
-export const saveCharacters = async (characters: Character[]): Promise<Result<void, Error>> => {
+export const saveCharacters = async (
+	characters: (Partial<Character> & { key: string; uid: string })[]
+): Promise<Result<void, Error>> => {
 	try {
 		const updates = characters.map((character) =>
 			prisma.character.upsert({

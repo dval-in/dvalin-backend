@@ -3,6 +3,9 @@ export interface IUser {
 	ar: number;
 	uid: number;
 	wl: number;
+	name: string;
+	namecard: string;
+	signature?: string;
 }
 
 const serverKeys = ['Europe', 'America', 'Asia', 'HK-TW', 'China'];

@@ -4,11 +4,12 @@ import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
 import { connection } from '../config/redis.config';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import { Result, ok, err } from 'neverthrow';
+import { PaimonFile } from '../types/frontend/paimonFIle';
 
 export const SYNC_USER_PROFILE_QUEUE_NAME = 'syncUserProfile';
 
 export const syncUserProfileQueue = new Queue<
-	UserProfile & { userId: string },
+	(UserProfile | PaimonFile) & { userId: string },
 	'SYNC_USER_PROFILE'
 >(SYNC_USER_PROFILE_QUEUE_NAME, {
 	connection

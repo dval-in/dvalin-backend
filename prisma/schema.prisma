@@ -33,7 +33,7 @@ model Auth {
   id         String @id @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   providerId String
   provider   String
-  user       User   @relation(fields: [userId], references: [userId])
+  user       User   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   userId     String @db.Uuid
 }
 
@@ -43,11 +43,13 @@ model GenshinAccount {
   ar           Int           @default(1)
   server       String        @default("Europe")
   wl           Int           @default(1)
+  signature    String?
+  namecard     String        @default("Traveler")
   config       Config?
   wishes       Wish[]
   achievements Achievement[]
   characters   Character[]
-  user         User          @relation(fields: [userId], references: [userId])
+  user         User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
   userId       String        @db.Uuid
   Weapon       Weapon[]
 }
@@ -62,14 +64,14 @@ model Wish {
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
   pity           String?
-  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   wasImported    Boolean        @default(false)
 }
 
 model Achievement {
   key            Int
   achieved       Boolean
-  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   uid            String
 
   @@id([key, uid], name: "id")
@@ -84,7 +86,7 @@ model Character {
   talentSkill          Int            @default(1)
   talentBurst          Int            @default(1)
   manualConstellations Int?
-  genshinAccount       GenshinAccount @relation(fields: [uid], references: [uid])
+  genshinAccount       GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   uid                  String
 
   @@id([key, uid], name: "id")
@@ -97,7 +99,7 @@ model Weapon {
   ascension      Int            @default(0)
   refinement     Int            @default(1)
   characterKey   String?
-  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid])
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   uid            String
 }
 
@@ -107,5 +109,5 @@ model Config {
   autoRefine4      Boolean        @default(false)
   autoRefine5      Boolean        @default(false)
   preferedLanguage String         @default("en")
-  genshinAccount   GenshinAccount @relation(fields: [uid], references: [uid])
+  genshinAccount   GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
 }
