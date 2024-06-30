@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
-import { weaponService } from '../../services/weapon.service';
+import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
+import { weaponService } from '../../services/weapon.service.ts';
 
 export class WeaponRoute {
 	constructor(private readonly app: Express) {}
