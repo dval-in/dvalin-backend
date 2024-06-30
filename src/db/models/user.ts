@@ -78,7 +78,6 @@ export const deleteUserById = async (userId: string): Promise<Result<void, Error
 		});
 		return ok(undefined);
 	} catch (error) {
-		logToConsole('UserProfileService', error.message);
 		return err(new Error('Failed to delete user'));
 	}
 };
