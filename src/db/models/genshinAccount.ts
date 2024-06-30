@@ -5,7 +5,7 @@ import { err, ok, Result } from 'neverthrow';
 const prisma = DBClient.getInstance();
 
 export const createGenshinAccount = async (
-	genshinAccount: GenshinAccount & { uid: string; userId: string },
+	genshinAccount: Partial<GenshinAccount> & { uid: string; userId: string },
 	config?: Omit<Config, 'uid'>
 ): Promise<Result<GenshinAccount, Error>> => {
 	try {

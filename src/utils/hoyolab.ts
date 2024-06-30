@@ -1,11 +1,12 @@
 import axios from 'axios';
-import { GachaTypeList, HoyoConfigResponse, HoyoWishResponse } from '../types/models/wish';
+import { GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
+import { fetchWishes, processWish } from '../handlers/wish/wish.handler';
 
 /**
  * Converts a time returned by server into UTC time.
@@ -59,105 +60,50 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  * @param uid Optional UID.
  * @returns A Promise with the result containing the wish history or an error message.
  */
+
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	bkTree: BKTree,
-	uid?: string
+	uid: string
 ): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
-	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
-	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 	let latestSavedWishId = '0';
 
-	if (uid) {
-		const latestSavedWishResult = await getLatestWishByUid(uid);
-		if (latestSavedWishResult.isErr()) {
-			return err(new Error('Failed to retrieve latest saved wish'));
-		}
-		const latestSavedWish = latestSavedWishResult.value;
-		if (latestSavedWish !== undefined) {
-			latestSavedWishId = latestSavedWish.uid;
-		}
+	const latestSavedWishResult = await getLatestWishByUid(uid);
+	if (latestSavedWishResult.isErr()) {
+		return err(new Error('Failed to retrieve latest saved wish'));
 	}
+	latestSavedWishId = latestSavedWishResult.value?.id || '0';
+
+	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 
 	for (const gachaType of gachaTypeList) {
 		let lastNewWishId = '0';
 		let hasMore = true;
-
-		let fourStarPity = 0;
-		let fiveStarPity = 0;
-		let lastFiveStarIndex: number | undefined = undefined;
-		let lastFourStarIndex: number | undefined = undefined;
+		const pityCounter = { fourStar: 0, fiveStar: 0 };
 
 		while (hasMore) {
-			try {
-				const response = await axios.get<HoyoWishResponse>(url, {
-					params: {
-						authkey,
-						authkey_ver: 1,
-						lang: 'en-us',
-						page: 1,
-						size: 20,
-						end_id: lastNewWishId,
-						gacha_type: gachaType.key
-					}
-				});
+			const wishesResult = await fetchWishes(authkey, gachaType.key, lastNewWishId);
 
-				const { data } = response;
-				if (data.retcode === 0 && data.data !== null && data.data.list.length > 0) {
-					for (const wish of data.data.list) {
-						if (wish.id > latestSavedWishId) {
-							fiveStarPity++;
-							fourStarPity++;
-
-							if (wish.rank_type === '4') {
-								if (lastFourStarIndex !== undefined) {
-									wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
-								}
-								lastFourStarIndex = wishHistory.length;
-								fourStarPity = 0;
-							} else if (wish.rank_type === '5') {
-								if (lastFiveStarIndex !== undefined) {
-									wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
-								}
-								lastFiveStarIndex = wishHistory.length;
-								fiveStarPity = 0;
-							}
-
-							wishHistory.push({
-								gachaType: wish.gacha_type,
-								time: new Date(wish.time),
-								name: bkTree.search(wish.name)[0].word,
-								itemType: wish.item_type,
-								rankType: wish.rank_type,
-								id: wish.id,
-								uid: wish.uid,
-								pity: '1',
-								wasImported: false
-							});
-							lastNewWishId = wish.id;
-						} else {
-							hasMore = false;
-							break;
-						}
-					}
-
-					//Update last 5 and 4* after list has been iterated to set their pity
-					if (lastFourStarIndex !== undefined) {
-						wishHistory[lastFourStarIndex].pity = fourStarPity.toString();
-					}
-					if (lastFiveStarIndex !== undefined) {
-						wishHistory[lastFiveStarIndex].pity = fiveStarPity.toString();
-					}
-
-					await randomDelay(100, 500);
-				} else {
-					hasMore = false;
-				}
-			} catch (error) {
-				logToConsole('Utils', `getWishes failed for gachaType: ${gachaType.key}`);
-				return err(new Error('Failed to fetch wishes'));
+			if (wishesResult.isErr()) {
+				return err(new Error(wishesResult.error));
 			}
+			const wishes = wishesResult.value;
+
+			for (const wish of wishes) {
+				if (wish.id <= latestSavedWishId) {
+					hasMore = false;
+					break;
+				}
+
+				wishHistory.push(processWish(wish, bkTree, pityCounter));
+				lastNewWishId = wish.id;
+			}
+			if (wishes.length < 20) {
+				hasMore = false;
+			}
+
+			await randomDelay(100, 1000);
 		}
 	}
 

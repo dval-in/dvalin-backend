@@ -12,10 +12,6 @@ export const getAchievementsByUid = async (uid: string): Promise<Result<Achievem
 			}
 		});
 
-		if (achievements.length === 0) {
-			return err(new Error('No achievements found'));
-		}
-
 		return ok(achievements);
 	} catch (error) {
 		return err(new Error('Failed to retrieve achievements'));

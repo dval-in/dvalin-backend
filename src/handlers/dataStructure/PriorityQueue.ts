@@ -70,11 +70,15 @@ class PriorityQueue<T> {
 		return result;
 	}
 
-	public peek(): T | undefined {
-		return this.heap.length > 0 ? this.heap[0] : undefined;
+	public peek(): T {
+		return this.heap[0];
 	}
 
 	public size(): number {
 		return this.heap.length;
+	}
+
+	public isEmpty(): boolean {
+		return this.heap.length === 0;
 	}
 }

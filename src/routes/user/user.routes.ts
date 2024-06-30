@@ -3,6 +3,8 @@ import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.
 import { UserProfileService } from '../../services/userProfile.service';
 import { syncUserProfileQueue } from '../../queues/syncUserProfile.queue';
 import { createGenshinAccount, getGenshinAccountByUid } from '../../db/models/genshinAccount';
+import { config } from '../../config/config';
+import { logToConsole } from '../../utils/log';
 
 export class UserRoute {
 	private userProfileService = new UserProfileService();
@@ -21,7 +23,7 @@ export class UserRoute {
 					if (error.message.includes('No Genshin accounts')) {
 						return sendErrorResponse(res, 404, 'NO_GENSHIN_ACCOUNTS');
 					}
-					console.error(error);
+					logToConsole('AuthService', error.message);
 					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);
@@ -58,7 +60,7 @@ export class UserRoute {
 				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
-			const { userProfile } = req.body;
+			const userProfile = req.body;
 			const { userId } = req.user;
 
 			if (!userProfile || !userId) {
@@ -102,7 +104,26 @@ export class UserRoute {
 			result.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
-					console.error(error);
+					logToConsole('AuthService', error.message);
+					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				}
+			);
+		});
+
+		this.app.delete('/user', async (req: Request, res: Response) => {
+			if (req.user === undefined) {
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
+			}
+			const { userId } = req.user;
+			const result = await this.userProfileService.deleteUserProfile(userId);
+			req.session.destroy((err: any) => {
+				if (err) {
+					logToConsole('AuthService', 'Session destroy error:' + err);
+				}
+			});
+			result.match(
+				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
+				(error) => {
 					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);

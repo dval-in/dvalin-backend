@@ -12,10 +12,6 @@ export const getWeaponsByUid = async (uid: string): Promise<Result<Weapon[], Err
 			}
 		});
 
-		if (weapons.length === 0) {
-			return err(new Error('No weapons found'));
-		}
-
 		return ok(weapons);
 	} catch (error) {
 		return err(new Error('Failed to retrieve weapons'));
@@ -94,6 +90,20 @@ export const deleteWeapon = async (id: string): Promise<Result<Weapon, Error>> =
 		return ok(deletedWeapon);
 	} catch (error) {
 		return err(new Error('Failed to delete weapon'));
+	}
+};
+
+export const deleteWeaponsByUid = async (uid: string): Promise<Result<void, Error>> => {
+	try {
+		await prisma.weapon.deleteMany({
+			where: {
+				uid: uid
+			}
+		});
+
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to delete weapons'));
 	}
 };
 

@@ -9,11 +9,12 @@ import { IWeapons } from './weapon';
 import { IWishes } from './wish';
 
 export interface UserProfile {
-	format: 'dvalin' | 'paimon';
+	format: 'dvalin';
 	version: number;
 	config: Config;
-	user?: IUser;
+	account: IUser;
 	auth: string[];
+	lastUpdated?: Date;
 	achievements?: IAchievements;
 	artifacts?: IArtifact[];
 	characters?: ICharacters;
