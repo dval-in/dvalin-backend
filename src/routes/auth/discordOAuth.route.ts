@@ -15,7 +15,7 @@ const setupDiscordOAuth = (app: Express): void => {
 		'/auth/discord/callback',
 		passport.authenticate('discord', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
-			res.redirect(config.FRONTEND_URL + '/settings/firstlogin');
+			res.redirect(config.FRONTEND_URL);
 		}
 	);
 
