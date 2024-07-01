@@ -1,6 +1,6 @@
 import { type Express } from 'express';
-import { wishService } from '../../services/wish.service';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
+import { wishService } from '../../services/wish.service.ts';
+import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
 export class WishRoute {
 	constructor(private readonly app: Express) {}
 

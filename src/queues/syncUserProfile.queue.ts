@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import { logToConsole } from '../utils/log';
 import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
-import { connection } from '../config/redis.config';
+import { connection } from '../config/redis.config.ts';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import { Result, ok, err } from 'neverthrow';
 import { PaimonFile } from '../types/frontend/paimonFIle';

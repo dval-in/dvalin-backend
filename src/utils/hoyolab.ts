@@ -6,7 +6,7 @@ import { Wish } from '@prisma/client';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
-import { fetchWishes, processWish } from '../handlers/wish/wish.handler';
+import { fetchWishes, processWish } from '../handlers/wish/wish.handler.ts';
 
 /**
  * Converts a time returned by server into UTC time.

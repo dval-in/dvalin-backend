@@ -1,7 +1,5 @@
-import { err, ok } from 'neverthrow';
 import { config } from '../config/config';
 import { logToConsole } from '../utils/log';
-import { getAuthsByUser } from '../db/models/auth';
 
 class AuthService {
 	logout(req: any, res: any) {

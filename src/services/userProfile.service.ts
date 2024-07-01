@@ -7,10 +7,10 @@ import { Achievement, Character, GenshinAccount, Weapon, Wish } from '@prisma/cl
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
 import { Index } from '../types/models/dataIndex';
 import { BKTree } from '../handlers/dataStructure/BKTree';
-import { handleCharacters } from '../handlers/userProfile/characters.handler';
-import { handleWeapons } from '../handlers/userProfile/weapons.handler';
-import { handleWishes } from '../handlers/userProfile/wishes.handler';
-import { handleAchievements } from '../handlers/userProfile/achievements.handler';
+import { handleCharacters } from '../handlers/userProfile/characters.handler.ts';
+import { handleWeapons } from '../handlers/userProfile/weapons.handler.ts';
+import { handleWishes } from '../handlers/userProfile/wishes.handler.ts';
+import { handleAchievements } from '../handlers/userProfile/achievements.handler.ts';
 import { Result, ok, err } from 'neverthrow';
 import { mapCardName, queryUserInfoEnka } from '../utils/enka';
 import { getServer } from '../utils/hoyolab';
@@ -20,10 +20,10 @@ import { getConfigFromUid, updateConfig } from '../db/models/config';
 import { getAuthsByUser } from '../db/models/auth';
 import { deleteUserById } from '../db/models/user';
 import { isPaimonData, PaimonFile } from '../types/frontend/paimonFIle';
-import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler';
-import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler';
-import { transformCharacterFromWishes } from '../handlers/wish/characters.handler';
-import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler';
+import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler.ts';
+import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler.ts';
+import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
+import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
 
 export class UserProfileService {
 	async deleteUserProfile(userId: string): Promise<Result<void, Error>> {

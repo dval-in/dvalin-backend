@@ -1,10 +1,10 @@
 import { Worker } from 'bullmq';
-import { wishService } from '../services/wish.service';
+import { wishService } from '../services/wish.service.ts';
 import { logToConsole } from '../utils/log';
 import { WishQueueData } from '../types/models/queue';
-import { WISH_QUEUE_NAME, wishQueue } from '../queues/wish.queue';
-import { connection } from '../config/redis.config';
-import { WebSocketService } from '../services/websocket.service';
+import { WISH_QUEUE_NAME, wishQueue } from '../queues/wish.queue.ts';
+import { connection } from '../config/redis.config.ts';
+import { WebSocketService } from '../services/websocket.service.ts';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { Wish } from '@prisma/client';
 import { Result, ok, err } from 'neverthrow';

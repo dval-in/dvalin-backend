@@ -3,8 +3,8 @@ import { Server, Socket } from 'socket.io';
 import { logToConsole } from '../../utils/log';
 import { session } from '../../utils/session';
 import { RequestHandler } from 'express';
-import { WebSocketService } from '../../services/websocket.service';
-import { handleAchievements } from './achievement.handler';
+import { WebSocketService } from '../../services/websocket.service.ts';
+import { handleAchievements } from './achievement.handler.ts';
 import { getGenshinAccountsByUser } from '../../db/models/genshinAccount';
 import { Result } from 'neverthrow';
 
