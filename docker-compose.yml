@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+    backend:
+        build:
+            context: https://github.com/dval-in/dvalin-backend.git#main
+            dockerfile: Dockerfile
+            args:
+                CACHEBUST: ${CACHEBUST:-1}
+        ports:
+            - '3000:3000'
+        environment:
+            - GITHUB_CLIENT_ID=fake
+            - GITHUB_CLIENT_SECRET=fake
+            - GOOGLE_CLIENT_ID=fake
+            - GOOGLE_CLIENT_SECRET=fake
+            - MICROSOFT_CLIENT_ID=fake
+            - MICROSOFT_CLIENT_SECRET=fake
+            - DISCORD_CLIENT_ID=id
+            - DISCORD_CLIENT_SECRET=secret
+            - COOKIE_SECRET=secret
+            - FRONTEND_URL=http://localhost:8080
+            - BACKEND_URL=http://localhost:3000
+            - BACKEND_PORT=3000
+            - DATABASE_URL=postgresql://dvalin:password@postgres:5432/dvalindb
+            - REDIS_HOSTNAME=redis
+            - REDIS_PORT=6379
+            - REDIS_PASSWORD=
+            - DEBUG=false
+        command: sh -c "pnpm prisma db push --accept-data-loss && pnpm start"
+        depends_on:
+            postgres:
+                condition: service_healthy
+            redis:
+                condition: service_started
+        networks:
+            - dvalin
+
+    frontend:
+        build:
+            context: https://github.com/dval-in/dvalin-frontend.git#feat/import-and-user-settings
+            dockerfile: Dockerfile
+            args:
+                CACHEBUST: ${CACHEBUST:-1}
+                VITE_BACKEND_URL: http://localhost:3000
+        ports:
+            - '8080:8080'
+        command: pnpm run preview
+        depends_on:
+            - backend
+        networks:
+            - dvalin
+
+    postgres:
+        image: postgres:15
+        environment:
+            - POSTGRES_USER=dvalin
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_DB=dvalindb
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - dvalin
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U dvalin -d dvalindb']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: redis:7
+        networks:
+            - dvalin
+
+networks:
+    dvalin:
+        name: dvalin
+
+volumes:
+    postgres_data:

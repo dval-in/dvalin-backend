@@ -1,8 +1,8 @@
 import { type Express, type Request, type Response } from 'express';
-import { dataService } from '../../services/data.service';
+import { dataService } from '../../services/data.service.ts';
 import { queryGitHubFile } from '../../utils/github';
 import { logToConsole } from '../../utils/log';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
+import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
 import { isDataTypeKey } from '../../types/models/fileReference';
 import { isLanguageKey } from '../../types/models/language';
 

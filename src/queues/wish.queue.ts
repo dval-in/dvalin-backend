@@ -2,7 +2,7 @@ import { Queue } from 'bullmq';
 import { logToConsole } from '../utils/log';
 import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
 import { WishQueueData } from '../types/models/queue';
-import { connection } from '../config/redis.config';
+import { connection } from '../config/redis.config.ts';
 import { Wish } from '@prisma/client';
 import { Result, ok, err } from 'neverthrow';
 

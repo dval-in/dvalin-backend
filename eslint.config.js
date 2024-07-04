@@ -40,8 +40,17 @@ export default tseslint.config(
 	},
 	{
 		// disable type-aware linting on JS files
-		files: ['**/*.js'],
+		files: ['**/*.js', '**/*.cjs'],
 		...tseslint.configs.disableTypeChecked
+	},
+	{
+		// Specific configuration for commitlint.config.cjs
+		files: ['commitlint.config.cjs'],
+		languageOptions: {
+			parserOptions: {
+				project: null // Disable TypeScript parsing for this file
+			}
+		}
 	},
 	eslintPluginPrettier
 );

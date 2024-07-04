@@ -1,6 +1,6 @@
 import { type Express, type Request, type Response } from 'express';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
-import { characterService } from '../../services/character.service';
+import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
+import { characterService } from '../../services/character.service.ts';
 
 export class CharacterRoute {
 	constructor(private readonly app: Express) {}

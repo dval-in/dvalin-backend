@@ -1,14 +1,14 @@
 import { Worker } from 'bullmq';
 import { logToConsole } from '../utils/log';
-import { connection } from '../config/redis.config';
-import { WebSocketService } from '../services/websocket.service';
+import { connection } from '../config/redis.config.ts';
+import { WebSocketService } from '../services/websocket.service.ts';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import {
 	SYNC_USER_PROFILE_QUEUE_NAME,
 	syncUserProfileQueue
-} from '../queues/syncUserProfile.queue';
-import { UserProfileService } from '../services/userProfile.service';
+} from '../queues/syncUserProfile.queue.ts';
+import { UserProfileService } from '../services/userProfile.service.ts';
 import { Index } from '../types/models/dataIndex';
 import { PaimonFile } from '../types/frontend/paimonFIle';
 

@@ -1,10 +1,9 @@
 import { type Express } from 'express';
-import { setupGitHubOAuth } from './githubOAuth.route';
-import { setupGoogleOAuth } from './googleOAuth.route';
-import { setupMicrosoftOAuth } from './microsoftOAuth.route';
-import { authService } from '../../services/auth.service';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler';
-import { setupDiscordOAuth } from './discordOAuth.route';
+import { setupGitHubOAuth } from './githubOAuth.route.ts';
+import { setupGoogleOAuth } from './googleOAuth.route.ts';
+import { setupMicrosoftOAuth } from './microsoftOAuth.route.ts';
+import { authService } from '../../services/auth.service.ts';
+import { setupDiscordOAuth } from './discordOAuth.route.ts';
 
 export class AuthRoute {
 	constructor(private readonly app: Express) {}
