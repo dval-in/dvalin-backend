@@ -3,7 +3,6 @@ import { setupGitHubOAuth } from './githubOAuth.route.ts';
 import { setupGoogleOAuth } from './googleOAuth.route.ts';
 import { setupMicrosoftOAuth } from './microsoftOAuth.route.ts';
 import { authService } from '../../services/auth.service.ts';
-import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
 import { setupDiscordOAuth } from './discordOAuth.route.ts';
 
 export class AuthRoute {

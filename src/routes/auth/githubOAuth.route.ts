@@ -11,7 +11,7 @@ const setupGitHubOAuth = (app: Express): void => {
 		'/auth/github/callback',
 		passport.authenticate('github', { failureRedirect: config.FRONTEND_URL + '/login' }),
 		(req, res) => {
-			res.redirect(config.FRONTEND_URL + '/settings/firstlogin');
+			res.redirect(config.FRONTEND_URL);
 		}
 	);
 
