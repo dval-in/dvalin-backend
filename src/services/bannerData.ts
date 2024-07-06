@@ -69,4 +69,4 @@ class BannerService {
 	}
 }
 
-export { bannerdata, setupBannerService , BannerService};
+export { bannerdata, setupBannerService, BannerService };
