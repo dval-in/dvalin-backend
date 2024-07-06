@@ -11,10 +11,9 @@ import { BKTree } from '../utils/BKTree';
 import { Wish } from '@prisma/client';
 import { BannerService } from '../services/bannerData';
 
-
 const waitForInitialization = async (bkTree: BKTree, bannerService: BannerService) => {
 	while (!bkTree.isInitialised || !bannerService.isInitialised) {
-		await new Promise(resolve => setTimeout(resolve, 100));
+		await new Promise((resolve) => setTimeout(resolve, 100));
 	}
 };
 
