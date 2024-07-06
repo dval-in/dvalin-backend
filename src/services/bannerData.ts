@@ -3,18 +3,25 @@ import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner } from '../types/banner';
 import { ToadScheduler, SimpleIntervalJob, AsyncTask } from 'toad-scheduler';
 
+let bannerServiceInstance: BannerService | null = null;
+
 const setupBannerService = (): BannerService => {
-	const bannerService = new BannerService();
+	if (!bannerServiceInstance) {
+		bannerServiceInstance = new BannerService();
 
-	(async () => {
-		await bannerService.initialise().then(async () => {
-			if (bannerdata) {
-				bannerService.isInitialised = true;
-			}
-		});
-	})();
+		(async () => {
+			await bannerServiceInstance!.initialise().then(async () => {
+				if (bannerdata) {
+					bannerServiceInstance!.isInitialised = true;
+				}
+			});
+		})();
+	}
+	return bannerServiceInstance;
+};
 
-	return bannerService;
+const isBannerServiceInitialised = (): boolean => {
+	return bannerServiceInstance?.isInitialised || false;
 };
 
 let bannerdata: Banner[] | undefined;
@@ -28,7 +35,7 @@ class BannerService {
 
 	public async initialise() {
 		await this.updateBannerData();
-		logToConsole('bannerDataWorker', 'active: bannerdata updater');
+		logToConsole('BannerDataService', 'Active: bannerdata updater');
 		this.startUpdates();
 	}
 
@@ -44,10 +51,10 @@ class BannerService {
 				break;
 			}
 
-			logToConsole('bannerDataWorker', `Attempt ${attempts} failed`);
+			logToConsole('BannerDataService', `Attempt ${attempts} failed`);
 
 			if (attempts >= maxRetries) {
-				logToConsole('bannerDataWorker', 'All attempts failed: update bannerdata');
+				logToConsole('BannerDataService', 'All attempts failed: update bannerdata');
 			} else {
 				await this.delay(2000);
 			}
@@ -59,6 +66,9 @@ class BannerService {
 	}
 
 	private async startUpdates() {
+		await this.updateBannerData();
+		logToConsole('BannerDataService', 'First initialisation completed');
+
 		const task = new AsyncTask('Banner Data Service', () => {
 			return this.updateBannerData();
 		});
@@ -69,4 +79,4 @@ class BannerService {
 	}
 }
 
-export { bannerdata, setupBannerService, BannerService };
+export { bannerdata, setupBannerService, BannerService, isBannerServiceInitialised };

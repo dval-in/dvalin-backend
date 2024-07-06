@@ -4,6 +4,7 @@ import { UserProfile } from '../../types/frontend/dvalinFile';
 import { IMappedWish } from '../../types/frontend/wish';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
+import { getBannerIdFromTime } from 'utils/bannerIdentifier';
 
 export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
@@ -53,7 +54,8 @@ const formatWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt
 		gachaType: wish.banner,
 		pity: wish.pity.toString(),
 		wasImported: true,
-		rankType: wish.rarity.toString()
+		rankType: wish.rarity.toString(),
+		bannerId: getBannerIdFromTime(wish.banner, new Date(wish.date))
 	}));
 };
 

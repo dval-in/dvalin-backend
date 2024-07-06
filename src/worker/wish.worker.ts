@@ -8,6 +8,13 @@ import { WebSocketService } from '../services/websocket.service.ts';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { Wish } from '@prisma/client';
 import { Result, ok, err } from 'neverthrow';
+import { isBannerServiceInitialised } from '../services/bannerData.ts';
+
+const waitForInitialization = async (bkTree: BKTree) => {
+	while (!bkTree.isInitialised || isBannerServiceInitialised()) {
+		await new Promise((resolve) => setTimeout(resolve, 100));
+	}
+};
 
 export const setupWishWorker = (bkTree: BKTree) => {
 	const wssResult = WebSocketService.getInstance();
@@ -31,7 +38,10 @@ export const setupWishWorker = (bkTree: BKTree) => {
 				}
 			);
 		},
-		{ connection }
+		{
+			connection,
+			autorun: false
+		}
 	);
 
 	worker.on('active', async (job) => {
@@ -61,6 +71,10 @@ export const setupWishWorker = (bkTree: BKTree) => {
 
 	worker.on('error', (err) => {
 		logToConsole('Wish.worker', err.message);
+	});
+
+	waitForInitialization(bkTree).then(() => {
+		worker.run();
 	});
 };
 

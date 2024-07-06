@@ -24,6 +24,7 @@ export type IMappedWish = {
 	banner: string;
 	name: string;
 	rarity: number;
+	bannerid: string;
 };
 
 export type PaimonWish = {

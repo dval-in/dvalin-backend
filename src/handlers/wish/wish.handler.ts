@@ -4,6 +4,7 @@ import { Result, ok, err } from 'neverthrow';
 import { GachaItem, HoyoWishResponse } from '../../types/models/wish';
 import { logToConsole } from '../../utils/log';
 import { BKTree } from '../dataStructure/BKTree';
+import { getBannerIdFromTime } from 'utils/bannerIdentifier';
 
 const fetchWishes = async (
 	authkey: string,
@@ -52,7 +53,8 @@ const processWish = (
 		id: wish.id,
 		uid: wish.uid,
 		pity: '1',
-		wasImported: false
+		wasImported: false,
+		bannerId: getBannerIdFromTime(wish.gacha_type, new Date(wish.time))
 	};
 
 	if (wish.rank_type === '4') {
