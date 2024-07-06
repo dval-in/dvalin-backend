@@ -17,6 +17,7 @@ import { setupWorkers } from './worker/worker';
 import { BKTree } from './handlers/dataStructure/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
 import { setupBannerService } from './services/bannerData';
+import { setupBannerService } from './services/bannerData';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -45,6 +46,7 @@ setupSession(app);
 setupPassport(app);
 setupWebsockets(io);
 const bannerService = setupBannerService();
+const bannerService = setupBannerService();
 
 app.use((req, res, next) => {
 	const isExcluded =
@@ -64,6 +66,7 @@ const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 
 app.get('/', (req, res) => {
+	if (dynamicDataRoute.isInitialised && bannerService.isInitialised) {
 	if (dynamicDataRoute.isInitialised && bannerService.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
