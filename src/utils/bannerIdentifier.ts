@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { logToConsole } from './log';
-import { bannerdata } from '../services/bannerData';
+import { bannerdata } from '../services/banner.service';
 import { Banner, RawBanners } from '../types/banner';
 
 export const getBannerData = async (): Promise<Banner[] | undefined> => {
@@ -15,7 +15,7 @@ export const getBannerData = async (): Promise<Banner[] | undefined> => {
 
 		return parseBannerDates(response.data);
 	} catch (e) {
-		logToConsole('Utils', `Failed to get banner data: ${e}`);
+		logToConsole('utils bannerId', `Failed to get banner data: ${e}`);
 		return undefined;
 	}
 };
@@ -41,19 +41,13 @@ const parseBannerDates = (banners: RawBanners): Banner[] => {
 
 // from utc time to bannerid
 export const getBannerIdFromTime = (gachaType: string, time: Date): string => {
-	try {
-		const found = bannerdata!.find(
-			(banner) =>
-				banner.bannerType === gachaType &&
-				banner.startTime <= time &&
-				banner.endTime >= time
-		);
-		if (!found) {
-			return 'BANNERNOTFOUND';
-		}
-		return found.id;
-	} catch (e) {
-		logToConsole('Utils', 'Failed to find bannerid in banner');
+	const found = bannerdata!.find(
+		(banner) =>
+			banner.bannerType === gachaType && banner.startTime <= time && banner.endTime >= time
+	);
+	if (!found) {
+		logToConsole('utils bannerId', 'Failed to find banner');
 		return 'BANNERNOTFOUND';
 	}
+	return found.id;
 };

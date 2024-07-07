@@ -16,7 +16,7 @@ import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './handlers/dataStructure/BKTree';
 import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
-import { isBannerServiceInitialised, setupBannerService } from './services/bannerData';
+import { isBannerServiceInitialised, setupBannerService } from './services/banner.service.ts';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];

@@ -4,7 +4,6 @@ import passport from 'passport';
 import { config } from '../../config/config';
 import { createUser, getUserByAuth } from '../../db/models/user';
 import { createAuth } from '../../db/models/auth';
-import { logToConsole } from 'utils/log';
 
 const setupGitHubOAuth = (app: Express): void => {
 	app.get('/auth/github', passport.authenticate('github'));
@@ -25,7 +24,6 @@ const setupGitHubOAuth = (app: Express): void => {
 				passReqToCallback: true
 			},
 			async (req, accessToken, refreshToken, profile, cb) => {
-				logToConsole('alsdjfkd', 'lasjdflasjdklf');
 				if (req.user === undefined) {
 					const userResult = await getUserByAuth(profile.id, 'Github');
 					if (userResult.isErr()) {
@@ -43,7 +41,6 @@ const setupGitHubOAuth = (app: Express): void => {
 
 					cb(null, user);
 				} else {
-					logToConsole('alsdjfkd', 'lasjdflasjdklf');
 					const createAuthResult = await createAuth(
 						profile.id,
 						'Github',
