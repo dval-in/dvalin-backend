@@ -8,7 +8,7 @@ import { join } from 'path';
 import { config } from '../config/config';
 
 class DataService {
-	private readonly index: Index = { Character: {}, Weapon: {} };
+	private readonly index: Index = { Character: {}, Weapon: {}, AchievementCategory: {} };
 
 	async initialize(): Promise<Result<void, Error>> {
 		const characterResult = await this.fetchData('Character');
@@ -21,15 +21,24 @@ class DataService {
 			return err(new Error('Failed to initialize Weapon data'));
 		}
 
+		const achievementCategoryResult = await this.fetchData('AchievementCategory');
+		if (achievementCategoryResult.isErr()) {
+			return err(new Error('Failed to initialize AchievementCategory data'));
+		}
 		return ok(undefined);
 	}
 
-	async fetchData(type: 'Character' | 'Weapon'): Promise<Result<void, Error>> {
+	async fetchData(
+		type: 'Character' | 'Weapon' | 'AchievementCategory'
+	): Promise<Result<void, Error>> {
 		const isDev = config.DEBUG;
 		try {
 			let files;
 			if (isDev) {
-				const dirPath = join('<path>/dvalin-data/data/EN', type);
+				const dirPath = join(
+					'/run/media/sasikuttan2163/Volume/Dev/Dvalin/dvalin-data/data/EN',
+					type
+				);
 				files = await readdir(dirPath);
 				files = files.map((name) => ({ name, download_url: join(dirPath, name) }));
 			} else {
@@ -50,14 +59,19 @@ class DataService {
 						const fileResponse = await axios.get(file.download_url);
 						data = fileResponse.data;
 					}
-
-					this.index[type][file.name.replace('.json', '')] = {
-						name: data.name,
-						rarity: data.rarity,
-						element: data.element,
-						weaponType: data.weaponType,
-						type: data.type
-					};
+					if (type === 'Weapon' || type === 'Character') {
+						this.index[type][file.name.replace('.json', '')] = {
+							name: data.name,
+							rarity: data.rarity,
+							element: data.element,
+							weaponType: data.weaponType
+						};
+					} else {
+						this.index[type][file.name.replace('.json', '')] = {
+							name: data.name,
+							order: data.order
+						};
+					}
 				} catch (fileError: any) {
 					logToConsole(
 						`DataService`,

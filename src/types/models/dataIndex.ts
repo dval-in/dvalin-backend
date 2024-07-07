@@ -11,9 +11,15 @@ interface CharacterItem extends DataItem {
 	weaponType: string;
 }
 
+interface AchievementCategoryItem {
+	name: string;
+	order: number;
+}
+
 interface Index {
 	Character: Record<string, CharacterItem>;
 	Weapon: Record<string, WeaponItem>;
+	AchievementCategory: Record<string, AchievementCategoryItem>;
 }
 
 export type { Index };
