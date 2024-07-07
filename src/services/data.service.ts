@@ -35,10 +35,7 @@ class DataService {
 		try {
 			let files;
 			if (isDev) {
-				const dirPath = join(
-					'/run/media/sasikuttan2163/Volume/Dev/Dvalin/dvalin-data/data/EN',
-					type
-				);
+				const dirPath = join(config.DATA_DIR, type);
 				files = await readdir(dirPath);
 				files = files.map((name) => ({ name, download_url: join(dirPath, name) }));
 			} else {
