@@ -14,6 +14,7 @@ interface CharacterItem extends DataItem {
 interface AchievementCategoryItem {
 	name: string;
 	order: number;
+	total: number;
 }
 
 interface Index {

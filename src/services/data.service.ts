@@ -66,7 +66,8 @@ class DataService {
 					} else {
 						this.index[type][file.name.replace('.json', '')] = {
 							name: data.name,
-							order: data.order
+							order: data.order,
+							total: data.achievements.length
 						};
 					}
 				} catch (fileError: any) {
