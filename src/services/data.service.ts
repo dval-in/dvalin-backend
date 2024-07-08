@@ -35,7 +35,7 @@ class DataService {
 		try {
 			let files;
 			if (isDev) {
-				const dirPath = join(config.DATA_DIR, type);
+				const dirPath = join(config.DEBUG_DATA_DIR, type);
 				files = await readdir(dirPath);
 				files = files.map((name) => ({ name, download_url: join(dirPath, name) }));
 			} else {

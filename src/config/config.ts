@@ -26,7 +26,7 @@ const configSchema = z.object({
 	REDIS_PORT: z.number().min(1024).max(65535),
 	REDIS_PASSWORD: z.string().min(0),
 	DEBUG: z.boolean(),
-	DATA_DIR: z.string().min(0)
+	DEBUG_DATA_DIR: z.string().min(0)
 });
 
 // Validate the environment configuration immediately
@@ -48,7 +48,7 @@ const validatedConfig = configSchema.safeParse({
 	REDIS_PORT: Number(process.env.REDIS_PORT),
 	REDIS_PASSWORD: process.env.REDIS_PASSWORD,
 	DEBUG: process.env.DEBUG === 'true',
-	DATA_DIR: process.env.DATA_DIR
+	DEBUG_DATA_DIR: process.env.DEBUG_DATA_DIR
 });
 
 if (!validatedConfig.success) {
