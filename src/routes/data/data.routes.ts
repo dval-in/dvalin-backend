@@ -29,7 +29,11 @@ export class DynamicDataRoute {
 
 			const { dataType } = req.params;
 
-			if (dataType !== 'Character' && dataType !== 'Weapon') {
+			if (
+				dataType !== 'Character' &&
+				dataType !== 'Weapon' &&
+				dataType !== 'AchievementCategory'
+			) {
 				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
