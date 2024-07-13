@@ -1,20 +1,16 @@
 export interface RawBanner {
-	id: string;
+	version: string;
 	name: string;
-	picture: string;
+	startDuration: string;
+	duration: string;
 	featured: string[];
-	startTime: string;
-	endTime: string;
-	bannerType: string;
+	type: 'Beginner' | 'Permanent' | 'Character' | 'Weapon' | 'Chronicled';
+	id: string;
 }
-
-export type RawBanners = {
-	[key: string]: RawBanner;
-};
 
 export type Banner = {
 	id: string;
-	bannerType: string;
-	startTime: Date;
-	endTime: Date;
+	type: 'Beginner' | 'Permanent' | 'Character' | 'Weapon' | 'Chronicled';
+	startDuration: Date;
+	duration: Date;
 };

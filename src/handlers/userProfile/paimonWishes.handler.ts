@@ -6,6 +6,7 @@ import { createMultipleWishes, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFIle';
 import { randomUUID } from 'crypto';
+import { getBannerIdFromTime } from 'utils/bannerIdentifier';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -92,7 +93,8 @@ const formatWishes = (
 			wasImported: true,
 			rankType: wish.rate
 				? '3'
-				: getRarity(name, wish.type === 'character' ? 'Character' : 'Weapon', dataIndex)
+				: getRarity(name, wish.type === 'character' ? 'Character' : 'Weapon', dataIndex),
+			bannerId: getBannerIdFromTime(wish.gachaType, new Date(wish.time))
 		};
 	});
 };
