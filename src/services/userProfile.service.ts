@@ -24,6 +24,10 @@ import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler
 import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler.ts';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
+import { IWish } from 'types/frontend/wish.ts';
+import { IAchievements } from 'types/frontend/achievement.ts';
+import { ICharacters } from 'types/frontend/character.ts';
+import { IUser } from 'types/frontend/user.ts';
 
 export class UserProfileService {
 	async deleteUserProfile(userId: string): Promise<Result<void, Error>> {
@@ -63,19 +67,41 @@ export class UserProfileService {
 		if (!achievementsResult.isErr()) {
 			achievements = achievementsResult.value;
 		}
+		const mappedAchievements: IAchievements = achievements.reduce((acc, achievement) => {
+			acc[achievement.key] = achievement.achieved;
+			return acc;
+		}, {} as IAchievements);
 		const charactersResult = await getCharactersByUid(account.uid);
 		let charactersArray: Character[] = [];
 		if (!charactersResult.isErr()) {
 			charactersArray = charactersResult.value;
 		}
-		const characters = charactersArray.reduce<Record<string, Omit<Character, 'key'>>>(
-			(acc, c) => {
-				const { key, ...otherProps } = c;
-				acc[key] = otherProps;
-				return acc;
-			},
-			{}
-		);
+		const characters: ICharacters = charactersArray.reduce((acc, char) => {
+			const {
+				key,
+				level,
+				constellation,
+				ascension,
+				talentAuto,
+				talentSkill,
+				talentBurst,
+				manualConstellations
+			} = char;
+
+			acc[key] = {
+				level,
+				constellation,
+				ascension,
+				talent: {
+					auto: talentAuto,
+					skill: talentSkill,
+					burst: talentBurst
+				},
+				manualConstellations
+			};
+
+			return acc;
+		}, {} as ICharacters);
 
 		const weaponsResult = await getWeaponsByUid(account.uid);
 		let weapons: Weapon[] = [];
@@ -83,17 +109,28 @@ export class UserProfileService {
 			weapons = weaponsResult.value;
 		}
 
-		return ok({
+		const user: IUser = {
+			uid: Number(account.uid),
+			server: account.server,
+			ar: account.ar,
+			wl: account.wl,
+			name: account.name,
+			namecard: account.namecard,
+			signature: account.signature
+		};
+
+		const userProfile: UserProfile = {
 			format: 'dvalin',
 			version: 1,
-			account,
+			account: user,
 			wishes,
 			auth,
 			config: config.value,
-			achievements: achievements,
+			achievements: mappedAchievements,
 			characters: characters,
 			weapons: weapons
-		});
+		};
+		return ok(userProfile);
 	}
 
 	async syncUserProfile(
@@ -232,7 +269,7 @@ export class UserProfileService {
 		return resultUpdate;
 	}
 
-	private formatWishesByType(allWishes: Wish[] | undefined) {
+	private formatWishesByType(allWishes: Wish[] | undefined): Record<string, IWish[]> {
 		if (!allWishes) return {};
 
 		const filterAndConvert = (type: string) =>
@@ -247,13 +284,13 @@ export class UserProfileService {
 		};
 	}
 
-	private convertToFrontendWishes(wishes: Wish[]) {
+	private convertToFrontendWishes(wishes: Wish[]): IWish[] {
 		return wishes.map((wish) => ({
-			type: wish.itemType,
-			number: wish.id,
+			type: wish.itemType === 'Character' ? 'Character' : 'Weapon',
+			number: Number(wish.id),
 			key: wish.name,
 			date: wish.time,
-			pity: wish.pity,
+			pity: Number(wish.pity),
 			rarity: wish.rankType,
 			banner: 'BalladInGoblets1'
 		}));

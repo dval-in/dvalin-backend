@@ -1,5 +1,5 @@
 export type IWishes = {
-	[key in string]?: IMappedWish[];
+	[key in string]?: IWish[];
 };
 
 export type IMappedWishes = {

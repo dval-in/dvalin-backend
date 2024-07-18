@@ -5,7 +5,7 @@ import { Config } from './config';
 import { IFurnishings } from './furnishing';
 import { IMaterials } from './material';
 import { IUser } from './user';
-import { IWeapons } from './weapon';
+import { IWeapon } from './weapon';
 import { IWishes } from './wish';
 
 export interface UserProfile {
@@ -20,7 +20,7 @@ export interface UserProfile {
 	characters?: ICharacters;
 	furnishing?: IFurnishings;
 	materials?: IMaterials;
-	weapons?: IWeapons;
+	weapons?: IWeapon[];
 	wishes?: IWishes;
 }
 
