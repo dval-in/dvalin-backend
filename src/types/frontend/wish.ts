@@ -13,6 +13,7 @@ export type IWish = {
 	date: Date;
 	pity: number;
 	banner: string;
+	rarity: number;
 };
 
 export type IMappedWish = {

@@ -1,7 +1,7 @@
 import { Wish } from '@prisma/client';
 import { getWishesByUid, createMultipleWishes } from '../../db/models/wishes';
 import { UserProfile } from '../../types/frontend/dvalinFile';
-import { IMappedWish } from '../../types/frontend/wish';
+import { IMappedWish, IWish } from '../../types/frontend/wish';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
 
@@ -43,7 +43,7 @@ export const handleWishes = async (
 	return ok(undefined);
 };
 
-const formatWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
+const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => ({
 		id: wish.number.toString(),
 		uid,

@@ -291,7 +291,7 @@ export class UserProfileService {
 			key: wish.name,
 			date: wish.time,
 			pity: Number(wish.pity),
-			rarity: wish.rankType,
+			rarity: Number(wish.rankType),
 			banner: 'BalladInGoblets1'
 		}));
 	}
