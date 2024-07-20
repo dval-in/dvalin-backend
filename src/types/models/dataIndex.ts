@@ -2,11 +2,11 @@ interface DataItem {
 	name: string;
 	rarity: number;
 }
-interface WeaponItem extends DataItem {
+export interface WeaponItem extends DataItem {
 	type: string;
 }
 
-interface CharacterItem extends DataItem {
+export interface CharacterItem extends DataItem {
 	element: string;
 	weaponType: string;
 }

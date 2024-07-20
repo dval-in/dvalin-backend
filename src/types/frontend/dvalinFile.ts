@@ -25,12 +25,13 @@ export interface UserProfile {
 }
 
 export const isDvalinUserProfile = (object: unknown): object is UserProfile => {
-	if (typeof object === 'object' && object !== null) {
-		if ('format' in object) {
-			if (object.format === 'dvalin') {
-				return true;
-			}
-		}
+	if (
+		typeof object === 'object' &&
+		object !== null &&
+		'format' in object &&
+		object.format === 'dvalin'
+	) {
+		return true;
 	}
 	return false;
 };

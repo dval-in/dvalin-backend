@@ -12,7 +12,9 @@ const optimizedLevenshteinDistance = (s1: string, s2: string, maxDistanceAllowed
 		return Math.abs(s1.length - s2.length);
 	}
 
-	if (s1.length > s2.length) [s1, s2] = [s2, s1];
+	if (s1.length > s2.length) {
+		[s1, s2] = [s2, s1];
+	}
 
 	let previousRow = Array(s1.length + 1)
 		.fill(undefined)

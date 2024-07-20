@@ -80,7 +80,7 @@ export const setupWebsockets = (io: Server): void => {
 						return;
 					}
 
-					const achievementResult = await handleAchievements(socket, data);
+					const achievementResult = await handleAchievements(data);
 					await achievementResult.match(
 						async () => {
 							socket.emit('achievementAdded', { success: true });

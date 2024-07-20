@@ -58,7 +58,8 @@ const processWish = (
 	if (wish.rank_type === '4') {
 		processedWish.pity = pityCounter.fourStar.toString();
 		pityCounter.fourStar = 0;
-	} else if (wish.rank_type === '5') {
+	}
+	if (wish.rank_type === '5') {
 		processedWish.pity = pityCounter.fiveStar.toString();
 		pityCounter.fiveStar = 0;
 	}

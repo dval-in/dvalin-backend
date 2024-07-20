@@ -61,7 +61,7 @@ const dynamicDataRoute = new DynamicDataRoute(app);
 const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
 	if (dynamicDataRoute.isInitialised) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {

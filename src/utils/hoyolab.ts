@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GachaType, GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
+import { GachaItem, GachaType, GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
@@ -143,14 +143,14 @@ const fetchWishesForGachaType = async (
 };
 
 const processWishes = (
-	wishes: any[],
+	wishes: GachaItem[],
 	latestSavedWishId: string,
 	bkTree: BKTree,
 	pityCounter: { fourStar: number; fiveStar: number },
 	wishHistory: Omit<Wish, 'createdAt'>[]
 ): boolean => {
 	for (const wish of wishes) {
-		if (wish.id <= latestSavedWishId) {
+		if (Number(wish.id) <= Number(latestSavedWishId)) {
 			return false;
 		}
 		wishHistory.push(processWish(wish, bkTree, pityCounter));

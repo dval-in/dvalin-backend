@@ -32,6 +32,6 @@ class WeaponService {
 
 export const weaponService = new WeaponService();
 
-export const isWeapon = (obj: any): obj is Weapon => {
+export const isWeapon = (obj: unknown): obj is Weapon => {
 	return typeof obj === 'object' && obj !== null && 'key' in obj && typeof obj.key === 'string';
 };

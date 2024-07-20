@@ -10,5 +10,5 @@ export const logToConsole = (path: string, message: string) => {
 		hour12: false
 	});
 
-	console.log(`[${formattedDate} | ${path}] ${message}`);
+	console.log(`[${formattedDate} | ${path}] ${message}`); // NOSONAR
 };

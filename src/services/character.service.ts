@@ -37,6 +37,6 @@ const isCharacter = (obj: unknown): obj is Character => {
 		typeof obj === 'object' &&
 		obj !== null &&
 		'key' in obj &&
-		typeof (obj as any).key === 'string'
+		typeof (obj as any).key === 'string' //NOSONAR
 	);
 };

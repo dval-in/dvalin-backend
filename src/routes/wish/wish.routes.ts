@@ -7,7 +7,7 @@ export class WishRoute {
 	setupRoutes(): void {
 		this.app.get('/wish', async (req, res) => {
 			if (!req.user?.userId) {
-				return sendErrorResponse(res, 500, 'MISSING_USER');
+				sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
 			const authkey =
@@ -24,7 +24,7 @@ export class WishRoute {
 
 		this.app.get('/wish/status', async (req, res) => {
 			if (!req.user?.userId) {
-				return sendErrorResponse(res, 500, 'MISSING_USER');
+				sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
 			const response = await wishService.getJobStatus(req.user.userId);

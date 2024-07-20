@@ -6,7 +6,9 @@ export const handleAchievements = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
 ): Promise<Result<void, Error>> => {
-	if (!userProfile.achievements) return ok(undefined);
+	if (!userProfile.achievements) {
+		return ok(undefined);
+	}
 
 	const newAchievements = Object.entries(userProfile.achievements).map(([key, achieved]) => ({
 		key: Number(key),

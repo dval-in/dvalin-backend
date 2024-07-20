@@ -47,7 +47,9 @@ export class UserProfileService {
 		const auth = authResult.value.map((a) => a.provider);
 
 		const genshinAccounts = genshinAccountsResult.value;
-		if (!genshinAccounts?.length) return ok({});
+		if (!genshinAccounts?.length) {
+			return ok({});
+		}
 		const account = genshinAccounts[0];
 		const allWishesResult = await getWishesByUid(account.uid);
 		let allWishes: Wish[] = [];
@@ -283,7 +285,9 @@ export class UserProfileService {
 	}
 
 	private formatWishesByType(allWishes: Wish[] | undefined): Record<string, IWish[]> {
-		if (!allWishes) return {};
+		if (!allWishes) {
+			return {};
+		}
 
 		const filterAndConvert = (type: string) =>
 			this.convertToFrontendWishes(allWishes.filter((w) => w.gachaType === type));

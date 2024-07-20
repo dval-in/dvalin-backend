@@ -52,7 +52,7 @@ export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => 
 		wss.invalidateQuery(job.data.userId, 'userSyncStatus');
 	});
 
-	worker.on('completed', async (job, returnvalue) => {
+	worker.on('completed', async (job, _returnvalue) => {
 		logToConsole(
 			'UserProfileSyncWorker',
 			`completed: ${job.id}, remaining: ${await syncUserProfileQueue.getWaitingCount()}`

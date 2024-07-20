@@ -14,7 +14,9 @@ export const handlePaimonWishes = async (
 	dataIndex: Index
 ): Promise<Result<void, Error>> => {
 	const allWishes = assignGachaType(userProfile);
-	if (allWishes.length === 0) return ok(undefined);
+	if (allWishes.length === 0) {
+		return ok(undefined);
+	}
 
 	const newlyFormattedWishes = formatWishes(allWishes, uid, bktree, dataIndex);
 	const currentWishesResult = await getWishesByUid(uid);

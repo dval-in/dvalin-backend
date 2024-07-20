@@ -24,7 +24,8 @@ const transformWeaponFromWishes = (
 			);
 			if (unrefinedWeaponExist) {
 				unrefinedWeaponExist.refinement += 1;
-				if (unrefinedWeaponExist.refinement === 5) {
+				const MAX_REFINEMENT = 5;
+				if (unrefinedWeaponExist.refinement === MAX_REFINEMENT) {
 					currentUnrefinedWeapon = currentUnrefinedWeapon.filter(
 						(weapon) => weapon.id !== unrefinedWeaponExist.id
 					);

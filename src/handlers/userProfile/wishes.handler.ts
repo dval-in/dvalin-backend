@@ -9,7 +9,9 @@ export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
 ): Promise<Result<void, Error>> => {
-	if (!userProfile.wishes) return ok(undefined);
+	if (!userProfile.wishes) {
+		return ok(undefined);
+	}
 
 	const allWishes = [
 		...(userProfile.wishes.CharacterEvent || []),

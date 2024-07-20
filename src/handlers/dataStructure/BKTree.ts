@@ -10,7 +10,7 @@ interface SearchResult {
 
 class BKTree {
 	private root: BKTreeNode | null = null;
-	private distanceFunction: (a: string, b: string) => number;
+	private readonly distanceFunction: (a: string, b: string) => number;
 
 	constructor(distanceFunction: (a: string, b: string) => number) {
 		this.distanceFunction = distanceFunction;

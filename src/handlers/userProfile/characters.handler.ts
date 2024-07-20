@@ -6,7 +6,9 @@ export const handleCharacters = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
 ): Promise<Result<void, Error>> => {
-	if (!userProfile.characters) return ok(undefined);
+	if (!userProfile.characters) {
+		return ok(undefined);
+	}
 
 	const transformedCharacters = Object.entries(userProfile.characters).map(
 		([key, character]) => ({
