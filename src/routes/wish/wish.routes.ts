@@ -6,7 +6,7 @@ export class WishRoute {
 
 	setupRoutes(): void {
 		this.app.get('/wish', async (req, res) => {
-			if (!req.user || !req.user.userId) {
+			if (!req.user?.userId) {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 
@@ -23,7 +23,7 @@ export class WishRoute {
 		});
 
 		this.app.get('/wish/status', async (req, res) => {
-			if (!req.user || !req.user.userId) {
+			if (!req.user?.userId) {
 				return sendErrorResponse(res, 500, 'MISSING_USER');
 			}
 

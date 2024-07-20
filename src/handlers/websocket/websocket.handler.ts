@@ -6,7 +6,6 @@ import { RequestHandler } from 'express';
 import { WebSocketService } from '../../services/websocket.service.ts';
 import { handleAchievements } from './achievement.handler.ts';
 import { getGenshinAccountsByUser } from '../../db/models/genshinAccount';
-import { Result } from 'neverthrow';
 
 /**
  * Middleware to apply another middleware only for handshake requests.

@@ -81,18 +81,19 @@ const formatWishes = (
 ): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
+		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
+		const rankType = wish.rate ? '3' : getRarity(name, itemType, dataIndex);
+
 		return {
 			id: randomUUID(),
 			uid,
 			name,
-			itemType: wish.type === 'character' ? 'Character' : 'Weapon',
+			itemType,
 			time: new Date(wish.time),
 			gachaType: wish.gachaType,
 			pity: wish.pity.toString(),
 			wasImported: true,
-			rankType: wish.rate
-				? '3'
-				: getRarity(name, wish.type === 'character' ? 'Character' : 'Weapon', dataIndex)
+			rankType
 		};
 	});
 };
@@ -101,8 +102,10 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	switch (type) {
 		case 'Character':
 			return dataIndex.Character[key].rarity.toString();
-		default:
+		case 'Weapon':
 			return dataIndex.Weapon[key].rarity.toString();
+		default:
+			throw new Error('Invalid type');
 	}
 };
 

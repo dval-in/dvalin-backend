@@ -1,4 +1,4 @@
-import { getAchievementsByUid, saveAchievements } from '../../db/models/achievements';
+import { saveAchievements } from '../../db/models/achievements';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { err, ok, Result } from 'neverthrow';
 
@@ -14,24 +14,9 @@ export const handleAchievements = async (
 		achieved
 	}));
 
-	const currentAchievementsResult = await getAchievementsByUid(uid);
-
-	if (currentAchievementsResult.isErr()) {
-		return err(currentAchievementsResult.error);
-	}
-
-	const currentAchievements = currentAchievementsResult.value;
-
-	if (!currentAchievements || currentAchievements.length === 0) {
-		const saveResult = await saveAchievements(newAchievements);
-		if (saveResult.isErr()) {
-			return err(saveResult.error);
-		}
-	} else {
-		const saveResult = await saveAchievements(newAchievements);
-		if (saveResult.isErr()) {
-			return err(saveResult.error);
-		}
+	const saveResult = await saveAchievements(newAchievements);
+	if (saveResult.isErr()) {
+		return err(saveResult.error);
 	}
 
 	return ok(undefined);

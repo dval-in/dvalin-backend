@@ -3,7 +3,7 @@ import { getWishesByUid } from '../db/models/wishes';
 import { getAchievementsByUid } from '../db/models/achievements';
 import { getCharactersByUid, saveCharacters } from '../db/models/character';
 import { deleteWeaponsByUid, getWeaponsByUid, saveWeapons } from '../db/models/weapons';
-import { Achievement, Character, GenshinAccount, Weapon, Wish } from '@prisma/client';
+import { Achievement, Character, GenshinAccount, Weapon, Wish, Config } from '@prisma/client';
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
 import { Index } from '../types/models/dataIndex';
 import { BKTree } from '../handlers/dataStructure/BKTree';
@@ -15,7 +15,6 @@ import { Result, ok, err } from 'neverthrow';
 import { mapCardName, queryUserInfoEnka } from '../utils/enka';
 import { getServer } from '../utils/hoyolab';
 import { isLangKey } from '../types/frontend/config';
-import { Config } from '@prisma/client';
 import { getConfigFromUid, updateConfig } from '../db/models/config';
 import { getAuthsByUser } from '../db/models/auth';
 import { deleteUserById } from '../db/models/user';
@@ -139,83 +138,97 @@ export class UserProfileService {
 		dataIndex: Index
 	): Promise<Result<string, Error>> {
 		if (userProfile.format === 'paimon' && isPaimonData(userProfile)) {
-			const uid = userProfile['wish-uid']?.toString();
-			if (!uid) {
-				return err(new Error('User not found'));
-			}
-
-			const wishResult = await handlePaimonWishes(userProfile, uid, bkTree, dataIndex);
-			if (wishResult.isErr()) {
-				return err(new Error('Failed to handle wishes'));
-			}
-
-			const achievementResult = await handlePaimonAchievements(userProfile, uid);
-			if (achievementResult.isErr()) {
-				return err(new Error('Failed to handle achievements'));
-			}
-
-			const configResult = await getConfigFromUid(uid);
-			if (configResult.isErr()) {
-				return err(new Error('Failed to fetch config'));
-			}
-			const config = configResult.value;
-
-			const wishes = await getWishesByUid(uid);
-			if (wishes.isErr()) {
-				return err(new Error('Failed to fetch wishes'));
-			}
-			const charWishes = wishes.value.filter((wish) => wish.itemType === 'Character');
-			const weaponWishes = wishes.value.filter((wish) => wish.itemType === 'Weapon');
-			const transformedCharacters = transformCharacterFromWishes(charWishes, uid);
-			const transformedWeapons = transformWeaponFromWishes(
-				[],
-				weaponWishes,
-				config.autoRefine3,
-				config.autoRefine4,
-				config.autoRefine5
-			);
-			const saveChar = await saveCharacters(transformedCharacters);
-			if (saveChar.isErr()) {
-				return err(new Error('Failed to save characters'));
-			}
-			const deleteWeapons = await deleteWeaponsByUid(uid);
-			if (deleteWeapons.isErr()) {
-				return err(new Error('Failed to delete weapons'));
-			}
-			const saveWeapon = await saveWeapons(transformedWeapons);
-			if (saveWeapon.isErr()) {
-				return err(new Error('Failed to save weapons'));
-			}
-			return ok(userProfile.userId);
+			return await this.syncPaimonUserProfile(userProfile, bkTree, dataIndex);
 		}
 		if (userProfile.format === 'dvalin' && isDvalinUserProfile(userProfile)) {
-			if (!userProfile.account) {
-				return err(new Error('User not found'));
-			}
-			const uid = userProfile.account.uid.toString();
-
-			const wishResult = await handleWishes(userProfile, uid);
-			if (wishResult.isErr()) {
-				return err(new Error('Failed to handle wishes'));
-			}
-
-			const achievementResult = await handleAchievements(userProfile, uid);
-			if (achievementResult.isErr()) {
-				return err(new Error('Failed to handle achievements'));
-			}
-
-			const characterResult = await handleCharacters(userProfile, uid);
-			if (characterResult.isErr()) {
-				return err(new Error('Failed to handle characters'));
-			}
-
-			const weaponResult = await handleWeapons(userProfile, uid);
-			if (weaponResult.isErr()) {
-				return err(new Error('Failed to handle weapons'));
-			}
-			return ok(userProfile.userId);
+			return await this.syncDvalinUserProfile(userProfile);
 		}
 		return err(new Error('Invalid user profile format'));
+	}
+
+	async syncPaimonUserProfile(
+		userProfile: PaimonFile & { userId: string },
+		bkTree: BKTree,
+		dataIndex: Index
+	): Promise<Result<string, Error>> {
+		const uid = userProfile['wish-uid']?.toString();
+		if (!uid) {
+			return err(new Error('User not found'));
+		}
+
+		const wishResult = await handlePaimonWishes(userProfile, uid, bkTree, dataIndex);
+		if (wishResult.isErr()) {
+			return err(new Error('Failed to handle wishes'));
+		}
+
+		const achievementResult = await handlePaimonAchievements(userProfile, uid);
+		if (achievementResult.isErr()) {
+			return err(new Error('Failed to handle achievements'));
+		}
+
+		const configResult = await getConfigFromUid(uid);
+		if (configResult.isErr()) {
+			return err(new Error('Failed to fetch config'));
+		}
+		const config = configResult.value;
+
+		const wishes = await getWishesByUid(uid);
+		if (wishes.isErr()) {
+			return err(new Error('Failed to fetch wishes'));
+		}
+		const charWishes = wishes.value.filter((wish) => wish.itemType === 'Character');
+		const weaponWishes = wishes.value.filter((wish) => wish.itemType === 'Weapon');
+		const transformedCharacters = transformCharacterFromWishes(charWishes, uid);
+		const transformedWeapons = transformWeaponFromWishes(
+			[],
+			weaponWishes,
+			config.autoRefine3,
+			config.autoRefine4,
+			config.autoRefine5
+		);
+		const saveChar = await saveCharacters(transformedCharacters);
+		if (saveChar.isErr()) {
+			return err(new Error('Failed to save characters'));
+		}
+		const deleteWeapons = await deleteWeaponsByUid(uid);
+		if (deleteWeapons.isErr()) {
+			return err(new Error('Failed to delete weapons'));
+		}
+		const saveWeapon = await saveWeapons(transformedWeapons);
+		if (saveWeapon.isErr()) {
+			return err(new Error('Failed to save weapons'));
+		}
+		return ok(userProfile.userId);
+	}
+
+	async syncDvalinUserProfile(
+		userProfile: UserProfile & { userId: string }
+	): Promise<Result<string, Error>> {
+		if (!userProfile.account) {
+			return err(new Error('User not found'));
+		}
+		const uid = userProfile.account.uid.toString();
+
+		const wishResult = await handleWishes(userProfile, uid);
+		if (wishResult.isErr()) {
+			return err(new Error('Failed to handle wishes'));
+		}
+
+		const achievementResult = await handleAchievements(userProfile, uid);
+		if (achievementResult.isErr()) {
+			return err(new Error('Failed to handle achievements'));
+		}
+
+		const characterResult = await handleCharacters(userProfile, uid);
+		if (characterResult.isErr()) {
+			return err(new Error('Failed to handle characters'));
+		}
+
+		const weaponResult = await handleWeapons(userProfile, uid);
+		if (weaponResult.isErr()) {
+			return err(new Error('Failed to handle weapons'));
+		}
+		return ok(userProfile.userId);
 	}
 
 	async createNewUser(

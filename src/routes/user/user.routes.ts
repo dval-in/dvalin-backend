@@ -2,8 +2,7 @@ import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
 import { UserProfileService } from '../../services/userProfile.service.ts';
 import { syncUserProfileQueue } from '../../queues/syncUserProfile.queue.ts';
-import { createGenshinAccount, getGenshinAccountByUid } from '../../db/models/genshinAccount';
-import { config } from '../../config/config';
+import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { logToConsole } from '../../utils/log';
 
 export class UserRoute {

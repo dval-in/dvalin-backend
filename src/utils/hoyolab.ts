@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
+import { GachaType, GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
 import { logToConsole } from './log';
 import { getLatestWishByUid } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
@@ -61,53 +61,101 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  * @returns A Promise with the result containing the wish history or an error message.
  */
 
+/**
+ * Fetches wish history from the Genshin Impact API.
+ *
+ * @param authkey Authentication key for the API.
+ * @param gachaTypeList List of gacha types to query.
+ * @param bkTree BKTree instance.
+ * @param uid Optional UID.
+ * @returns A Promise with the result containing the wish history or an error message.
+ */
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	bkTree: BKTree,
 	uid: string
 ): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
-	let latestSavedWishId = '0';
-
 	const latestSavedWishResult = await getLatestWishByUid(uid);
 	if (latestSavedWishResult.isErr()) {
 		return err(new Error('Failed to retrieve latest saved wish'));
 	}
-	latestSavedWishId = latestSavedWishResult.value?.id || '0';
+	const latestSavedWishId = latestSavedWishResult.value?.id || '0';
 
+	try {
+		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, latestSavedWishId, bkTree);
+		return ok(wishHistory);
+	} catch (error) {
+		return err(new Error(`Failed to fetch wishes: ${error.message}`));
+	}
+};
+
+const fetchAllWishes = async (
+	authkey: string,
+	gachaTypeList: GachaTypeList,
+	latestSavedWishId: string,
+	bkTree: BKTree
+): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 
 	for (const gachaType of gachaTypeList) {
-		let lastNewWishId = '0';
-		let hasMore = true;
 		const pityCounter = { fourStar: 0, fiveStar: 0 };
-
-		while (hasMore) {
-			const wishesResult = await fetchWishes(authkey, gachaType.key, lastNewWishId);
-
-			if (wishesResult.isErr()) {
-				return err(new Error(wishesResult.error));
-			}
-			const wishes = wishesResult.value;
-
-			for (const wish of wishes) {
-				if (wish.id <= latestSavedWishId) {
-					hasMore = false;
-					break;
-				}
-
-				wishHistory.push(processWish(wish, bkTree, pityCounter));
-				lastNewWishId = wish.id;
-			}
-			if (wishes.length < 20) {
-				hasMore = false;
-			}
-
-			await randomDelay(100, 1000);
-		}
+		await fetchWishesForGachaType(
+			authkey,
+			gachaType,
+			latestSavedWishId,
+			bkTree,
+			pityCounter,
+			wishHistory
+		);
 	}
 
-	return ok(wishHistory);
+	return wishHistory;
+};
+
+const fetchWishesForGachaType = async (
+	authkey: string,
+	gachaType: GachaType,
+	latestSavedWishId: string,
+	bkTree: BKTree,
+	pityCounter: { fourStar: number; fiveStar: number },
+	wishHistory: Omit<Wish, 'createdAt'>[]
+) => {
+	let lastNewWishId = '0';
+	let hasMore = true;
+
+	while (hasMore) {
+		const wishesResult = await fetchWishes(authkey, gachaType.key, lastNewWishId);
+		if (wishesResult.isErr()) {
+			throw new Error(wishesResult.error);
+		}
+
+		const wishes = wishesResult.value;
+		hasMore = processWishes(wishes, latestSavedWishId, bkTree, pityCounter, wishHistory);
+		lastNewWishId = wishes[wishes.length - 1]?.id || lastNewWishId;
+
+		if (wishes.length < 20) {
+			hasMore = false;
+		}
+
+		await randomDelay(100, 1000);
+	}
+};
+
+const processWishes = (
+	wishes: any[],
+	latestSavedWishId: string,
+	bkTree: BKTree,
+	pityCounter: { fourStar: number; fiveStar: number },
+	wishHistory: Omit<Wish, 'createdAt'>[]
+): boolean => {
+	for (const wish of wishes) {
+		if (wish.id <= latestSavedWishId) {
+			return false;
+		}
+		wishHistory.push(processWish(wish, bkTree, pityCounter));
+	}
+	return true;
 };
 
 /**

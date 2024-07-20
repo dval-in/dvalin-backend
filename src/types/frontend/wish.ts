@@ -9,7 +9,7 @@ export type IMappedWishes = {
 export type IWish = {
 	type: 'Weapon' | 'Character';
 	number: number;
-	key: string | string;
+	key: string;
 	date: Date;
 	pity: number;
 	banner: string;
@@ -19,7 +19,7 @@ export type IWish = {
 export type IMappedWish = {
 	type: 'Weapon' | 'Character';
 	number: number;
-	key: string | string;
+	key: string;
 	date: Date;
 	pity: number;
 	banner: string;

@@ -8,7 +8,7 @@ import { createMultipleWishes } from '../db/models/wishes';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
 import { saveCharactersConstellation } from '../db/models/character';
-import { getNonRefinedWeapons, saveWeapons, saveWeaponsRefinement } from '../db/models/weapons';
+import { getNonRefinedWeapons, saveWeapons } from '../db/models/weapons';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
 import { getConfigFromUid } from '../db/models/config';
 import { Wish } from '@prisma/client';
@@ -125,34 +125,11 @@ class WishService {
 		returnvalue: Omit<Wish, 'createdAt'>[]
 	): Promise<Result<void, Error>> {
 		const { userId } = jobData;
-
-		const genshinAccountsResult = await getGenshinAccountsByUser(userId);
-		if (genshinAccountsResult.isErr()) {
-			return err(genshinAccountsResult.error);
-		}
-
-		const genshinAccounts = genshinAccountsResult.value;
 		const uid = returnvalue[0].uid;
-		let genshinAccount;
 
-		if (genshinAccounts !== undefined) {
-			const prefilter = genshinAccounts.filter((account) => account.uid === uid);
-
-			if (prefilter.length === 0) {
-				const createResult = await createGenshinAccount({ uid, userId });
-				if (createResult.isErr()) {
-					return err(createResult.error);
-				}
-				genshinAccount = createResult.value;
-			} else {
-				genshinAccount = prefilter[0];
-			}
-		} else {
-			const createResult = await createGenshinAccount({ uid, userId });
-			if (createResult.isErr()) {
-				return err(createResult.error);
-			}
-			genshinAccount = createResult.value;
+		const accountResult = await this.ensureGenshinAccount(userId, uid);
+		if (accountResult.isErr()) {
+			return err(accountResult.error);
 		}
 
 		const createWishesResult = await createMultipleWishes(returnvalue);
@@ -160,19 +137,51 @@ class WishService {
 			return err(createWishesResult.error);
 		}
 
+		const updateResult = await this.updateCharactersAndWeapons(uid, returnvalue);
+		if (updateResult.isErr()) {
+			return err(updateResult.error);
+		}
+
+		await this.sendWebSocketUpdates(userId);
+
+		return ok(undefined);
+	}
+
+	private async ensureGenshinAccount(userId: string, uid: string): Promise<Result<void, Error>> {
+		const genshinAccountsResult = await getGenshinAccountsByUser(userId);
+		if (genshinAccountsResult.isErr()) {
+			return err(genshinAccountsResult.error);
+		}
+
+		const genshinAccounts = genshinAccountsResult.value;
+		if (!genshinAccounts?.some((account) => account?.uid === uid)) {
+			const createResult = await createGenshinAccount({ uid, userId });
+			if (createResult.isErr()) {
+				return err(createResult.error);
+			}
+		}
+
+		return ok(undefined);
+	}
+
+	private async updateCharactersAndWeapons(
+		uid: string,
+		wishes: Omit<Wish, 'createdAt'>[]
+	): Promise<Result<void, Error>> {
 		const configResult = await getConfigFromUid(uid);
 		if (configResult.isErr()) {
 			return err(configResult.error);
 		}
 
 		const config = configResult.value;
-		const charWish = returnvalue.filter((wish) => wish.itemType === 'Character');
-		const weaponWish = returnvalue.filter((wish) => wish.itemType === 'Weapon');
-		const currentUnrefinedWeaponsResult = await getNonRefinedWeapons(uid);
+		const charWish = wishes.filter((wish) => wish.itemType === 'Character');
+		const weaponWish = wishes.filter((wish) => wish.itemType === 'Weapon');
 
+		const currentUnrefinedWeaponsResult = await getNonRefinedWeapons(uid);
 		if (currentUnrefinedWeaponsResult.isErr()) {
 			return err(currentUnrefinedWeaponsResult.error);
 		}
+
 		const currentUnrefinedWeapons = currentUnrefinedWeaponsResult.value;
 		const characterUpdate = transformCharacterFromWishes(charWish, uid);
 		const weaponUpdate = transformWeaponFromWishes(
@@ -193,6 +202,10 @@ class WishService {
 			return err(saveWeaponsResult.error);
 		}
 
+		return ok(undefined);
+	}
+
+	private async sendWebSocketUpdates(userId: string): Promise<Result<void, Error>> {
 		const wssResult = this.getWss();
 		if (wssResult.isErr()) {
 			return err(wssResult.error);
