@@ -21,9 +21,10 @@ export class UserRoute {
 				(error) => {
 					if (error.message.includes('No Genshin accounts')) {
 						sendErrorResponse(res, 404, 'NO_GENSHIN_ACCOUNTS');
+					} else {
+						logToConsole('AuthService', error.message);
+						sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 					}
-					logToConsole('AuthService', error.message);
-					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);
 		});
