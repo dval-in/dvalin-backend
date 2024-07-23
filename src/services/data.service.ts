@@ -67,8 +67,32 @@ class DataService {
 						this.index[type][file.name.replace('.json', '')] = {
 							name: data.name,
 							order: data.order,
-							total: data.achievements.length
+							total: data.achievements.length,
+							achievements: []
 						};
+						data.achievements.forEach(
+							(achievement: {
+								id: number;
+								name: string;
+								desc: string;
+								reward: number;
+								order: number;
+								version: string;
+								hidden: boolean;
+							}) => {
+								this.index[type][file.name.replace('.json', '')].achievements[
+									achievement.id
+								] = {
+									name: achievement.name,
+									id: achievement.id,
+									desc: achievement.desc,
+									reward: achievement.reward,
+									order: achievement.order,
+									version: achievement.version,
+									hidden: achievement.hidden
+								};
+							}
+						);
 					}
 				} catch (fileError: any) {
 					logToConsole(

@@ -15,6 +15,17 @@ interface AchievementCategoryItem {
 	name: string;
 	order: number;
 	total: number;
+	achievements: AchievementItem[];
+}
+
+interface AchievementItem {
+	id: number;
+	name: string;
+	desc: string;
+	reward: number;
+	hidden: boolean;
+	order: number;
+	version: string;
 }
 
 interface Index {
