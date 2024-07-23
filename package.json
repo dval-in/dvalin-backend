@@ -57,7 +57,7 @@
 		"ts-loader": "^9.5.1",
 		"tsx": "^4.16.2",
 		"typescript": "^5.5.4",
-		"typescript-eslint": "^7.16.1"
+		"typescript-eslint": "^7.17.0"
 	},
 	"engines": {
 		"node": ">=20.0.0",
