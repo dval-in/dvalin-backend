@@ -10,7 +10,7 @@ const fetchWishes = async (
 	gachaType: string,
 	endId: string
 ): Promise<Result<GachaItem[], string>> => {
-	const FETCH_URL = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
+	const FETCH_URL = 'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getGachaLog';
 	try {
 		const { data } = await axios.get<HoyoWishResponse>(FETCH_URL, {
 			params: {
