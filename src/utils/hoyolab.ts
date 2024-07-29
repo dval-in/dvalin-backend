@@ -117,7 +117,7 @@ const getWishes = async (
  * @returns The Gacha configuration list result.
  */
 const getGachaConfigList = async (authkey: string): Promise<Result<HoyoConfigResponse, Error>> => {
-	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getConfigList';
+	const url = 'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getConfigList';
 
 	try {
 		const response = await axios.get<HoyoConfigResponse>(url, {
