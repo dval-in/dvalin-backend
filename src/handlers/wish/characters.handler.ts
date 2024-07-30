@@ -13,7 +13,7 @@ const transformCharacterFromWishes = (
 	const constellationCountMap: Map<string, number> = new Map();
 
 	for (const wish of wishes) {
-		const count = (constellationCountMap.get(wish.name) || 0) + 1;
+		const count = (constellationCountMap.get(wish.name) + 1 || 0) + 1;
 		constellationCountMap.set(wish.name, count);
 	}
 

@@ -38,7 +38,7 @@ const processWish = (
 	pityCounter: {
 		fourStar: number;
 		fiveStar: number;
-	}
+	},order: number
 ): Omit<Wish, 'createdAt'> => {
 	pityCounter.fourStar++;
 	pityCounter.fiveStar++;
@@ -49,7 +49,7 @@ const processWish = (
 		name: bkTree.search(wish.name)[0].word,
 		itemType: wish.item_type,
 		rankType: wish.rank_type,
-		id: wish.id,
+		order,
 		uid: wish.uid,
 		pity: '1',
 		wasImported: false

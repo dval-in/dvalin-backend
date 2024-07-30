@@ -80,10 +80,8 @@ const getWishes = async (
 	if (latestSavedWishResult.isErr()) {
 		return err(new Error('Failed to retrieve latest saved wish'));
 	}
-	const latestSavedWishId = latestSavedWishResult.value?.id || '0';
-
 	try {
-		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, latestSavedWishId, bkTree);
+		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, latestSavedWishResult.value, bkTree);
 		return ok(wishHistory);
 	} catch (error) {
 		return err(new Error(`Failed to fetch wishes: ${error.message}`));
@@ -93,7 +91,7 @@ const getWishes = async (
 const fetchAllWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	latestSavedWishId: string,
+	latestSavedWish: Wish | null,
 	bkTree: BKTree
 ): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
@@ -103,7 +101,7 @@ const fetchAllWishes = async (
 		await fetchWishesForGachaType(
 			authkey,
 			gachaType,
-			latestSavedWishId,
+			latestSavedWish,
 			bkTree,
 			pityCounter,
 			wishHistory
@@ -116,7 +114,7 @@ const fetchAllWishes = async (
 const fetchWishesForGachaType = async (
 	authkey: string,
 	gachaType: GachaType,
-	latestSavedWishId: string,
+	latestSavedWish: Wish | null,
 	bkTree: BKTree,
 	pityCounter: { fourStar: number; fiveStar: number },
 	wishHistory: Omit<Wish, 'createdAt'>[]
@@ -131,7 +129,7 @@ const fetchWishesForGachaType = async (
 		}
 
 		const wishes = wishesResult.value;
-		hasMore = processWishes(wishes, latestSavedWishId, bkTree, pityCounter, wishHistory);
+		hasMore = processWishes(wishes, latestSavedWish, bkTree, pityCounter, wishHistory);
 		lastNewWishId = wishes[wishes.length - 1]?.id || lastNewWishId;
 
 		if (wishes.length < 20) {
@@ -144,11 +142,20 @@ const fetchWishesForGachaType = async (
 
 const processWishes = (
 	wishes: GachaItem[],
-	latestSavedWishId: string,
+	latestSavedWish: Wish | null,
 	bkTree: BKTree,
 	pityCounter: { fourStar: number; fiveStar: number },
 	wishHistory: Omit<Wish, 'createdAt'>[]
 ): boolean => {
+	let order = 0;
+	if (latestSavedWish === null) {
+		for (const wish of wishes) {
+			order++;
+			wishHistory.push(processWish(wish, bkTree, pityCounter, order));
+		}
+		return true;
+	}
+	
 	for (const wish of wishes) {
 		if (Number(wish.id) <= Number(latestSavedWishId)) {
 			return false;

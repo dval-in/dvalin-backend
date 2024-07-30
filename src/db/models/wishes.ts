@@ -25,7 +25,7 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 				uid
 			},
 			orderBy: {
-				id: 'desc'
+				order: 'desc'
 			}
 		});
 
@@ -42,7 +42,7 @@ export const getLatestWishByUid = async (uid: string): Promise<Result<Wish | und
 				uid
 			},
 			orderBy: {
-				id: 'desc'
+				order: 'desc'
 			}
 		});
 

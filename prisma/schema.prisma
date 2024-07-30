@@ -55,7 +55,7 @@ model GenshinAccount {
 }
 
 model Wish {
-  id             String         @id @unique
+  order          Int
   createdAt      DateTime       @default(now())
   uid            String
   gachaType      String         @map("gacha_type")
@@ -63,9 +63,11 @@ model Wish {
   name           String
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
-  pity           String?
+  pity           String
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   wasImported    Boolean        @default(false)
+
+  @@id([order, uid], name: "id")
 }
 
 model Achievement {
