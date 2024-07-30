@@ -55,6 +55,7 @@ model GenshinAccount {
 }
 
 model Wish {
+  genshinWishId  String?
   order          Int
   createdAt      DateTime       @default(now())
   uid            String

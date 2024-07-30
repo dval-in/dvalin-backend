@@ -32,13 +32,13 @@ export type GachaTypeName =
 
 export interface GachaItem {
 	uid: string;
-	gacha_type: string;
+	gacha_type: string; // banner
 	count: string;
 	time: string; // "YYYY-MM-DD HH:mm:ss"
 	name: string;
 	lang: string;
-	item_type: string;
-	rank_type: string;
+	item_type: string; // char/weapon
+	rank_type: string; // rarity
 	id: string;
 }
 

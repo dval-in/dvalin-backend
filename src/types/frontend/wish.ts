@@ -2,29 +2,15 @@ export type IWishes = {
 	[key in string]?: IWish[];
 };
 
-export type IMappedWishes = {
-	[key in string]?: IMappedWish[];
-};
-
 export type IWish = {
 	type: 'Weapon' | 'Character';
-	number: number;
+	number?: number;
 	key: string;
 	date: Date;
 	pity: number;
 	banner: string;
 	rarity: number;
-};
-
-export type IMappedWish = {
-	type: 'Weapon' | 'Character';
-	number: number;
-	key: string;
-	date: Date;
-	pity: number;
-	banner: string;
-	name: string;
-	rarity: number;
+	order: number;
 };
 
 export type PaimonWish = {

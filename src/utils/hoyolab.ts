@@ -60,16 +60,6 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  * @param uid Optional UID.
  * @returns A Promise with the result containing the wish history or an error message.
  */
-
-/**
- * Fetches wish history from the Genshin Impact API.
- *
- * @param authkey Authentication key for the API.
- * @param gachaTypeList List of gacha types to query.
- * @param bkTree BKTree instance.
- * @param uid Optional UID.
- * @returns A Promise with the result containing the wish history or an error message.
- */
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
@@ -81,7 +71,12 @@ const getWishes = async (
 		return err(new Error('Failed to retrieve latest saved wish'));
 	}
 	try {
-		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, latestSavedWishResult.value, bkTree);
+		const wishHistory = await fetchAllWishes(
+			authkey,
+			gachaTypeList,
+			latestSavedWishResult.value,
+			bkTree
+		);
 		return ok(wishHistory);
 	} catch (error) {
 		return err(new Error(`Failed to fetch wishes: ${error.message}`));
@@ -155,12 +150,19 @@ const processWishes = (
 		}
 		return true;
 	}
-	
+
 	for (const wish of wishes) {
-		if (Number(wish.id) <= Number(latestSavedWishId)) {
+		if (
+			latestSavedWish.genshinWishId === wish.id ||
+			(wish.gacha_type === latestSavedWish.gachaType &&
+				compareGachaItemDate(wish, latestSavedWish.time) === 0 &&
+				bkTree.search(wish.name)[0].word === latestSavedWish.name) ||
+			compareGachaItemDate(wish, latestSavedWish.time) <= 0
+		) {
 			return false;
 		}
-		wishHistory.push(processWish(wish, bkTree, pityCounter));
+		order++;
+		wishHistory.push(processWish(wish, bkTree, pityCounter, order));
 	}
 	return true;
 };
@@ -233,5 +235,20 @@ const getServer = (uid: string): ServerKey => {
 			return 'Europe';
 	}
 };
+
+/**
+ * Compares the date of a Gacha item with a given date.
+ * - Negative: item's date is earlier
+ * - Zero: dates are the same (to the second)
+ * - Positive: item's date is later
+ *
+ * @param item Gacha item to compare.
+ * @param compareDate Date to compare with.
+ * @returns The difference in seconds between the two dates.
+ * */
+function compareGachaItemDate(item: GachaItem, compareDate: Date): number {
+	const itemDate = new Date(item.time);
+	return Math.floor(itemDate.getTime() / 1000) - Math.floor(compareDate.getTime() / 1000);
+}
 
 export { getWishes, getGachaConfigList, serverTimeToUTC, getServer };

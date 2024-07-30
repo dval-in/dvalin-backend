@@ -65,7 +65,7 @@ class DataService {
 	}
 
 	private async getDevFiles(type: 'Character' | 'Weapon'): Promise<Result<FileInfo[], Error>> {
-		const dirPath = join('<path>/dvalin-data/data/EN', type);
+		const dirPath = join('/Users/jervis/Desktop/Loisir/Informatique/dvalin-data/data/EN', type);
 		try {
 			const files = await readdir(dirPath);
 			return ok(files.map((name) => ({ name, download_url: join(dirPath, name) })));

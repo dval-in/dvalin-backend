@@ -38,7 +38,8 @@ const processWish = (
 	pityCounter: {
 		fourStar: number;
 		fiveStar: number;
-	},order: number
+	},
+	order: number
 ): Omit<Wish, 'createdAt'> => {
 	pityCounter.fourStar++;
 	pityCounter.fiveStar++;
@@ -50,6 +51,7 @@ const processWish = (
 		itemType: wish.item_type,
 		rankType: wish.rank_type,
 		order,
+		genshinWishId: wish.id,
 		uid: wish.uid,
 		pity: '1',
 		wasImported: false

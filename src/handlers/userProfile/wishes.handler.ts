@@ -4,6 +4,7 @@ import { UserProfile } from '../../types/frontend/dvalinFile';
 import { IWish } from '../../types/frontend/wish';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
+import { randomUUID } from 'node:crypto';
 
 export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
@@ -47,7 +48,7 @@ export const handleWishes = async (
 
 const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => ({
-		id: wish.number.toString(),
+		genshinWishId: wish.number.toString() ?? randomUUID(),
 		uid,
 		name: wish.key,
 		itemType: wish.type,
@@ -55,7 +56,8 @@ const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] =
 		gachaType: wish.banner,
 		pity: wish.pity.toString(),
 		wasImported: true,
-		rankType: wish.rarity.toString()
+		rankType: wish.rarity.toString(),
+		order: wish.order
 	}));
 };
 
@@ -63,9 +65,9 @@ const filterNewWishes = (
 	newWishes: Omit<Wish, 'createdAt'>[],
 	currentWishes: Omit<Wish, 'createdAt'>[]
 ) => {
-	const wishSet = new Set<string>(currentWishes.map((wish) => wish.id));
+	const wishSet = new Set<string>(currentWishes.map((wish) => wish.order.toString()));
 
 	return newWishes.filter((wish) => {
-		return !wishSet.has(wish.id);
+		return !wishSet.has(wish.order.toString());
 	});
 };
