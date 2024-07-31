@@ -5,7 +5,7 @@ import { syncUserProfileQueue } from '../../queues/syncUserProfile.queue.ts';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { logToConsole } from '../../utils/log';
 import { Character } from '@prisma/client';
-import {saveCharacters} from '../../db/models/character';
+import { saveCharacters } from '../../db/models/character';
 
 export class UserRoute {
 	private readonly userProfileService = new UserProfileService();
@@ -50,13 +50,21 @@ export class UserRoute {
 			const result = await this.userProfileService.createNewUser(uid, config, userId);
 			result.match(
 				async (genshinAccount) => {
-					const alreadyExistingCharacter:(Partial<Character> & { key: string; uid: string })[]= [{key:'Amber', uid:genshinAccount.uid}, {key:'Kaeya', uid:genshinAccount.uid}, {key:'Lisa', uid:genshinAccount.uid}]; 
+					const alreadyExistingCharacter: (Partial<Character> & {
+						key: string;
+						uid: string;
+					})[] = [
+						{ key: 'Amber', uid: genshinAccount.uid },
+						{ key: 'Kaeya', uid: genshinAccount.uid },
+						{ key: 'Lisa', uid: genshinAccount.uid }
+					];
 					await saveCharacters(alreadyExistingCharacter).then(
 						() => sendSuccessResponse(res, { state: 'SUCCESS', data: genshinAccount }),
 						async (_error) => {
 							sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 						}
-					)},
+					);
+				},
 				async (_error) => {
 					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
