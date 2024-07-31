@@ -46,7 +46,7 @@
 		"@types/passport-google-oauth": "^1.0.45",
 		"@types/passport-google-oauth20": "^2.0.16",
 		"@types/passport-microsoft": "^1.0.3",
-		"@typescript-eslint/parser": "^7.17.0",
+		"@typescript-eslint/parser": "^7.18.0",
 		"eslint": "^9.8.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-neverthrow": "^1.1.4",
