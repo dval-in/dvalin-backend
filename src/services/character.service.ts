@@ -34,9 +34,6 @@ export const characterService = new CharacterService();
 
 const isCharacter = (obj: unknown): obj is Character => {
 	return (
-		typeof obj === 'object' &&
-		obj !== null &&
-		'key' in obj &&
-		typeof (obj as any).key === 'string' //NOSONAR
+		typeof obj === 'object' && obj !== null && 'key' in obj && typeof obj.key === 'string' //NOSONAR
 	);
 };

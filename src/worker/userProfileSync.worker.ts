@@ -10,7 +10,7 @@ import {
 } from '../queues/syncUserProfile.queue.ts';
 import { UserProfileService } from '../services/userProfile.service.ts';
 import { Index } from '../types/models/dataIndex';
-import { PaimonFile } from '../types/frontend/paimonFIle';
+import { PaimonFile } from '../types/frontend/paimonFile.ts';
 
 const userProfileService = new UserProfileService();
 

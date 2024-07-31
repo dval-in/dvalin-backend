@@ -1,6 +1,6 @@
 import { saveAchievements } from '../../db/models/achievements';
 import { err, ok, Result } from 'neverthrow';
-import { PaimonFile } from '../../types/frontend/paimonFIle';
+import { PaimonFile } from '../../types/frontend/paimonFile';
 
 export const handlePaimonAchievements = async (
 	userProfile: PaimonFile & { userId: string },

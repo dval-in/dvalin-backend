@@ -4,7 +4,7 @@ import { BKTree } from '../dataStructure/BKTree';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { PaimonFile } from '../../types/frontend/paimonFIle';
+import { PaimonFile } from '../../types/frontend/paimonFile';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },

@@ -16,22 +16,17 @@ class DataService {
 	private readonly index: Index = { Character: {}, Weapon: {} };
 
 	async initialize(): Promise<Result<void, Error>> {
-		const characterResult = await this.fetchData('Character');
+		const characterResult = await this.tryFetchData('Character', config.DEBUG);
 		if (characterResult.isErr()) {
 			return err(new Error('Failed to initialize Character data'));
 		}
 
-		const weaponResult = await this.fetchData('Weapon');
+		const weaponResult = await this.tryFetchData('Weapon', config.DEBUG);
 		if (weaponResult.isErr()) {
 			return err(new Error('Failed to initialize Weapon data'));
 		}
 
 		return ok(undefined);
-	}
-
-	async fetchData(type: 'Character' | 'Weapon'): Promise<Result<void, Error>> {
-		const isDev = config.DEBUG;
-		return this.tryFetchData(type, isDev);
 	}
 
 	private async tryFetchData(

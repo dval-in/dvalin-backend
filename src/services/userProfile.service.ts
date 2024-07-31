@@ -18,7 +18,7 @@ import { isLangKey } from '../types/frontend/config';
 import { getConfigFromUid, updateConfig } from '../db/models/config';
 import { getAuthsByUser } from '../db/models/auth';
 import { deleteUserById } from '../db/models/user';
-import { isPaimonData, PaimonFile } from '../types/frontend/paimonFIle';
+import { isPaimonData, PaimonFile } from '../types/frontend/paimonFile.ts';
 import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler.ts';
 import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler.ts';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
