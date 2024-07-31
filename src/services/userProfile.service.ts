@@ -304,7 +304,7 @@ export class UserProfileService {
 	private convertToFrontendWishes(wishes: Wish[]): IWish[] {
 		return wishes.map((wish) => ({
 			type: wish.itemType === 'Character' ? 'Character' : 'Weapon',
-			number: Number(wish.genshinWishId) ?? undefined,
+			number: Number(wish.genshinWishId),
 			key: wish.name,
 			date: wish.time,
 			pity: Number(wish.pity),
