@@ -304,12 +304,13 @@ export class UserProfileService {
 	private convertToFrontendWishes(wishes: Wish[]): IWish[] {
 		return wishes.map((wish) => ({
 			type: wish.itemType === 'Character' ? 'Character' : 'Weapon',
-			number: Number(wish.id),
+			number: Number(wish.genshinWishId) ?? undefined,
 			key: wish.name,
 			date: wish.time,
 			pity: Number(wish.pity),
 			rarity: Number(wish.rankType),
-			banner: 'BalladInGoblets1'
+			banner: 'BalladInGoblets1',
+			order: wish.order
 		}));
 	}
 }

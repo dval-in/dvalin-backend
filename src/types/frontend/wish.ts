@@ -4,7 +4,7 @@ export type IWishes = {
 
 export type IWish = {
 	type: 'Weapon' | 'Character';
-	number?: number;
+	number: number | undefined;
 	key: string;
 	date: Date;
 	pity: number;
