@@ -5,7 +5,6 @@ import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFIle';
-import { randomUUID } from 'crypto';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -29,9 +28,13 @@ export const handlePaimonWishes = async (
 		if (accountResult.isErr()) {
 			return err(new Error('User does not have a Genshin account'));
 		}
-		return err(new Error('User needs to add wishes with dvalin first'));
+		const finalWishes = newlyFormattedWishes.map((wish, index) => ({
+			...wish,
+			order: index + 1
+		}));
+		await createMultipleWishes(finalWishes);
 	} else {
-		const newWishes = filterNewWishes(newlyFormattedWishes, currentWishes);
+		const newWishes = mergeWishes(currentWishes, newlyFormattedWishes);
 		if (newWishes.length > 0) {
 			await createMultipleWishes(newWishes);
 		}
@@ -80,15 +83,15 @@ const formatWishes = (
 	uid: string,
 	bktree: BKTree,
 	dataIndex: Index
-): Omit<Wish, 'createdAt'>[] => {
+): Omit<Wish, 'createdAt' | 'order'>[] => {
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
 		const rankType = wish.rate ? '3' : getRarity(name, itemType, dataIndex);
 
 		return {
-			id: randomUUID(),
 			uid,
+			genshinWishId: null,
 			name,
 			itemType,
 			time: new Date(wish.time),
@@ -111,23 +114,50 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	}
 };
 
-const filterNewWishes = (
-	newWishes: Omit<Wish, 'createdAt'>[],
-	currentWishes: Omit<Wish, 'createdAt'>[]
-) => {
-	const wishMap = new Map<string, Omit<Wish, 'createdAt'>>();
-	let latestCurrentWishTime = -Infinity;
+function mergeWishes(
+	currentWishes: Omit<Wish, 'createdAt'>[],
+	newWishes: Omit<Wish, 'createdAt' | 'order'>[]
+): Omit<Wish, 'createdAt'>[] {
+	const mergedWishes: Omit<Wish, 'createdAt'>[] = [];
+	let currentIndex = 0;
+	let newIndex = 0;
 
-	currentWishes.forEach((wish) => {
-		const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}`;
-		wishMap.set(key, wish);
-		latestCurrentWishTime = Math.max(latestCurrentWishTime, wish.time.getTime());
-	});
+	while (currentIndex < currentWishes.length || newIndex < newWishes.length) {
+		if (newIndex >= newWishes.length) {
+			// If we've exhausted new wishes, add remaining current wishes
+			mergedWishes.push(currentWishes[currentIndex]);
+			currentIndex++;
+		} else if (currentIndex >= currentWishes.length) {
+			// If we've exhausted current wishes, add remaining new wishes
+			mergedWishes.push({
+				...newWishes[newIndex],
+				order: mergedWishes.length + 1,
+				genshinWishId: null
+			});
+			newIndex++;
+		} else {
+			// Compare timestamps
+			const currentTime = currentWishes[currentIndex].time.getTime();
+			const newTime = newWishes[newIndex].time.getTime();
 
-	const filteredWishes = newWishes.filter((wish) => {
-		const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}`;
-		return !wishMap.has(key) && wish.time.getTime() < latestCurrentWishTime;
-	});
+			if (newTime <= currentTime) {
+				// Add new wish
+				mergedWishes.push({
+					...newWishes[newIndex],
+					order: mergedWishes.length + 1,
+					genshinWishId: null
+				});
+				newIndex++;
+			} else {
+				// Add current wish
+				mergedWishes.push({
+					...currentWishes[currentIndex],
+					order: mergedWishes.length + 1
+				});
+				currentIndex++;
+			}
+		}
+	}
 
-	return filteredWishes;
-};
+	return mergedWishes;
+}
