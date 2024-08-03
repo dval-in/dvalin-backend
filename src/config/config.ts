@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { logToConsole } from '../utils/log';
 
 dotenv.config();
+const MAX_PORT_VALUE = 65535;
 
 // Define the schema as before
 const configSchema = z.object({
@@ -20,10 +21,10 @@ const configSchema = z.object({
 	COOKIE_SECRET: z.string().min(1),
 	FRONTEND_URL: z.string().min(1),
 	BACKEND_URL: z.string().min(1),
-	BACKEND_PORT: z.number().min(1024).max(65535),
+	BACKEND_PORT: z.number().min(1024).max(MAX_PORT_VALUE),
 	DATABASE_URL: z.string().url(),
 	REDIS_HOSTNAME: z.string().min(1),
-	REDIS_PORT: z.number().min(1024).max(65535),
+	REDIS_PORT: z.number().min(1024).max(MAX_PORT_VALUE),
 	REDIS_PASSWORD: z.string().min(0),
 	DEBUG: z.boolean()
 });

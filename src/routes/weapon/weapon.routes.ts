@@ -8,7 +8,7 @@ export class WeaponRoute {
 	setupRoutes(): void {
 		this.app.post('/weapon', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const { user, weapon } = req.body;

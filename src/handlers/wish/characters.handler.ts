@@ -13,13 +13,13 @@ const transformCharacterFromWishes = (
 	const constellationCountMap: Map<string, number> = new Map();
 
 	for (const wish of wishes) {
-		const count = (constellationCountMap.get(wish.name) || 0) + 1;
-		constellationCountMap.set(wish.name, count);
+		const count = constellationCountMap.get(wish.name) || 0;
+		constellationCountMap.set(wish.name, count + 1);
 	}
 
-	return Array.from(constellationCountMap, ([key, constellation]) => ({
+	return Array.from(constellationCountMap, ([key, count]) => ({
 		key,
-		constellation,
+		constellation: count - 1, // Subtract 1 to make first encounter 0
 		uid
 	}));
 };

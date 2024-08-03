@@ -1,10 +1,11 @@
+import { Request, Response } from 'express';
 import { config } from '../config/config';
 import { logToConsole } from '../utils/log';
 
 class AuthService {
-	logout(req: any, res: any) {
+	logout(req: Request, res: Response) {
 		req.logout(() => {
-			req.session.destroy((err: any) => {
+			req.session.destroy((err) => {
 				if (err) {
 					logToConsole('AuthService', 'Session destroy error:' + err);
 				}

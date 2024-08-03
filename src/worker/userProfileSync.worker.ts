@@ -10,7 +10,7 @@ import {
 } from '../queues/syncUserProfile.queue.ts';
 import { UserProfileService } from '../services/userProfile.service.ts';
 import { Index } from '../types/models/dataIndex';
-import { PaimonFile } from '../types/frontend/paimonFIle';
+import { PaimonFile } from '../types/frontend/paimonFile.ts';
 
 const userProfileService = new UserProfileService();
 
@@ -52,7 +52,7 @@ export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => 
 		wss.invalidateQuery(job.data.userId, 'userSyncStatus');
 	});
 
-	worker.on('completed', async (job, returnvalue) => {
+	worker.on('completed', async (job, _returnvalue) => {
 		logToConsole(
 			'UserProfileSyncWorker',
 			`completed: ${job.id}, remaining: ${await syncUserProfileQueue.getWaitingCount()}`

@@ -9,4 +9,4 @@ const langKey = ['en', 'de', 'es', 'fr', 'id', 'ja', 'ko', 'pt', 'ru', 'th', 'vi
 
 export type langKey = (typeof langKey)[number];
 
-export const isLangKey = (key: string): key is langKey => langKey.includes(key as langKey);
+export const isLangKey = (key: string): key is langKey => langKey.includes(key);

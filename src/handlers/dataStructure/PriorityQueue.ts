@@ -1,6 +1,6 @@
 class PriorityQueue<T> {
 	private heap: T[];
-	private comparator: (a: T, b: T) => number;
+	private readonly comparator: (a: T, b: T) => number;
 
 	constructor(comparator: (a: T, b: T) => number) {
 		this.heap = [];
@@ -33,8 +33,8 @@ class PriorityQueue<T> {
 	}
 
 	private siftDown(index: number): void {
-		let left = this.leftChild(index);
-		let right = this.rightChild(index);
+		const left = this.leftChild(index);
+		const right = this.rightChild(index);
 		let smallest = index;
 
 		if (left < this.heap.length && this.comparator(this.heap[left], this.heap[smallest]) < 0) {

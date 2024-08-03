@@ -2,7 +2,6 @@ import { User } from '@prisma/client';
 import { Provider } from '../../types/models/auth';
 import { DBClient } from '../prismaClient';
 import { err, ok, Result } from 'neverthrow';
-import { logToConsole } from '../../utils/log';
 
 const prisma = DBClient.getInstance();
 

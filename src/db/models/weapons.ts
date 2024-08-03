@@ -57,8 +57,7 @@ export const saveWeapons = async (weapons: Weapon[]): Promise<Result<void, Error
 };
 
 export const saveWeaponsRefinement = async (
-	weapons: { id: string; refinement: number }[],
-	uid: string
+	weapons: { id: string; refinement: number }[]
 ): Promise<Result<void, Error>> => {
 	try {
 		const updates = weapons.map((weapon) =>

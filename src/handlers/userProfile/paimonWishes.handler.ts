@@ -2,10 +2,9 @@ import { err, ok, Result } from 'neverthrow';
 import { Index } from '../../types/models/dataIndex';
 import { BKTree } from '../dataStructure/BKTree';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
-import { createMultipleWishes, getWishesByUid } from '../../db/models/wishes';
+import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { PaimonFile } from '../../types/frontend/paimonFIle';
-import { randomUUID } from 'crypto';
+import { PaimonFile } from '../../types/frontend/paimonFile';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -14,7 +13,9 @@ export const handlePaimonWishes = async (
 	dataIndex: Index
 ): Promise<Result<void, Error>> => {
 	const allWishes = assignGachaType(userProfile);
-	if (allWishes.length === 0) return ok(undefined);
+	if (allWishes.length === 0) {
+		return ok(undefined);
+	}
 
 	const newlyFormattedWishes = formatWishes(allWishes, uid, bktree, dataIndex);
 	const currentWishesResult = await getWishesByUid(uid);
@@ -27,9 +28,14 @@ export const handlePaimonWishes = async (
 		if (accountResult.isErr()) {
 			return err(new Error('User does not have a Genshin account'));
 		}
-		return err(new Error('User needs to add wishes with dvalin first'));
+		const finalWishes = newlyFormattedWishes.map((wish, index) => ({
+			...wish,
+			order: index + 1
+		}));
+		await createMultipleWishes(finalWishes);
 	} else {
-		const newWishes = filterNewWishes(newlyFormattedWishes, currentWishes);
+		const newWishes = mergeWishes(currentWishes, newlyFormattedWishes);
+		await deleteWishesByUid(uid);
 		if (newWishes.length > 0) {
 			await createMultipleWishes(newWishes);
 		}
@@ -40,28 +46,32 @@ export const handlePaimonWishes = async (
 
 const assignGachaType = (userProfile: PaimonFile & { userId: string }) => {
 	const allWishesWithType = [
-		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '301'
+			gachaType: '301',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '302'
+			gachaType: '302',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-standard']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-standard']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '200'
+			gachaType: '200',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-beginners']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-beginners']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '100'
+			gachaType: '100',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-chronicled']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-chronicled']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '500'
+			gachaType: '500',
+			order: index + 1
 		}))
 	];
-
 	return allWishesWithType;
 };
 
@@ -74,6 +84,7 @@ const formatWishes = (
 		time: string;
 		pity: number;
 		rate?: number;
+		order: number;
 	}[],
 	uid: string,
 	bktree: BKTree,
@@ -81,18 +92,20 @@ const formatWishes = (
 ): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
+		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
+		const rankType = wish.rate ? '3' : getRarity(name, itemType, dataIndex);
+
 		return {
-			id: randomUUID(),
 			uid,
+			genshinWishId: null,
 			name,
-			itemType: wish.type === 'character' ? 'Character' : 'Weapon',
+			itemType,
+			order: wish.order,
 			time: new Date(wish.time),
 			gachaType: wish.gachaType,
 			pity: wish.pity.toString(),
 			wasImported: true,
-			rankType: wish.rate
-				? '3'
-				: getRarity(name, wish.type === 'character' ? 'Character' : 'Weapon', dataIndex)
+			rankType
 		};
 	});
 };
@@ -101,28 +114,117 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	switch (type) {
 		case 'Character':
 			return dataIndex.Character[key].rarity.toString();
-		default:
+		case 'Weapon':
 			return dataIndex.Weapon[key].rarity.toString();
+		default:
+			throw new Error('Invalid type');
 	}
 };
 
-const filterNewWishes = (
-	newWishes: Omit<Wish, 'createdAt'>[],
-	currentWishes: Omit<Wish, 'createdAt'>[]
+type WishWithoutCreatedAt = Omit<Wish, 'createdAt'>;
+
+type WishesByBanner = {
+	[gachaType: string]: [WishWithoutCreatedAt[], WishWithoutCreatedAt[]];
+};
+
+const mergeWishes = (
+	currentWishes: WishWithoutCreatedAt[],
+	newWishes: WishWithoutCreatedAt[]
+): WishWithoutCreatedAt[] => {
+	// group every wish by gachaType
+	const wishesByBanner = groupWishesByBanner(newWishes, currentWishes);
+	const mergedWishes: WishWithoutCreatedAt[] = [];
+	for (const [newW, currentW] of Object.values(wishesByBanner)) {
+		const merged = mergeWishesForBanner(newW.toReversed(), currentW); // reverse to get the latest wish first
+		mergedWishes.push(...merged);
+	}
+	return mergedWishes;
+};
+
+const groupWishesByBanner = (
+	newWishes: WishWithoutCreatedAt[],
+	currWishes: WishWithoutCreatedAt[]
+): WishesByBanner => {
+	const result: WishesByBanner = {};
+	// Helper function to ensure each gachaType has an entry
+	const ensureGachaTypeEntry = (gachaType: string) => {
+		if (!result[gachaType]) {
+			result[gachaType] = [[], []];
+		}
+	};
+
+	// Process new wishes
+	for (const wish of newWishes) {
+		ensureGachaTypeEntry(wish.gachaType);
+		result[wish.gachaType][0].push(wish);
+	}
+
+	// Process current wishes
+	for (const wish of currWishes) {
+		ensureGachaTypeEntry(wish.gachaType);
+		result[wish.gachaType][1].push(wish);
+	}
+
+	return result;
+};
+
+const mergeWishesForBanner = (
+	newWishes: WishWithoutCreatedAt[],
+	currentWishes: WishWithoutCreatedAt[]
 ) => {
-	const wishMap = new Map<string, Omit<Wish, 'createdAt'>>();
-	let latestCurrentWishTime = -Infinity;
+	if (!newWishes) {
+		return currentWishes;
+	}
+	if (!currentWishes) {
+		return newWishes;
+	}
 
-	currentWishes.forEach((wish) => {
-		const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}`;
-		wishMap.set(key, wish);
-		latestCurrentWishTime = Math.max(latestCurrentWishTime, wish.time.getTime());
+	const oldestWishSaved = currentWishes.at(-1);
+	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
+	let wishToAdd = [];
+	if (oldestWishSaved.time > newWishes[index].time) {
+		// gap between wishes
+		wishToAdd = newWishes.slice(index);
+		currentWishes.push(...wishToAdd);
+		return currentWishes;
+	}
+	while (
+		index < newWishes.length &&
+		oldestWishSaved.time.getTime() === newWishes[index].time.getTime()
+	) {
+		if (
+			oldestWishSaved.name === newWishes[index].name &&
+			currentWishes.length > 1 &&
+			currentWishes.at(-2).name === newWishes[index - 1]?.name
+		) {
+			// Found the exact match, break the loop
+			break;
+		}
+		index++;
+	}
+	wishToAdd = newWishes.slice(index + 1);
+	currentWishes.push(...wishToAdd);
+	currentWishes.reverse();
+	currentWishes.forEach((wish, i) => {
+		wish.order = i + 1;
 	});
-
-	const filteredWishes = newWishes.filter((wish) => {
-		const key = `${wish.name}-${wish.time.getTime()}-${wish.gachaType}`;
-		return !wishMap.has(key) && wish.time.getTime() < latestCurrentWishTime;
-	});
-
-	return filteredWishes;
+	// Rebuild pity
+	let pity4 = 1;
+	let pity5 = 1;
+	// Iterate in order (oldest to newest)
+	for (const wish of currentWishes) {
+		if (wish.rankType === '5') {
+			wish.pity = pity5.toString();
+			pity5 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
+			pity4 += 1;
+		} else if (wish.rankType === '4') {
+			wish.pity = pity4.toString();
+			pity4 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
+			pity5 += 1;
+		} else {
+			pity4 += 1;
+			pity5 += 1;
+		}
+	}
+	return currentWishes;
 };

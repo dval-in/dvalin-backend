@@ -25,7 +25,7 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 				uid
 			},
 			orderBy: {
-				id: 'desc'
+				order: 'desc'
 			}
 		});
 
@@ -35,14 +35,18 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 	}
 };
 
-export const getLatestWishByUid = async (uid: string): Promise<Result<Wish | undefined, Error>> => {
+export const getLatestWishByUidAndGachaType = async (
+	uid: string,
+	gachaType: string
+): Promise<Result<Wish | undefined, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			where: {
-				uid
+				uid,
+				gachaType: gachaType
 			},
 			orderBy: {
-				id: 'desc'
+				order: 'desc'
 			}
 		});
 
@@ -53,5 +57,67 @@ export const getLatestWishByUid = async (uid: string): Promise<Result<Wish | und
 		return ok(wish);
 	} catch (error) {
 		return err(new Error('Failed to retrieve latest wish'));
+	}
+};
+
+export const getLatest4StarWishByUid = async (
+	uid: string
+): Promise<Result<Wish | undefined, Error>> => {
+	try {
+		const wish = await prisma.wish.findFirst({
+			where: {
+				uid,
+				rankType: '4'
+			},
+			orderBy: {
+				order: 'desc'
+			}
+		});
+
+		if (!wish) {
+			return ok(undefined);
+		}
+
+		return ok(wish);
+	} catch (error) {
+		return err(new Error('Failed to retrieve latest 4 star wish'));
+	}
+};
+
+export const getLatest5StarWishByUid = async (
+	uid: string
+): Promise<Result<Wish | undefined, Error>> => {
+	try {
+		const wish = await prisma.wish.findFirst({
+			where: {
+				uid,
+				rankType: '5'
+			},
+			orderBy: {
+				order: 'desc'
+			}
+		});
+
+		if (!wish) {
+			return ok(undefined);
+		}
+
+		return ok(wish);
+	} catch (error) {
+		return err(new Error('Failed to retrieve latest 5 star wish'));
+	}
+};
+
+export const deleteWishesByUid = async (uid: string): Promise<Result<void, Error>> => {
+	try {
+		await prisma.wish.deleteMany({
+			where: {
+				uid
+			}
+		});
+
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to delete wishes'));
 	}
 };
