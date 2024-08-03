@@ -178,12 +178,6 @@ const mergeWishesForBanner = (
 	if (!currentWishes) {
 		return newWishes;
 	}
-	// only for now
-	currentWishes.reverse();
-	// rebuild order
-	currentWishes.forEach((wish, i) => {
-		wish.order = i + 1;
-	});
 
 	const oldestWishSaved = currentWishes.at(-1);
 	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
@@ -210,8 +204,27 @@ const mergeWishesForBanner = (
 	}
 	wishToAdd = newWishes.slice(index + 1);
 	currentWishes.push(...wishToAdd);
+	currentWishes.reverse();
 	currentWishes.forEach((wish, i) => {
 		wish.order = i + 1;
 	});
+	// Rebuild pity
+	let pity4 = 1;
+	let pity5 = 1;
+	// Iterate in order (oldest to newest)
+	for (const wish of currentWishes) {
+		if (wish.rankType === '5') {
+			wish.pity = pity5.toString();
+			pity5 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
+			pity4 += 1;
+		} else if (wish.rankType === '4') {
+			wish.pity = pity4.toString();
+			pity4 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
+			pity5 += 1;
+		} else {
+			pity4 += 1;
+			pity5 += 1;
+		}
+	}
 	return currentWishes;
 };

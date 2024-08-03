@@ -23,10 +23,10 @@ import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler
 import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler.ts';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
-import { IWish } from 'types/frontend/wish.ts';
-import { IAchievements } from 'types/frontend/achievement.ts';
-import { ICharacters } from 'types/frontend/character.ts';
-import { IUser } from 'types/frontend/user.ts';
+import { IWish } from '../types/frontend/wish.ts';
+import { IAchievements } from '../types/frontend/achievement.ts';
+import { ICharacters } from '../types/frontend/character.ts';
+import { IUser } from '../types/frontend/user.ts';
 
 export class UserProfileService {
 	async deleteUserProfile(userId: string): Promise<Result<void, Error>> {
