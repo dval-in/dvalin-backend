@@ -56,7 +56,7 @@
 		"prettier": "^3.3.3",
 		"prisma": "^5.17.0",
 		"ts-loader": "^9.5.1",
-		"tsx": "^4.16.4",
+		"tsx": "^4.16.5",
 		"typescript": "^5.5.4",
 		"typescript-eslint": "^7.18.0"
 	},
