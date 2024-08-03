@@ -131,7 +131,6 @@ class WishService {
 		if (accountResult.isErr()) {
 			return err(accountResult.error);
 		}
-
 		const createWishesResult = await createMultipleWishes(returnvalue);
 		if (createWishesResult.isErr()) {
 			return err(createWishesResult.error);
@@ -214,7 +213,7 @@ class WishService {
 		const wss = wssResult.value;
 		wss.invalidateQuery(userId, 'fetchUserProfile');
 		wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
-		wss.sendToastMessage(userId, 'server.wish_.success', 'success');
+		wss.sendToastMessage(userId, 'server.wish.success', 'success');
 
 		return ok(undefined);
 	}
@@ -230,7 +229,7 @@ class WishService {
 		if (wssResult.isOk()) {
 			const wss = wssResult.value;
 			wss.invalidateQuery(userId, 'fetchHoyoWishStatus');
-			wss.sendToastMessage(userId, 'server.wish_.error', 'error');
+			wss.sendToastMessage(userId, 'server.wish.error', 'error');
 		}
 	}
 }

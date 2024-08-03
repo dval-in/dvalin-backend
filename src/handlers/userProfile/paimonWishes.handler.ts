@@ -2,7 +2,7 @@ import { err, ok, Result } from 'neverthrow';
 import { Index } from '../../types/models/dataIndex';
 import { BKTree } from '../dataStructure/BKTree';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
-import { createMultipleWishes, getWishesByUid } from '../../db/models/wishes';
+import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
 
@@ -35,6 +35,7 @@ export const handlePaimonWishes = async (
 		await createMultipleWishes(finalWishes);
 	} else {
 		const newWishes = mergeWishes(currentWishes, newlyFormattedWishes);
+		await deleteWishesByUid(uid);
 		if (newWishes.length > 0) {
 			await createMultipleWishes(newWishes);
 		}
@@ -45,28 +46,32 @@ export const handlePaimonWishes = async (
 
 const assignGachaType = (userProfile: PaimonFile & { userId: string }) => {
 	const allWishesWithType = [
-		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '301'
+			gachaType: '301',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '302'
+			gachaType: '302',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-standard']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-standard']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '200'
+			gachaType: '200',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-beginners']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-beginners']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '100'
+			gachaType: '100',
+			order: index + 1
 		})),
-		...(userProfile['wish-counter-chronicled']?.pulls || []).map((pull) => ({
+		...(userProfile['wish-counter-chronicled']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '500'
+			gachaType: '500',
+			order: index + 1
 		}))
 	];
-
 	return allWishesWithType;
 };
 
@@ -79,11 +84,12 @@ const formatWishes = (
 		time: string;
 		pity: number;
 		rate?: number;
+		order: number;
 	}[],
 	uid: string,
 	bktree: BKTree,
 	dataIndex: Index
-): Omit<Wish, 'createdAt' | 'order'>[] => {
+): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
@@ -94,6 +100,7 @@ const formatWishes = (
 			genshinWishId: null,
 			name,
 			itemType,
+			order: wish.order,
 			time: new Date(wish.time),
 			gachaType: wish.gachaType,
 			pity: wish.pity.toString(),
@@ -114,50 +121,97 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 	}
 };
 
-function mergeWishes(
-	currentWishes: Omit<Wish, 'createdAt'>[],
-	newWishes: Omit<Wish, 'createdAt' | 'order'>[]
-): Omit<Wish, 'createdAt'>[] {
-	const mergedWishes: Omit<Wish, 'createdAt'>[] = [];
-	let currentIndex = 0;
-	let newIndex = 0;
+type WishWithoutCreatedAt = Omit<Wish, 'createdAt'>;
 
-	while (currentIndex < currentWishes.length || newIndex < newWishes.length) {
-		if (newIndex >= newWishes.length) {
-			// If we've exhausted new wishes, add remaining current wishes
-			mergedWishes.push(currentWishes[currentIndex]);
-			currentIndex++;
-		} else if (currentIndex >= currentWishes.length) {
-			// If we've exhausted current wishes, add remaining new wishes
-			mergedWishes.push({
-				...newWishes[newIndex],
-				order: mergedWishes.length + 1,
-				genshinWishId: null
-			});
-			newIndex++;
-		} else {
-			// Compare timestamps
-			const currentTime = currentWishes[currentIndex].time.getTime();
-			const newTime = newWishes[newIndex].time.getTime();
+type WishesByBanner = {
+	[gachaType: string]: [WishWithoutCreatedAt[], WishWithoutCreatedAt[]];
+};
 
-			if (newTime <= currentTime) {
-				// Add new wish
-				mergedWishes.push({
-					...newWishes[newIndex],
-					order: mergedWishes.length + 1,
-					genshinWishId: null
-				});
-				newIndex++;
-			} else {
-				// Add current wish
-				mergedWishes.push({
-					...currentWishes[currentIndex],
-					order: mergedWishes.length + 1
-				});
-				currentIndex++;
-			}
+const mergeWishes = (
+	currentWishes: WishWithoutCreatedAt[],
+	newWishes: WishWithoutCreatedAt[]
+): WishWithoutCreatedAt[] => {
+	// group every wish by gachaType
+	const wishesByBanner = groupWishesByBanner(newWishes, currentWishes);
+	const mergedWishes: WishWithoutCreatedAt[] = [];
+	for (const [newW, currentW] of Object.values(wishesByBanner)) {
+		const merged = mergeWishesForBanner(newW.toReversed(), currentW); // reverse to get the latest wish first
+		mergedWishes.push(...merged);
+	}
+	return mergedWishes;
+};
+
+const groupWishesByBanner = (
+	newWishes: WishWithoutCreatedAt[],
+	currWishes: WishWithoutCreatedAt[]
+): WishesByBanner => {
+	const result: WishesByBanner = {};
+	// Helper function to ensure each gachaType has an entry
+	const ensureGachaTypeEntry = (gachaType: string) => {
+		if (!result[gachaType]) {
+			result[gachaType] = [[], []];
 		}
+	};
+
+	// Process new wishes
+	for (const wish of newWishes) {
+		ensureGachaTypeEntry(wish.gachaType);
+		result[wish.gachaType][0].push(wish);
 	}
 
-	return mergedWishes;
-}
+	// Process current wishes
+	for (const wish of currWishes) {
+		ensureGachaTypeEntry(wish.gachaType);
+		result[wish.gachaType][1].push(wish);
+	}
+
+	return result;
+};
+
+const mergeWishesForBanner = (
+	newWishes: WishWithoutCreatedAt[],
+	currentWishes: WishWithoutCreatedAt[]
+) => {
+	if (!newWishes) {
+		return currentWishes;
+	}
+	if (!currentWishes) {
+		return newWishes;
+	}
+	// only for now
+	currentWishes.reverse();
+	// rebuild order
+	currentWishes.forEach((wish, i) => {
+		wish.order = i + 1;
+	});
+
+	const oldestWishSaved = currentWishes.at(-1);
+	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
+	let wishToAdd = [];
+	if (oldestWishSaved.time > newWishes[index].time) {
+		// gap between wishes
+		wishToAdd = newWishes.slice(index);
+		currentWishes.push(...wishToAdd);
+		return currentWishes;
+	}
+	while (
+		index < newWishes.length &&
+		oldestWishSaved.time.getTime() === newWishes[index].time.getTime()
+	) {
+		if (
+			oldestWishSaved.name === newWishes[index].name &&
+			currentWishes.length > 1 &&
+			currentWishes.at(-2).name === newWishes[index - 1]?.name
+		) {
+			// Found the exact match, break the loop
+			break;
+		}
+		index++;
+	}
+	wishToAdd = newWishes.slice(index + 1);
+	currentWishes.push(...wishToAdd);
+	currentWishes.forEach((wish, i) => {
+		wish.order = i + 1;
+	});
+	return currentWishes;
+};

@@ -14,7 +14,6 @@ export class WishRoute {
 				typeof req.query.authkey === 'string'
 					? decodeURIComponent(req.query.authkey)
 					: null;
-
 			const response = await wishService.checkOrCreateJob(req.user.userId, authkey);
 			response.match(
 				(data) => sendSuccessResponse(res, data),

@@ -68,7 +68,7 @@ model Wish {
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   wasImported    Boolean        @default(false)
 
-  @@id([order, uid], name: "id")
+  @@id([order, uid, gachaType], name: "id")
 }
 
 model Achievement {

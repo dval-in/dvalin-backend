@@ -60,8 +60,8 @@ export class UserRoute {
 					];
 					await saveCharacters(alreadyExistingCharacter).then(
 						() => sendSuccessResponse(res, { state: 'SUCCESS', data: genshinAccount }),
-						async (_error) => {
-							sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+						(_error) => {
+							return;
 						}
 					);
 				},

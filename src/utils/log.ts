@@ -1,4 +1,10 @@
-export const logToConsole = (path: string, message: string) => {
+import chalk from 'chalk';
+
+export const logToConsole = (
+	path: string,
+	message: string,
+	level: 'info' | 'warn' | 'error' = 'info'
+) => {
 	const now = new Date();
 	const formattedDate = now.toLocaleString('fr-Fr', {
 		year: 'numeric',
@@ -10,5 +16,21 @@ export const logToConsole = (path: string, message: string) => {
 		hour12: false
 	});
 
-	console.log(`[${formattedDate} | ${path}] ${message}`); // NOSONAR
+	const timestamp = chalk.gray(`[${formattedDate}]`);
+	const pathInfo = chalk.cyan(`[${path}]`);
+
+	let coloredMessage;
+	switch (level) {
+		case 'info':
+			coloredMessage = chalk.green(message);
+			break;
+		case 'warn':
+			coloredMessage = chalk.yellow(message);
+			break;
+		case 'error':
+			coloredMessage = chalk.red(message);
+			break;
+	}
+
+	console.log(`${timestamp} ${pathInfo} ${coloredMessage}`); // NOSONAR
 };

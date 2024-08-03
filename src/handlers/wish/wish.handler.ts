@@ -10,7 +10,7 @@ const fetchWishes = async (
 	gachaType: string,
 	endId: string
 ): Promise<Result<GachaItem[], string>> => {
-	const FETCH_URL = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
+	const FETCH_URL = 'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getGachaLog';
 	try {
 		const { data } = await axios.get<HoyoWishResponse>(FETCH_URL, {
 			params: {
@@ -32,20 +32,9 @@ const fetchWishes = async (
 	}
 };
 
-const processWish = (
-	wish: GachaItem,
-	bkTree: BKTree,
-	pityCounter: {
-		fourStar: number;
-		fiveStar: number;
-	},
-	order: number
-): Omit<Wish, 'createdAt'> => {
-	pityCounter.fourStar++;
-	pityCounter.fiveStar++;
-
+const processWish = (wish: GachaItem, bkTree: BKTree, order: number): Omit<Wish, 'createdAt'> => {
 	const processedWish: Omit<Wish, 'createdAt'> = {
-		gachaType: wish.gacha_type,
+		gachaType: wish.gacha_type === '400' ? '301' : wish.gacha_type,
 		time: new Date(wish.time),
 		name: bkTree.search(wish.name)[0].word,
 		itemType: wish.item_type,
@@ -56,15 +45,6 @@ const processWish = (
 		pity: '1',
 		wasImported: false
 	};
-
-	if (wish.rank_type === '4') {
-		processedWish.pity = pityCounter.fourStar.toString();
-		pityCounter.fourStar = 0;
-	}
-	if (wish.rank_type === '5') {
-		processedWish.pity = pityCounter.fiveStar.toString();
-		pityCounter.fiveStar = 0;
-	}
 
 	return processedWish;
 };
