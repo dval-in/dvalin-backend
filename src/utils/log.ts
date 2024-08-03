@@ -30,6 +30,8 @@ export const logToConsole = (
 		case 'error':
 			coloredMessage = chalk.red(message);
 			break;
+		default:
+			coloredMessage = chalk.gray(message);
 	}
 
 	console.log(`${timestamp} ${pathInfo} ${coloredMessage}`); // NOSONAR
