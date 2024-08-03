@@ -122,7 +122,7 @@ export class UserProfileService {
 
 		const userProfile: UserProfile = {
 			format: 'dvalin',
-			version: 1,
+			version: 1.1,
 			account: user,
 			wishes,
 			auth,
