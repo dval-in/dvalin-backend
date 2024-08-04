@@ -93,7 +93,7 @@ const formatWishes = (
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
-		const rankType = wish.rate ? '3' : getRarity(name, itemType, dataIndex);
+		const rankType = getRarity(name, itemType, dataIndex);
 
 		return {
 			uid,
@@ -117,7 +117,7 @@ const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index):
 		case 'Weapon':
 			return dataIndex.Weapon[key].rarity.toString();
 		default:
-			throw new Error('Invalid type');
+			return '3';
 	}
 };
 
@@ -209,21 +209,20 @@ const mergeWishesForBanner = (
 		wish.order = i + 1;
 	});
 	// Rebuild pity
-	let pity4 = 1;
-	let pity5 = 1;
+	let fiveStarPity = 0;
+	let fourStarPity = 0;
 	// Iterate in order (oldest to newest)
 	for (const wish of currentWishes) {
+		fiveStarPity++;
+		fourStarPity++;
 		if (wish.rankType === '5') {
-			wish.pity = pity5.toString();
-			pity5 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
-			pity4 += 1;
+			wish.pity = fiveStarPity.toString();
+			fiveStarPity = 0;
 		} else if (wish.rankType === '4') {
-			wish.pity = pity4.toString();
-			pity4 = 1; //NOSONAR Review this redundant assignment: "pity5" already holds the assigned value along all execution paths.sonarlint(typescript:S4165) -> false positive
-			pity5 += 1;
+			wish.pity = fourStarPity.toString();
+			fourStarPity = 0;
 		} else {
-			pity4 += 1;
-			pity5 += 1;
+			wish.pity = '0';
 		}
 	}
 	return currentWishes;
