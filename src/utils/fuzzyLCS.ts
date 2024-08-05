@@ -87,13 +87,13 @@ const optimizedFuzzyLCS = (
 	const maxLengthDiff = Math.max(s1.length, s2.length) * (1 - minSimilarityThreshold);
 	console.log(maxLengthDiff);
 	if (Math.abs(s1.length - s2.length) > maxLengthDiff) {
-		return Math.max(s1.length, s2.length);  // Return max length as a large distance
+		return Math.max(s1.length, s2.length); // Return max length as a large distance
 	}
 
 	const similarity = fuzzyLCS(s1, s2);
 	console.log(similarity);
 	if (similarity < minSimilarityThreshold) {
-		return Math.max(s1.length, s2.length);  // Return max length as a large distance
+		return Math.max(s1.length, s2.length); // Return max length as a large distance
 	}
 
 	// Convert similarity to distance (0 means identical, larger numbers mean more different)
