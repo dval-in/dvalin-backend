@@ -15,7 +15,7 @@ import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './handlers/dataStructure/BKTree';
-import { optimizedLevenshteinDistance } from './utils/levenshteinDistance';
+import { optimizedFuzzyLCS } from './utils/fuzzyLCS.ts';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -74,7 +74,7 @@ dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
 wishRoute.setupRoutes();
 
-const bkTree = new BKTree(optimizedLevenshteinDistance);
+const bkTree = new BKTree(optimizedFuzzyLCS);
 dynamicDataRoute.getDataIndex().then((data) => {
 	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
 	indexes.forEach((key) => bkTree.insert(key));
