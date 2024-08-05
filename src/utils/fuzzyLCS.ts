@@ -10,7 +10,9 @@
 const fuzzyLCS = (s1: string, s2: string): number => {
 	const m = s1.length;
 	const n = s2.length;
-	const dp: number[][] = Array(m + 1).fill(null).map(() => Array(n + 1).fill(0));
+	const dp: number[][] = Array(m + 1)
+		.fill(null)
+		.map(() => Array(n + 1).fill(0));
 
 	for (let i = 1; i <= m; i++) {
 		for (let j = 1; j <= n; j++) {
@@ -35,27 +37,33 @@ const fuzzyLCS = (s1: string, s2: string): number => {
  * @returns {boolean} - True if the characters are considered a fuzzy match, false otherwise.
  */
 const isFuzzyMatch = (c1: string, c2: string): boolean => {
-	if (c1 === c2) { return true };
+	if (c1 === c2) {
+		return true;
+	}
 
 	// Consider case-insensitive matches
-	if (c1.toLowerCase() === c2.toLowerCase()) { return true };
+	if (c1.toLowerCase() === c2.toLowerCase()) {
+		return true;
+	}
 
 	// Consider similar-looking characters - shouldnt be a thing BUT might happen with some manual import or smth
 	const similarChars: { [key: string]: string[] } = {
-		'l': ['1', 'i'],
-		'a': ['e', '@'],
-		'e': ['a', '3'],
-		'i': ['1', 'l'],
-		'o': ['0'],
-		's': ['5', '$'],
-		't': ['7'],
-		'b': ['6', '8'],
-		'g': ['9'],
-		'z': ['2'],
+		l: ['1', 'i'],
+		a: ['e', '@'],
+		e: ['a', '3'],
+		i: ['1', 'l'],
+		o: ['0'],
+		s: ['5', '$'],
+		t: ['7'],
+		b: ['6', '8'],
+		g: ['9'],
+		z: ['2']
 	};
 
-	if (similarChars[c1.toLowerCase()]?.includes(c2.toLowerCase()) ||
-		similarChars[c2.toLowerCase()]?.includes(c1.toLowerCase())) {
+	if (
+		similarChars[c1.toLowerCase()]?.includes(c2.toLowerCase()) ||
+		similarChars[c2.toLowerCase()]?.includes(c1.toLowerCase())
+	) {
 		return true;
 	}
 
@@ -70,7 +78,11 @@ const isFuzzyMatch = (c1: string, c2: string): boolean => {
  * @param {number} minSimilarityThreshold - The minimum similarity threshold for considering strings similar (0-1, default 0.7).
  * @returns {number} - The fuzzy LCS similarity score (0-1), or -1 if below the minimum threshold.
  */
-const optimizedFuzzyLCS = (s1: string, s2: string, minSimilarityThreshold: number = 0.7): number => {
+const optimizedFuzzyLCS = (
+	s1: string,
+	s2: string,
+	minSimilarityThreshold: number = 0.7
+): number => {
 	// Early exit if the length difference is too large
 	const maxLengthDiff = Math.max(s1.length, s2.length) * (1 - minSimilarityThreshold);
 	if (Math.abs(s1.length - s2.length) > maxLengthDiff) {
