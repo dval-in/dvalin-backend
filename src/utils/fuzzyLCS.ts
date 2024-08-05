@@ -71,12 +71,12 @@ const isFuzzyMatch = (c1: string, c2: string): boolean => {
 };
 
 /**
- * Calculates the fuzzy LCS similarity between two strings with an early exit option.
+ * Calculates the fuzzy LCS similarity between two strings and converts it to a distance metric.
  *
  * @param {string} s1 - The first string.
  * @param {string} s2 - The second string.
  * @param {number} minSimilarityThreshold - The minimum similarity threshold for considering strings similar (0-1, default 0.7).
- * @returns {number} - The fuzzy LCS similarity score (0-1), or -1 if below the minimum threshold.
+ * @returns {number} - The fuzzy distance (integer), or a large number if below the minimum threshold.
  */
 const optimizedFuzzyLCS = (
 	s1: string,
@@ -85,12 +85,19 @@ const optimizedFuzzyLCS = (
 ): number => {
 	// Early exit if the length difference is too large
 	const maxLengthDiff = Math.max(s1.length, s2.length) * (1 - minSimilarityThreshold);
+	console.log(maxLengthDiff);
 	if (Math.abs(s1.length - s2.length) > maxLengthDiff) {
-		return -1;
+		return Math.max(s1.length, s2.length);  // Return max length as a large distance
 	}
 
 	const similarity = fuzzyLCS(s1, s2);
-	return similarity >= minSimilarityThreshold ? similarity : -1;
+	console.log(similarity);
+	if (similarity < minSimilarityThreshold) {
+		return Math.max(s1.length, s2.length);  // Return max length as a large distance
+	}
+
+	// Convert similarity to distance (0 means identical, larger numbers mean more different)
+	return Math.round((1 - similarity) * Math.max(s1.length, s2.length));
 };
 
 export { optimizedFuzzyLCS };
