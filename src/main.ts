@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Response, Request } from 'express';
 import bodyParser from 'body-parser';
 import { config } from './config/config';
 import cors from 'cors';
@@ -63,8 +63,19 @@ const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 const bannerRoute = new BannerRoute(app);
 
+const getAppStatus = () => {
+	return dynamicDataRoute.isInitialized && bannerRoute.isInitialized;
+};
+
+const initMiddleware = (req: Request, res: Response, next: NextFunction) => {
+	if (!getAppStatus() && req.path !== '/') {
+		return res.status(503).json({ state: 'INITIALIZING' });
+	}
+	return next();
+};
+
 app.get('/', (_req, res) => {
-	if (dynamicDataRoute.isInitialized && bannerRoute.isInitialized) {
+	if (getAppStatus()) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });

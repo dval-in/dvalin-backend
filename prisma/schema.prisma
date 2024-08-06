@@ -64,7 +64,7 @@ model Wish {
   name           String
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
-  pity           String?
+  pity           String
   bannerId       String
   isFeatured     Boolean        @default(false)
   wonFiftyFifty  Boolean        @default(false)

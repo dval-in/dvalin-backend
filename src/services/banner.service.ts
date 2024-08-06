@@ -8,7 +8,6 @@ import { randomDelay } from '../utils/time';
 class BannerService {
 	private scheduler = new ToadScheduler();
 	private bannerData: Banner[] = undefined;
-	public isInitialized = false;
 
 	async initialize(): Promise<Result<void, Error>> {
 		const bannerResult = await this.updateBannerData();
@@ -17,7 +16,6 @@ class BannerService {
 		}
 		logToConsole('BannerDataService', 'BannerDataß updater is active');
 		this.startUpdates();
-		this.isInitialized = true;
 		return ok(undefined);
 	}
 
