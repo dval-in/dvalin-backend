@@ -74,6 +74,8 @@ const initMiddleware = (req: Request, res: Response, next: NextFunction) => {
 	return next();
 };
 
+app.use(initMiddleware);
+
 app.get('/', (_req, res) => {
 	if (getAppStatus()) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
