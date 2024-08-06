@@ -69,8 +69,8 @@ export const setupWishWorker = (bkTree: BKTree) => {
 		}
 	});
 
-	worker.on('error', (err) => {
-		logToConsole('Wish.worker', err.message);
+	worker.on('error', (error) => {
+		logToConsole('Wish.worker', error.message);
 	});
 
 	waitForInitialization(bkTree).then(() => {

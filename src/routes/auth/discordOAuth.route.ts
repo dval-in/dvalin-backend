@@ -14,7 +14,7 @@ const setupDiscordOAuth = (app: Express): void => {
 	app.get(
 		'/auth/discord/callback',
 		passport.authenticate('discord', { failureRedirect: config.FRONTEND_URL + '/login' }),
-		(req, res) => {
+		(_req, res) => {
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
@@ -30,8 +30,8 @@ const setupDiscordOAuth = (app: Express): void => {
 			},
 			async (
 				req: Request,
-				accessToken: string,
-				refreshToken: string,
+				_accessToken: string,
+				_refreshToken: string,
 				profile: Profile,
 				cb: VerifyCallback
 			) => {
@@ -50,7 +50,7 @@ const setupDiscordOAuth = (app: Express): void => {
 						user = createUserResult.value;
 					}
 
-					cb(null, user);
+					return cb(null, user);
 				} else {
 					const createAuthResult = await createAuth(
 						profile.id,
@@ -61,7 +61,7 @@ const setupDiscordOAuth = (app: Express): void => {
 						return cb(createAuthResult.error, req.user);
 					}
 
-					cb(null, req.user);
+					return cb(null, req.user);
 				}
 			}
 		)

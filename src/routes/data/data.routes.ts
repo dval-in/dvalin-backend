@@ -24,19 +24,19 @@ export class DynamicDataRoute {
 	setupRoutes(): void {
 		this.app.get('/data/:dataType/index', async (req: Request, res: Response) => {
 			if (!this.isInitialised) {
-				return sendErrorResponse(res, 503, 'NOT_INITIALIZED');
+				sendErrorResponse(res, 503, 'NOT_INITIALIZED');
 			}
 
 			const { dataType } = req.params;
 
 			if (dataType !== 'Character' && dataType !== 'Weapon') {
-				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
+				sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
 			const index = dataService.getIndex();
 
 			if (!(dataType in index)) {
-				return sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
+				sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
 			}
 
 			sendSuccessResponse(res, index[dataType]);
@@ -51,13 +51,13 @@ export class DynamicDataRoute {
 			}
 
 			if (!isDataTypeKey(dataType)) {
-				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
+				sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
 			const result = await queryGitHubFile(language, dataType, name);
 			result.match(
 				(data) => sendSuccessResponse(res, data),
-				(error) => sendErrorResponse(res, 404, 'NOT_FOUND')
+				(_error) => sendErrorResponse(res, 404, 'NOT_FOUND')
 			);
 		});
 	}

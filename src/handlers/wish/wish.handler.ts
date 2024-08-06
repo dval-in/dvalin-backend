@@ -4,14 +4,14 @@ import { Result, ok, err } from 'neverthrow';
 import { GachaItem, HoyoWishResponse } from '../../types/models/wish';
 import { logToConsole } from '../../utils/log';
 import { BKTree } from '../dataStructure/BKTree';
-import { convertGachaType, getBannerIdFromTime } from 'utils/bannerIdentifier';
+import { convertGachaType, getBannerIdFromTime } from '../../utils/bannerIdentifier';
 
 const fetchWishes = async (
 	authkey: string,
 	gachaType: string,
 	endId: string
 ): Promise<Result<GachaItem[], string>> => {
-	const FETCH_URL = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getGachaLog';
+	const FETCH_URL = 'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getGachaLog';
 	try {
 		const { data } = await axios.get<HoyoWishResponse>(FETCH_URL, {
 			params: {
@@ -33,39 +33,23 @@ const fetchWishes = async (
 	}
 };
 
-const processWish = (
-	wish: GachaItem,
-	bkTree: BKTree,
-	pityCounter: {
-		fourStar: number;
-		fiveStar: number;
-	}
-): Omit<Wish, 'createdAt'> => {
-	pityCounter.fourStar++;
-	pityCounter.fiveStar++;
-
-	const gachaType = convertGachaType(wish.gacha_type);
-
+const processWish = (wish: GachaItem, bkTree: BKTree, order: number): Omit<Wish, 'createdAt'> => {
 	const processedWish: Omit<Wish, 'createdAt'> = {
-		gachaType: gachaType,
+		gachaType: wish.gacha_type === '400' ? '301' : wish.gacha_type,
 		time: new Date(wish.time),
 		name: bkTree.search(wish.name)[0].word,
 		itemType: wish.item_type,
 		rankType: wish.rank_type,
-		id: wish.id,
+		order,
+		genshinWishId: wish.id,
 		uid: wish.uid,
 		pity: '1',
 		wasImported: false,
-		bannerId: getBannerIdFromTime(gachaType, new Date(wish.time))
+		bannerId: getBannerIdFromTime(
+			wish.gacha_type === '400' ? '301' : wish.gacha_type,
+			new Date(wish.time)
+		)
 	};
-
-	if (wish.rank_type === '4') {
-		processedWish.pity = pityCounter.fourStar.toString();
-		pityCounter.fourStar = 0;
-	} else if (wish.rank_type === '5') {
-		processedWish.pity = pityCounter.fiveStar.toString();
-		pityCounter.fiveStar = 0;
-	}
 
 	return processedWish;
 };

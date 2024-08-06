@@ -8,7 +8,7 @@ export class CharacterRoute {
 	setupRoutes(): void {
 		this.app.post('/character', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const { user, character } = req.body;

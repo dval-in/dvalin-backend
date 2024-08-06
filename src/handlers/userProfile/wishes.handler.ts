@@ -1,15 +1,18 @@
 import { Wish } from '@prisma/client';
 import { getWishesByUid, createMultipleWishes } from '../../db/models/wishes';
 import { UserProfile } from '../../types/frontend/dvalinFile';
-import { IMappedWish } from '../../types/frontend/wish';
+import { IWish } from '../../types/frontend/wish';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
+import { randomUUID } from 'node:crypto';
 
 export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
 ): Promise<Result<void, Error>> => {
-	if (!userProfile.wishes) return ok(undefined);
+	if (!userProfile.wishes) {
+		return ok(undefined);
+	}
 
 	const allWishes = [
 		...(userProfile.wishes.CharacterEvent || []),
@@ -43,9 +46,9 @@ export const handleWishes = async (
 	return ok(undefined);
 };
 
-const formatWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
+const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => ({
-		id: wish.number.toString(),
+		genshinWishId: wish.number.toString() ?? randomUUID(),
 		uid,
 		name: wish.key,
 		itemType: wish.type,
@@ -54,7 +57,8 @@ const formatWishes = (wishes: IMappedWish[], uid: string): Omit<Wish, 'createdAt
 		pity: wish.pity.toString(),
 		wasImported: true,
 		rankType: wish.rarity.toString(),
-		bannerId: wish.bannerId
+		bannerId: wish.bannerId,
+		order: wish.order
 	}));
 };
 
@@ -62,9 +66,9 @@ const filterNewWishes = (
 	newWishes: Omit<Wish, 'createdAt'>[],
 	currentWishes: Omit<Wish, 'createdAt'>[]
 ) => {
-	const wishSet = new Set<string>(currentWishes.map((wish) => wish.id));
+	const wishSet = new Set<string>(currentWishes.map((wish) => wish.order.toString()));
 
 	return newWishes.filter((wish) => {
-		return !wishSet.has(wish.id);
+		return !wishSet.has(wish.order.toString());
 	});
 };

@@ -10,7 +10,7 @@ import { Result, ok, err } from 'neverthrow';
  * @param {unknown} data - The data received from the client.
  * @returns {Promise<Result<void, Error>>} - The result of the save operation.
  */
-const handleAchievements = async (socket: Socket, data: unknown): Promise<Result<void, Error>> => {
+const handleAchievements = async (data: unknown): Promise<Result<void, Error>> => {
 	if (!isAchievementData(data)) {
 		return err(new Error('Invalid achievement data'));
 	}

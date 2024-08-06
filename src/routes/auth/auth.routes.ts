@@ -14,7 +14,7 @@ export class AuthRoute {
 		setupMicrosoftOAuth(this.app);
 		setupDiscordOAuth(this.app);
 
-		this.app.get('/auth/providers', (req, res) => {
+		this.app.get('/auth/providers', (_req, res) => {
 			res.send({
 				providers: authService.getProviders()
 			});

@@ -11,7 +11,7 @@ interface SearchResult {
 class BKTree {
 	public isInitialised: boolean = false;
 	private root: BKTreeNode | null = null;
-	private distanceFunction: (a: string, b: string) => number;
+	private readonly distanceFunction: (a: string, b: string) => number;
 
 	constructor(distanceFunction: (a: string, b: string) => number) {
 		this.distanceFunction = distanceFunction;
@@ -30,6 +30,20 @@ class BKTree {
 			}
 
 			currentNode.children[dist] = { word, children: {} };
+		}
+	}
+
+	showTree(): void {
+		console.log('... BK-Tree ...');
+		const showRecursive = (node: BKTreeNode, depth: number): void => {
+			console.log('  '.repeat(depth) + node.word);
+			Object.keys(node.children)
+				.map(Number)
+				.forEach((dist) => showRecursive(node.children[dist], depth + 1));
+		};
+
+		if (this.root) {
+			showRecursive(this.root, 10);
 		}
 	}
 

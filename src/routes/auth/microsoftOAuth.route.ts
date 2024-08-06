@@ -14,7 +14,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 		passport.authenticate('microsoft', {
 			failureRedirect: config.FRONTEND_URL + '/login'
 		}),
-		(req, res) => {
+		(_req, res) => {
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
@@ -29,8 +29,8 @@ const setupMicrosoftOAuth = (app: Express): void => {
 			},
 			async (
 				req: Express.Request,
-				accessToken: string,
-				refreshToken: string,
+				_accessToken: string,
+				_refreshToken: string,
 				profile: Profile,
 				cb: (err?: Error | null, user?: Express.User, info?: object) => void
 			) => {
@@ -49,7 +49,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 						user = createUserResult.value;
 					}
 
-					cb(null, user);
+					return cb(null, user);
 				} else {
 					const createAuthResult = await createAuth(
 						profile.id,
@@ -60,7 +60,7 @@ const setupMicrosoftOAuth = (app: Express): void => {
 						return cb(createAuthResult.error, req.user);
 					}
 
-					cb(null, req.user);
+					return cb(null, req.user);
 				}
 			}
 		)

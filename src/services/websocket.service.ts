@@ -4,7 +4,7 @@ import { Result, ok, err } from 'neverthrow';
 
 export class WebSocketService {
 	private static instance: WebSocketService | undefined = undefined;
-	private io: Server;
+	private readonly io: Server;
 
 	private constructor(io: Server) {
 		this.io = io;
@@ -14,10 +14,9 @@ export class WebSocketService {
 		if (!this.instance && io !== undefined) {
 			this.instance = new WebSocketService(io);
 			return ok(undefined);
-		} else if (!this.instance) {
+		} else {
 			return err(new Error('Websocket requires Socket.IO Server'));
 		}
-		return ok(undefined);
 	}
 
 	public static getInstance(): Result<WebSocketService, Error> {

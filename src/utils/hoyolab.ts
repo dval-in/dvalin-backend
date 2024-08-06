@@ -1,7 +1,11 @@
 import axios from 'axios';
-import { GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
+import { GachaItem, GachaType, GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
 import { logToConsole } from './log';
-import { getLatestWishByUid } from '../db/models/wishes';
+import {
+	getLatest4StarWishByUid,
+	getLatest5StarWishByUid,
+	getLatestWishByUidAndGachaType
+} from '../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
@@ -60,54 +64,129 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
  * @param uid Optional UID.
  * @returns A Promise with the result containing the wish history or an error message.
  */
-
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	bkTree: BKTree,
 	uid: string
 ): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
-	let latestSavedWishId = '0';
-
-	const latestSavedWishResult = await getLatestWishByUid(uid);
-	if (latestSavedWishResult.isErr()) {
-		return err(new Error('Failed to retrieve latest saved wish'));
+	try {
+		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, bkTree, uid);
+		return ok(wishHistory);
+	} catch (error) {
+		return err(new Error(`Failed to fetch wishes: ${error.message}`));
 	}
-	latestSavedWishId = latestSavedWishResult.value?.id || '0';
+};
 
+const fetchAllWishes = async (
+	authkey: string,
+	gachaTypeList: GachaTypeList,
+	bkTree: BKTree,
+	uid: string
+): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 
 	for (const gachaType of gachaTypeList) {
-		let lastNewWishId = '0';
-		let hasMore = true;
-		const pityCounter = { fourStar: 0, fiveStar: 0 };
-
-		while (hasMore) {
-			const wishesResult = await fetchWishes(authkey, gachaType.key, lastNewWishId);
-
-			if (wishesResult.isErr()) {
-				return err(new Error(wishesResult.error));
-			}
-			const wishes = wishesResult.value;
-
-			for (const wish of wishes) {
-				if (wish.id <= latestSavedWishId) {
-					hasMore = false;
-					break;
-				}
-
-				wishHistory.push(processWish(wish, bkTree, pityCounter));
-				lastNewWishId = wish.id;
-			}
-			if (wishes.length < 20) {
-				hasMore = false;
-			}
-
-			await randomDelay(100, 1000);
-		}
+		await fetchWishesForGachaType(authkey, gachaType, bkTree, wishHistory, uid);
 	}
 
-	return ok(wishHistory);
+	return wishHistory;
+};
+
+const fetchWishesForGachaType = async (
+	authkey: string,
+	gachaType: GachaType,
+	bkTree: BKTree,
+	wishHistory: Omit<Wish, 'createdAt'>[],
+	uid: string
+) => {
+	let lastNewWishId = '0';
+	let hasMore = true;
+	const wishArray = [];
+	const latestSavedWishResult = await getLatestWishByUidAndGachaType(uid, gachaType.key);
+	if (latestSavedWishResult.isErr()) {
+		throw new Error('Failed to retrieve latest saved wish');
+	}
+	const latestSavedWish = latestSavedWishResult.value;
+
+	while (hasMore) {
+		const wishesResult = await fetchWishes(authkey, gachaType.key, lastNewWishId);
+		if (wishesResult.isErr()) {
+			throw new Error(wishesResult.error);
+		}
+
+		const wishes = wishesResult.value;
+		hasMore = processWishes(wishes, latestSavedWish, bkTree, wishArray);
+		lastNewWishId = wishes[wishes.length - 1]?.id || lastNewWishId;
+
+		if (wishes.length < 20) {
+			hasMore = false;
+		}
+
+		await randomDelay(200, 1000);
+	}
+	let order = latestSavedWish?.order ?? 0;
+	let fiveStarPity = 0;
+	let fourStarPity = 0;
+
+	const latestSaved5Star = await getLatest5StarWishByUid(uid);
+	if (latestSaved5Star.isOk()) {
+		const fiveStarOrder = latestSaved5Star.value?.order ?? 0;
+		fiveStarPity = order - fiveStarOrder;
+	}
+
+	const latestSaved4Star = await getLatest4StarWishByUid(uid);
+	if (latestSaved4Star.isOk()) {
+		const fourStarOrder = latestSaved4Star.value?.order ?? 0;
+		fourStarPity = order - fourStarOrder;
+	}
+
+	for (const wish of wishArray.toReversed()) {
+		order++;
+		fiveStarPity++;
+		fourStarPity++;
+
+		wish.order = order;
+
+		if (wish.rankType === '5') {
+			wish.pity = fiveStarPity.toString();
+			fiveStarPity = 0;
+		} else if (wish.rankType === '4') {
+			wish.pity = fourStarPity.toString();
+			fourStarPity = 0;
+		} else {
+			wish.pity = '0';
+		}
+	}
+	wishHistory.push(...wishArray);
+};
+
+const processWishes = (
+	wishes: GachaItem[],
+	latestSavedWish: Wish | null,
+	bkTree: BKTree,
+	wishHistory: Omit<Wish, 'createdAt'>[]
+): boolean => {
+	if (!latestSavedWish) {
+		for (const wish of wishes) {
+			wishHistory.push(processWish(wish, bkTree, 0));
+		}
+		return true;
+	}
+
+	for (const wish of wishes) {
+		if (
+			latestSavedWish.genshinWishId === wish.id ||
+			(wish.gacha_type === latestSavedWish.gachaType &&
+				compareGachaItemDate(wish, latestSavedWish.time) === 0 &&
+				bkTree.search(wish.name)[0].word === latestSavedWish.name) ||
+			compareGachaItemDate(wish, latestSavedWish.time) <= 0
+		) {
+			return false;
+		}
+		wishHistory.push(processWish(wish, bkTree, 0));
+	}
+	return true;
 };
 
 /**
@@ -117,7 +196,7 @@ const getWishes = async (
  * @returns The Gacha configuration list result.
  */
 const getGachaConfigList = async (authkey: string): Promise<Result<HoyoConfigResponse, Error>> => {
-	const url = 'https://hk4e-api-os.mihoyo.com/gacha_info/api/getConfigList';
+	const url = 'https://public-operation-hk4e-sg.hoyoverse.com/gacha_info/api/getConfigList';
 
 	try {
 		const response = await axios.get<HoyoConfigResponse>(url, {
@@ -178,5 +257,20 @@ const getServer = (uid: string): ServerKey => {
 			return 'Europe';
 	}
 };
+
+/**
+ * Compares the date of a Gacha item with a given date.
+ * - Negative: item's date is earlier
+ * - Zero: dates are the same (to the second)
+ * - Positive: item's date is later
+ *
+ * @param item Gacha item to compare.
+ * @param compareDate Date to compare with.
+ * @returns The difference in seconds between the two dates.
+ * */
+function compareGachaItemDate(item: GachaItem, compareDate: Date): number {
+	const itemDate = new Date(item.time);
+	return Math.floor(itemDate.getTime() / 1000) - Math.floor(compareDate.getTime() / 1000);
+}
 
 export { getWishes, getGachaConfigList, serverTimeToUTC, getServer };

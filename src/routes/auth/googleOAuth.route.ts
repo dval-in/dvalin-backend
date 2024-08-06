@@ -10,7 +10,7 @@ const setupGoogleOAuth = (app: Express): void => {
 	app.get(
 		'/auth/google/callback',
 		passport.authenticate('google', { failureRedirect: config.FRONTEND_URL + '/login' }),
-		(req, res) => {
+		(_req, res) => {
 			res.redirect(config.FRONTEND_URL);
 		}
 	);
@@ -23,7 +23,7 @@ const setupGoogleOAuth = (app: Express): void => {
 				scope: ['profile'],
 				passReqToCallback: true
 			},
-			async (req, accessToken, refreshToken, profile, cb) => {
+			async (req, _accessToken, _refreshToken, profile, cb) => {
 				if (req.user === undefined) {
 					const userResult = await getUserByAuth(profile.id, 'Google');
 					if (userResult.isErr()) {
@@ -39,7 +39,7 @@ const setupGoogleOAuth = (app: Express): void => {
 						user = createUserResult.value;
 					}
 
-					cb(null, user);
+					return cb(null, user);
 				} else {
 					const createAuthResult = await createAuth(
 						profile.id,
@@ -50,7 +50,7 @@ const setupGoogleOAuth = (app: Express): void => {
 						return cb(createAuthResult.error, req.user);
 					}
 
-					cb(null, req.user);
+					return cb(null, req.user);
 				}
 			}
 		)

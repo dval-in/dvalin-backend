@@ -6,7 +6,6 @@ import { RequestHandler } from 'express';
 import { WebSocketService } from '../../services/websocket.service.ts';
 import { handleAchievements } from './achievement.handler.ts';
 import { getGenshinAccountsByUser } from '../../db/models/genshinAccount';
-import { Result } from 'neverthrow';
 
 /**
  * Middleware to apply another middleware only for handshake requests.
@@ -81,7 +80,7 @@ export const setupWebsockets = (io: Server): void => {
 						return;
 					}
 
-					const achievementResult = await handleAchievements(socket, data);
+					const achievementResult = await handleAchievements(data);
 					await achievementResult.match(
 						async () => {
 							socket.emit('achievementAdded', { success: true });
