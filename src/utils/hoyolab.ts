@@ -11,6 +11,7 @@ import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
 import { fetchWishes, processWish } from '../handlers/wish/wish.handler.ts';
+import { randomDelay } from './time.ts';
 
 /**
  * Converts a time returned by server into UTC time.
@@ -100,9 +101,10 @@ const fetchWishesForGachaType = async (
 	wishHistory: Omit<Wish, 'createdAt'>[],
 	uid: string
 ) => {
+	// NOSONAR : function complexity of 18 instead of 15, but still fine has its mostly 4 & 5 star double treatment
 	let lastNewWishId = '0';
 	let hasMore = true;
-	const wishArray = [];
+	const wishArray: Wish[] = [];
 	const latestSavedWishResult = await getLatestWishByUidAndGachaType(uid, gachaType.key);
 	if (latestSavedWishResult.isErr()) {
 		throw new Error('Failed to retrieve latest saved wish');
@@ -128,16 +130,20 @@ const fetchWishesForGachaType = async (
 	let order = latestSavedWish?.order ?? 0;
 	let fiveStarPity = 0;
 	let fourStarPity = 0;
+	let prev5StarIsFeatured = false;
+	let prev4StarIsFeatured = false;
 
 	const latestSaved5Star = await getLatest5StarWishByUid(uid);
 	if (latestSaved5Star.isOk()) {
 		const fiveStarOrder = latestSaved5Star.value?.order ?? 0;
+		prev5StarIsFeatured = latestSaved5Star.value?.isFeatured; // NOSONAR: false positive
 		fiveStarPity = order - fiveStarOrder;
 	}
 
 	const latestSaved4Star = await getLatest4StarWishByUid(uid);
 	if (latestSaved4Star.isOk()) {
 		const fourStarOrder = latestSaved4Star.value?.order ?? 0;
+		prev4StarIsFeatured = latestSaved4Star.value?.isFeatured; //NOSONAR: false positive
 		fourStarPity = order - fourStarOrder;
 	}
 
@@ -151,9 +157,15 @@ const fetchWishesForGachaType = async (
 		if (wish.rankType === '5') {
 			wish.pity = fiveStarPity.toString();
 			fiveStarPity = 0;
+			wish.wonFiftyFifty =
+				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev5StarIsFeatured;
+			prev5StarIsFeatured = wish.isFeatured;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
+			wish.wonFiftyFifty =
+				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev4StarIsFeatured;
+			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';
 		}
@@ -222,17 +234,6 @@ const getGachaConfigList = async (authkey: string): Promise<Result<HoyoConfigRes
 		logToConsole('Utils', `getGachaConfigList failed for ${authkey}`);
 		return err(new Error('Failed to fetch config list'));
 	}
-};
-
-/**
- * Generates a random delay between min and max milliseconds.
- *
- * @param min Minimum delay in milliseconds.
- * @param max Maximum delay in milliseconds.
- */
-const randomDelay = async (min: number, max: number): Promise<void> => {
-	const duration = Math.floor(Math.random() * (max - min + 1) + min);
-	await new Promise((resolve) => setTimeout(resolve, duration));
 };
 
 const getServer = (uid: string): ServerKey => {

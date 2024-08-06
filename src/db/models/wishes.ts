@@ -60,9 +60,7 @@ export const getLatestWishByUidAndGachaType = async (
 	}
 };
 
-export const getLatest4StarWishByUid = async (
-	uid: string
-): Promise<Result<Wish | undefined, Error>> => {
+export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			where: {
@@ -75,7 +73,7 @@ export const getLatest4StarWishByUid = async (
 		});
 
 		if (!wish) {
-			return ok(undefined);
+			return ok(null);
 		}
 
 		return ok(wish);
@@ -84,9 +82,7 @@ export const getLatest4StarWishByUid = async (
 	}
 };
 
-export const getLatest5StarWishByUid = async (
-	uid: string
-): Promise<Result<Wish | undefined, Error>> => {
+export const getLatest5StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			where: {
@@ -99,7 +95,7 @@ export const getLatest5StarWishByUid = async (
 		});
 
 		if (!wish) {
-			return ok(undefined);
+			return ok(null);
 		}
 
 		return ok(wish);

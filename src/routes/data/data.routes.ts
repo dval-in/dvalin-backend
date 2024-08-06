@@ -7,14 +7,14 @@ import { isDataTypeKey } from '../../types/models/fileReference';
 import { isLanguageKey } from '../../types/models/language';
 
 export class DynamicDataRoute {
-	public isInitialised: boolean = false;
+	public isInitialized: boolean = false;
 
 	constructor(private readonly app: Express) {
 		dataService
 			.initialize()
 			.then(() => {
 				logToConsole('Data', 'initialization complete');
-				this.isInitialised = true;
+				this.isInitialized = true;
 			})
 			.catch((error) => {
 				logToConsole('data', `initialization failed: ${error.message}`);
@@ -23,7 +23,7 @@ export class DynamicDataRoute {
 
 	setupRoutes(): void {
 		this.app.get('/data/:dataType/index', async (req: Request, res: Response) => {
-			if (!this.isInitialised) {
+			if (!this.isInitialized) {
 				sendErrorResponse(res, 503, 'NOT_INITIALIZED');
 			}
 
@@ -63,7 +63,7 @@ export class DynamicDataRoute {
 	}
 
 	async getDataIndex() {
-		while (!this.isInitialised) {
+		while (!this.isInitialized) {
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 		}
 		return dataService.getIndex();

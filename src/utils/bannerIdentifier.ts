@@ -1,48 +1,40 @@
 import axios from 'axios';
 import { logToConsole } from './log';
-import { bannerdata } from '../services/banner.service';
-import { Banner, RawBanner } from '../types/banner';
-import { GachaItem } from 'types/models/wish';
+import { Banner, BannerKeyType } from '../types/frontend/banner';
+import { err, ok, Result } from 'neverthrow';
+interface RawBanner extends Omit<Banner, 'startDuration' | 'duration'> {
+	startDuration: string;
+	duration: string;
+}
 
-export const getBannerData = async (): Promise<Banner[] | undefined> => {
+export const getBannerData = async (): Promise<Result<Banner[], Error>> => {
 	try {
-		const response = await axios.get(
+		const response = await axios.get<RawBanner[]>(
 			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/EN/banners.json`
 		);
 
 		if (response.status !== 200) {
-			return undefined;
+			return err(new Error(`Failed to get banner data: ${response.status}`));
 		}
-
-		return parseBannerData(response.data.banner as RawBanner[]);
+		const banners: Banner[] = [];
+		for (const banner of response.data) {
+			banners.push({
+				...banner,
+				startDuration: new Date(banner.startDuration),
+				duration:
+					banner.duration === 'TBA' || banner.duration === 'Indefinite'
+						? new Date('9999-12-31')
+						: new Date(banner.duration)
+			});
+		}
+		return ok(banners);
 	} catch (e) {
-		logToConsole('utils bannerId', `Failed to get banner data: ${e}`);
-		return undefined;
+		return err(new Error('Failed to get banner data'));
 	}
-};
-const indefiniteDate = new Date('9999-12-31');
-const parseBannerData = (banners: RawBanner[]): Banner[] => {
-	const result: Banner[] = [];
-
-	banners.forEach(function (banner) {
-		result.push({
-			id: banner.id,
-			type: banner.type,
-			startDuration:
-				banner.duration === 'TBA' ? indefiniteDate : new Date(banner.startDuration),
-			duration:
-				banner.duration === 'Indefinite' || banner.duration === 'TBA'
-					? indefiniteDate
-					: new Date(banner.duration)
-		});
-	});
-
-	result.sort((a, b) => b.duration.getTime() - a.duration.getTime());
-	return result;
 };
 
 // converts from 301, 302, 303
-export const convertGachaType = (gachaType: string): string => {
+export const convertGachaType = (gachaType: string): BannerKeyType => {
 	switch (gachaType) {
 		case '100':
 			return 'Beginner';
@@ -56,20 +48,7 @@ export const convertGachaType = (gachaType: string): string => {
 		case '302':
 			return 'Weapon';
 		default:
-			logToConsole('utils bannerId', 'Failed to match gacha type');
-			return 'Character';
+			logToConsole('utils bannerId', 'Failed to convert gachaType' + gachaType, 'error');
+			return 'Permanent';
 	}
-};
-
-// from utc time to bannerid
-export const getBannerIdFromTime = (gachaType: string, time: Date): string => {
-	const found = bannerdata!.find((banner) => {
-		return banner.type === gachaType && banner.startDuration <= time && banner.duration >= time;
-	});
-
-	if (!found) {
-		logToConsole('utils bannerId', 'Failed to find banner' + gachaType + ' ' + time);
-		return 'BANNERNOTFOUND';
-	}
-	return found.id;
 };

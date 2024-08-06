@@ -12,8 +12,8 @@ export type IWish = {
 	rarity: number;
 	bannerId: string;
 	order: number;
-	wasFeatured: boolean;
-	gainedFiftyFifty: boolean;
+	isFeatured: boolean;
+	wonFiftyFifty: boolean;
 };
 
 export type PaimonWish = {

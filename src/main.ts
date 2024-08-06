@@ -15,8 +15,8 @@ import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
 import { setupWorkers } from './worker/worker';
 import { BKTree } from './handlers/dataStructure/BKTree';
-import { isBannerServiceInitialised, setupBannerService } from './services/banner.service.ts';
 import { optimizedFuzzyLCS } from './utils/fuzzyLCS.ts';
+import { BannerRoute } from './routes/banner/banner.routes.ts';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -44,7 +44,6 @@ config.DEBUG && logToConsole('Server', 'Debug mode enabled');
 setupSession(app);
 setupPassport(app);
 setupWebsockets(io);
-setupBannerService();
 
 app.use((req, res, next) => {
 	const isExcluded =
@@ -62,9 +61,10 @@ const authRoute = new AuthRoute(app);
 const dynamicDataRoute = new DynamicDataRoute(app);
 const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
+const bannerRoute = new BannerRoute(app);
 
-app.get('/', (req, res) => {
-	if (dynamicDataRoute.isInitialised && isBannerServiceInitialised()) {
+app.get('/', (_req, res) => {
+	if (dynamicDataRoute.isInitialized && bannerRoute.isInitialized) {
 		sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
 		sendSuccessResponse(res, { state: 'INITIALIZING' });

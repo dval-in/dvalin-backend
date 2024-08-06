@@ -5,7 +5,8 @@ import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
-import { getBannerIdFromTime } from '../../utils/bannerIdentifier';
+import { bannerService } from '../../services/banner.service.ts';
+import { convertGachaType } from '../../utils/bannerIdentifier';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -93,6 +94,11 @@ const formatWishes = (
 ): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
+		const banner = bannerService.getBannerFromTime(
+			convertGachaType(wish.gachaType),
+			new Date(wish.time).getTime()
+		);
+		const isFeatured = banner?.featured.some((key) => key === name);
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
 		const rankType = getRarity(name, itemType, dataIndex);
 
@@ -106,7 +112,9 @@ const formatWishes = (
 			gachaType: wish.gachaType,
 			pity: wish.pity.toString(),
 			wasImported: true,
-			bannerId: getBannerIdFromTime(wish.gachaType, new Date(wish.time)),
+			bannerId: banner.id,
+			isFeatured,
+			wonFiftyFifty: false,
 			rankType
 		};
 	});
@@ -174,6 +182,7 @@ const mergeWishesForBanner = (
 	newWishes: WishWithoutCreatedAt[],
 	currentWishes: WishWithoutCreatedAt[]
 ) => {
+	// NOSONAR : function complexity of 16 instead of 15, but still fine has its mostly 4 & 5 star double treatment
 	if (!newWishes) {
 		return currentWishes;
 	}
@@ -213,16 +222,24 @@ const mergeWishesForBanner = (
 	// Rebuild pity
 	let fiveStarPity = 0;
 	let fourStarPity = 0;
+	let prev5StarIsFeatured = false;
+	let prev4StarIsFeatured = false;
 	// Iterate in order (oldest to newest)
 	for (const wish of currentWishes) {
 		fiveStarPity++;
 		fourStarPity++;
 		if (wish.rankType === '5') {
 			wish.pity = fiveStarPity.toString();
+			wish.wonFiftyFifty =
+				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev5StarIsFeatured;
+			prev5StarIsFeatured = wish.isFeatured;
 			fiveStarPity = 0;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
+			wish.wonFiftyFifty =
+				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev4StarIsFeatured;
+			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';
 		}

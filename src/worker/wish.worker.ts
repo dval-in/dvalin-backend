@@ -8,10 +8,10 @@ import { WebSocketService } from '../services/websocket.service.ts';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { Wish } from '@prisma/client';
 import { Result, ok, err } from 'neverthrow';
-import { isBannerServiceInitialised } from '../services/banner.service.ts';
+import { bannerService } from '../services/banner.service.ts';
 
 const waitForInitialization = async (bkTree: BKTree) => {
-	while (!bkTree.isInitialised && !isBannerServiceInitialised()) {
+	while (!bkTree.isInitialized && !bannerService.isInitialized) {
 		await new Promise((resolve) => setTimeout(resolve, 500));
 	}
 };
@@ -20,7 +20,7 @@ export const setupWishWorker = (bkTree: BKTree) => {
 	const wssResult = WebSocketService.getInstance();
 	if (wssResult.isErr()) {
 		logToConsole(
-			'Wish.worker',
+			'WishWorker',
 			'Failed to get WebSocketService instance:' + wssResult.error.message
 		);
 		return;

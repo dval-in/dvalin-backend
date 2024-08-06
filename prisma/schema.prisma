@@ -55,21 +55,21 @@ model GenshinAccount {
 }
 
 model Wish {
-  genshinWishId    String?
-  order            Int
-  createdAt        DateTime       @default(now())
-  uid              String
-  gachaType        String         @map("gacha_type")
-  time             DateTime       @map("wish_time")
-  name             String
-  itemType         String         @map("item_type")
-  rankType         String         @map("rank_type")
-  pity             String?
-  bannerId         String
-  wasFeatured      Boolean        @default(false)
-  gainedFiftyFifty Boolean        @default(false)
-  genshinAccount   GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
-  wasImported      Boolean        @default(false)
+  genshinWishId  String?
+  order          Int
+  createdAt      DateTime       @default(now())
+  uid            String
+  gachaType      String         @map("gacha_type")
+  time           DateTime       @map("wish_time")
+  name           String
+  itemType       String         @map("item_type")
+  rankType       String         @map("rank_type")
+  pity           String?
+  bannerId       String
+  isFeatured     Boolean        @default(false)
+  wonFiftyFifty  Boolean        @default(false)
+  genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
+  wasImported    Boolean        @default(false)
 
   @@id([order, uid, gachaType], name: "id")
 }

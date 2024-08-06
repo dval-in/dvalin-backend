@@ -262,11 +262,11 @@ export class UserProfileService {
 	}
 
 	async updateConfig(userId: string, config: Config): Promise<Result<Config, Error>> {
-		const uidresult = await getGenshinAccountsByUser(userId);
-		if (uidresult.isErr()) {
-			return err(uidresult.error);
+		const uidResult = await getGenshinAccountsByUser(userId);
+		if (uidResult.isErr()) {
+			return err(uidResult.error);
 		}
-		const result = await getConfigFromUid(uidresult.value[0].uid);
+		const result = await getConfigFromUid(uidResult.value[0].uid);
 		if (result.isErr()) {
 			return err(result.error);
 		}
@@ -309,8 +309,11 @@ export class UserProfileService {
 			date: wish.time,
 			pity: Number(wish.pity),
 			rarity: Number(wish.rankType),
-			banner: 'BalladInGoblets1',
-			order: wish.order
+			banner: wish.gachaType,
+			bannerId: wish.bannerId,
+			order: wish.order,
+			isFeatured: wish.isFeatured,
+			wonFiftyFifty: wish.wonFiftyFifty
 		}));
 	}
 }
