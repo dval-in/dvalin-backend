@@ -101,7 +101,6 @@ const fetchWishesForGachaType = async (
 	wishHistory: Omit<Wish, 'createdAt'>[],
 	uid: string
 ) => {
-	// NOSONAR : function complexity of 18 instead of 15, but still fine has its mostly 4 & 5 star double treatment
 	let lastNewWishId = '0';
 	let hasMore = true;
 	const wishArray: Wish[] = [];

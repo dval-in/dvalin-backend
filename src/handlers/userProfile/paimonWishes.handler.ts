@@ -182,7 +182,6 @@ const mergeWishesForBanner = (
 	newWishes: WishWithoutCreatedAt[],
 	currentWishes: WishWithoutCreatedAt[]
 ) => {
-	// NOSONAR : function complexity of 16 instead of 15, but still fine has its mostly 4 & 5 star double treatment
 	if (!newWishes) {
 		return currentWishes;
 	}
