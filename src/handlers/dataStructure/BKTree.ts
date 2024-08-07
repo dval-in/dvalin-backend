@@ -33,9 +33,7 @@ class BKTree {
 	}
 
 	showTree(): void {
-		console.log('... BK-Tree ...');
 		const showRecursive = (node: BKTreeNode, depth: number): void => {
-			console.log('  '.repeat(depth) + node.word);
 			Object.keys(node.children)
 				.map(Number)
 				.forEach((dist) => showRecursive(node.children[dist], depth + 1));
