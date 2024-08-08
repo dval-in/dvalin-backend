@@ -5,8 +5,6 @@ import { getCharactersByUid, saveCharacters } from '../db/models/character';
 import { deleteWeaponsByUid, getWeaponsByUid, saveWeapons } from '../db/models/weapons';
 import { Achievement, Character, GenshinAccount, Weapon, Wish, Config } from '@prisma/client';
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
-import { Index } from '../types/models/dataIndex';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { handleCharacters } from '../handlers/userProfile/characters.handler.ts';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler.ts';
 import { handleWishes } from '../handlers/userProfile/wishes.handler.ts';
@@ -135,12 +133,10 @@ export class UserProfileService {
 	}
 
 	async syncUserProfile(
-		userProfile: (UserProfile | PaimonFile) & { userId: string },
-		bkTree: BKTree,
-		dataIndex: Index
+		userProfile: (UserProfile | PaimonFile) & { userId: string }
 	): Promise<Result<string, Error>> {
 		if (userProfile.format === 'paimon' && isPaimonData(userProfile)) {
-			return await this.syncPaimonUserProfile(userProfile, bkTree, dataIndex);
+			return await this.syncPaimonUserProfile(userProfile);
 		}
 		if (userProfile.format === 'dvalin' && isDvalinUserProfile(userProfile)) {
 			return await this.syncDvalinUserProfile(userProfile);
@@ -149,16 +145,14 @@ export class UserProfileService {
 	}
 
 	async syncPaimonUserProfile(
-		userProfile: PaimonFile & { userId: string },
-		bkTree: BKTree,
-		dataIndex: Index
+		userProfile: PaimonFile & { userId: string }
 	): Promise<Result<string, Error>> {
 		const uid = userProfile['wish-uid']?.toString();
 		if (!uid) {
 			return err(new Error('User not found'));
 		}
 
-		const wishResult = await handlePaimonWishes(userProfile, uid, bkTree, dataIndex);
+		const wishResult = await handlePaimonWishes(userProfile, uid);
 		if (wishResult.isErr()) {
 			return err(new Error('Failed to handle wishes'));
 		}

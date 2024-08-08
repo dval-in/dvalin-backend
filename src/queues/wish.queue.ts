@@ -33,6 +33,24 @@ const job = new SimpleIntervalJob({ minutes: 5 }, task);
 
 scheduler.addSimpleIntervalJob(job);
 
+const wishQueueHasAnActiveJob = async (): Promise<Result<boolean, Error>> => {
+	try {
+		const activeJobs = await wishQueue.getActiveCount();
+		return ok(activeJobs > 0);
+	} catch (error) {
+		return err(new Error('Failed to get active jobs count'));
+	}
+};
+
+const pauseWishQueue = async (): Promise<Result<void, Error>> => {
+	try {
+		await wishQueue.pause();
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to pause wish queue'));
+	}
+};
+
 /**
  * Clears completed jobs from the wish queue.
  *

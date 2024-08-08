@@ -1,25 +1,23 @@
 import { err, ok, Result } from 'neverthrow';
-import { Index } from '../../types/models/dataIndex';
-import { BKTree } from '../dataStructure/BKTree';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
 import { bannerService } from '../../services/banner.service.ts';
 import { convertGachaType } from '../../utils/bannerIdentifier';
+import temporaryBannerCode from '../../config/constant.ts';
+import { dataService } from '../../services/data.service.ts';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
-	uid: string,
-	bktree: BKTree,
-	dataIndex: Index
+	uid: string
 ): Promise<Result<void, Error>> => {
 	const allWishes = assignGachaType(userProfile);
 	if (allWishes.length === 0) {
 		return ok(undefined);
 	}
 
-	const newlyFormattedWishes = formatWishes(allWishes, uid, bktree, dataIndex);
+	const newlyFormattedWishes = formatWishes(allWishes, uid);
 	const currentWishesResult = await getWishesByUid(uid);
 	if (currentWishesResult.isErr()) {
 		return err(new Error('Failed to retrieve current wishes'));
@@ -88,11 +86,10 @@ const formatWishes = (
 		rate?: number;
 		order: number;
 	}[],
-	uid: string,
-	bktree: BKTree,
-	dataIndex: Index
+	uid: string
 ): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
+		const bktree = dataService.getBKTree();
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
 		const banner = bannerService.getBannerFromTime(
 			convertGachaType(wish.gachaType),
@@ -100,7 +97,7 @@ const formatWishes = (
 		);
 		const isFeatured = banner?.featured.some((key) => key === name);
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
-		const rankType = getRarity(name, itemType, dataIndex);
+		const rankType = getRarity(name, itemType);
 
 		return {
 			uid,
@@ -120,7 +117,8 @@ const formatWishes = (
 	});
 };
 
-const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index): string => {
+const getRarity = (key: string, type: 'Character' | 'Weapon'): string => {
+	const dataIndex = dataService.getIndex();
 	switch (type) {
 		case 'Character':
 			return dataIndex.Character[key].rarity.toString();
@@ -230,14 +228,18 @@ const mergeWishesForBanner = (
 		if (wish.rankType === '5') {
 			wish.pity = fiveStarPity.toString();
 			wish.wonFiftyFifty =
-				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev5StarIsFeatured;
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev5StarIsFeatured;
 			prev5StarIsFeatured = wish.isFeatured;
 			fiveStarPity = 0;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
 			wish.wonFiftyFifty =
-				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev4StarIsFeatured;
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev4StarIsFeatured;
 			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';

@@ -24,7 +24,7 @@ export class BannerRoute {
 				sendErrorResponse(res, 503, 'NOT_INITIALIZED');
 			}
 
-			const bannerData = bannerService.getBannerData();
+			const bannerData = bannerService.getBanner();
 
 			if (bannerData === undefined) {
 				sendErrorResponse(res, 404, 'NOT_FOUND');

@@ -7,11 +7,12 @@ import {
 	getLatestWishByUidAndGachaType
 } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
 import { fetchWishes, processWish } from '../handlers/wish/wish.handler.ts';
 import { randomDelay } from './time.ts';
+import temporaryBannerCode from '../config/constant.ts';
+import { dataService } from '../services/data.service.ts';
 
 /**
  * Converts a time returned by server into UTC time.
@@ -68,11 +69,10 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	bkTree: BKTree,
 	uid: string
 ): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
 	try {
-		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, bkTree, uid);
+		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, uid);
 		return ok(wishHistory);
 	} catch (error) {
 		return err(new Error(`Failed to fetch wishes: ${error.message}`));
@@ -82,13 +82,12 @@ const getWishes = async (
 const fetchAllWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	bkTree: BKTree,
 	uid: string
 ): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 
 	for (const gachaType of gachaTypeList) {
-		await fetchWishesForGachaType(authkey, gachaType, bkTree, wishHistory, uid);
+		await fetchWishesForGachaType(authkey, gachaType, wishHistory, uid);
 	}
 
 	return wishHistory;
@@ -97,7 +96,6 @@ const fetchAllWishes = async (
 const fetchWishesForGachaType = async (
 	authkey: string,
 	gachaType: GachaType,
-	bkTree: BKTree,
 	wishHistory: Omit<Wish, 'createdAt'>[],
 	uid: string
 ) => {
@@ -117,7 +115,7 @@ const fetchWishesForGachaType = async (
 		}
 
 		const wishes = wishesResult.value;
-		hasMore = processWishes(wishes, latestSavedWish, bkTree, wishArray);
+		hasMore = processWishes(wishes, latestSavedWish, wishArray);
 		lastNewWishId = wishes[wishes.length - 1]?.id || lastNewWishId;
 
 		if (wishes.length < 20) {
@@ -157,13 +155,17 @@ const fetchWishesForGachaType = async (
 			wish.pity = fiveStarPity.toString();
 			fiveStarPity = 0;
 			wish.wonFiftyFifty =
-				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev5StarIsFeatured;
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev5StarIsFeatured;
 			prev5StarIsFeatured = wish.isFeatured;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
 			wish.wonFiftyFifty =
-				['301', '302'].includes(wish.gachaType) && wish.isFeatured && prev4StarIsFeatured;
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev4StarIsFeatured;
 			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';
@@ -175,9 +177,9 @@ const fetchWishesForGachaType = async (
 const processWishes = (
 	wishes: GachaItem[],
 	latestSavedWish: Wish | null,
-	bkTree: BKTree,
 	wishHistory: Omit<Wish, 'createdAt'>[]
 ): boolean => {
+	const bkTree = dataService.getBKTree();
 	if (!latestSavedWish) {
 		for (const wish of wishes) {
 			wishHistory.push(processWish(wish, bkTree, 0));
