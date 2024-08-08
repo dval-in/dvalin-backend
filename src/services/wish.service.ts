@@ -120,6 +120,9 @@ class WishService {
 		jobData: WishQueueData,
 		returnvalue: Omit<Wish, 'createdAt'>[]
 	): Promise<Result<void, Error>> {
+		if (returnvalue.length === 0) {
+			return ok(undefined);
+		}
 		const { userId } = jobData;
 		const uid = returnvalue[0]?.uid;
 
