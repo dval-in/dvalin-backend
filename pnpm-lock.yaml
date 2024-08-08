@@ -12,11 +12,11 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@prisma/client':
-        specifier: ^5.17.0
-        version: 5.17.0(prisma@5.18.0)
+        specifier: ^5.18.0
+        version: 5.18.0(prisma@5.18.0)
       '@quixo3/prisma-session-store':
         specifier: ^3.1.13
-        version: 3.1.13(@prisma/client@5.17.0(prisma@5.18.0))(express-session@1.18.0)
+        version: 3.1.13(@prisma/client@5.18.0(prisma@5.18.0))(express-session@1.18.0)
       axios:
         specifier: ^1.7.3
         version: 1.7.3
@@ -477,8 +477,8 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@prisma/client@5.17.0':
-    resolution: {integrity: sha512-N2tnyKayT0Zf7mHjwEyE8iG7FwTmXDHFZ1GnNhQp0pJUObsuel4ZZ1XwfuAYkq5mRIiC/Kot0kt0tGCfLJ70Jw==}
+  '@prisma/client@5.18.0':
+    resolution: {integrity: sha512-BWivkLh+af1kqC89zCJYkHsRcyWsM8/JHpsDMM76DjP3ZdEquJhXa4IeX+HkWPnwJ5FanxEJFZZDTWiDs/Kvyw==}
     engines: {node: '>=16.13'}
     peerDependencies:
       prisma: '*'
@@ -2421,7 +2421,7 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@prisma/client@5.17.0(prisma@5.18.0)':
+  '@prisma/client@5.18.0(prisma@5.18.0)':
     optionalDependencies:
       prisma: 5.18.0
 
@@ -2446,10 +2446,10 @@ snapshots:
     dependencies:
       '@prisma/debug': 5.18.0
 
-  '@quixo3/prisma-session-store@3.1.13(@prisma/client@5.17.0(prisma@5.18.0))(express-session@1.18.0)':
+  '@quixo3/prisma-session-store@3.1.13(@prisma/client@5.18.0(prisma@5.18.0))(express-session@1.18.0)':
     dependencies:
       '@paralleldrive/cuid2': 2.2.2
-      '@prisma/client': 5.17.0(prisma@5.18.0)
+      '@prisma/client': 5.18.0(prisma@5.18.0)
       express-session: 1.18.0
       ts-dedent: 2.2.0
       type-fest: 2.19.0
