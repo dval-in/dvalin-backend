@@ -121,7 +121,7 @@ class WishService {
 		returnvalue: Omit<Wish, 'createdAt'>[]
 	): Promise<Result<void, Error>> {
 		const { userId } = jobData;
-		const uid = returnvalue[0].uid;
+		const uid = returnvalue[0]?.uid;
 
 		const accountResult = await this.ensureGenshinAccount(userId, uid);
 		if (accountResult.isErr()) {

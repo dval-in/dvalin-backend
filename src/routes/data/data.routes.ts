@@ -37,9 +37,9 @@ export class DynamicDataRoute {
 
 			if (!(dataType in index)) {
 				sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
+			} else {
+				sendSuccessResponse(res, index[dataType]);
 			}
-
-			sendSuccessResponse(res, index[dataType]);
 		});
 
 		this.app.get('/data/:dataType/:name', async (req: Request, res: Response) => {
@@ -60,12 +60,5 @@ export class DynamicDataRoute {
 				(_error) => sendErrorResponse(res, 404, 'NOT_FOUND')
 			);
 		});
-	}
-
-	async getDataIndex() {
-		while (!this.isInitialized) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
-		return dataService.getIndex();
 	}
 }

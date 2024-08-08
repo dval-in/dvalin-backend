@@ -152,6 +152,15 @@ export class UserProfileService {
 			return err(new Error('User not found'));
 		}
 
+		// make sure uid is the same as the one in the user profile
+		const savedAccounts = await getGenshinAccountsByUser(userProfile.userId);
+		if (savedAccounts.isErr()) {
+			return err(new Error('Failed to fetch user account'));
+		}
+		if (!savedAccounts.value.some((account) => account.uid === uid)) {
+			return err(new Error('Uid not found for this user'));
+		}
+
 		const wishResult = await handlePaimonWishes(userProfile, uid);
 		if (wishResult.isErr()) {
 			return err(new Error('Failed to handle wishes'));
