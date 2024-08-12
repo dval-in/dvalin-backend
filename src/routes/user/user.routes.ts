@@ -15,10 +15,10 @@ export class UserRoute {
 	setupRoutes(): void {
 		this.app.get('/user', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 			const userProfileResult = await this.userProfileService.getUserProfile(req.user.userId);
-			userProfileResult.match(
+			return userProfileResult.match(
 				(userProfile) => sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile }),
 				(error) => {
 					if (error.message.includes('No Genshin accounts')) {
@@ -33,22 +33,22 @@ export class UserRoute {
 
 		this.app.post('/user/create', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 			const data = req.body;
 			const { userId } = req.user;
 			if (!data || !userId) {
-				sendErrorResponse(res, 400, 'MISSING_USER_PROFILE');
+				return sendErrorResponse(res, 400, 'MISSING_USER_PROFILE');
 			}
 
 			const uid = data.uid;
 			const isUidExist = await getGenshinAccountByUid(uid);
 			if (isUidExist.isOk()) {
-				sendErrorResponse(res, 400, 'UID_ALREADY_EXISTS');
+				return sendErrorResponse(res, 400, 'UID_ALREADY_EXISTS');
 			}
 			const config = data.config;
 			const result = await this.userProfileService.createNewUser(uid, config, userId);
-			result.match(
+			return result.match(
 				async (genshinAccount) => {
 					const alreadyExistingCharacter: (Partial<Character> & {
 						key: string;
@@ -59,35 +59,40 @@ export class UserRoute {
 						{ key: 'Lisa', uid: genshinAccount.uid }
 					];
 					await saveCharacters(alreadyExistingCharacter).then(
-						() => sendSuccessResponse(res, { state: 'SUCCESS', data: genshinAccount }),
+						() => {
+							return sendSuccessResponse(res, {
+								state: 'SUCCESS',
+								data: genshinAccount
+							});
+						},
 						(_error) => {
 							return;
 						}
 					);
 				},
 				async (_error) => {
-					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+					return sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);
 		});
 
 		this.app.post('/user/sync', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const userProfile = req.body;
 			const { userId } = req.user;
 
 			if (!userProfile || !userId) {
-				sendErrorResponse(res, 400, 'MISSING_USER_PROFILE');
+				return sendErrorResponse(res, 400, 'MISSING_USER_PROFILE');
 			}
 
 			try {
 				const runningJob = await syncUserProfileQueue.getJob(`${userId}syncUserProfile`);
 
 				if (runningJob !== undefined) {
-					sendSuccessResponse(res, { state: 'ALREADY_SYNCING' });
+					return sendSuccessResponse(res, { state: 'ALREADY_SYNCING' });
 				}
 
 				await syncUserProfileQueue.add(
@@ -100,24 +105,24 @@ export class UserRoute {
 					}
 				);
 
-				sendSuccessResponse(res, { state: 'SYNC_STARTED' });
+				return sendSuccessResponse(res, { state: 'SYNC_STARTED' });
 			} catch (error) {
-				sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				return sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 			}
 		});
 
 		this.app.post('/user/config', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const { userId } = req.user;
 			const { config } = req.body;
 			if (!config || !userId) {
-				sendErrorResponse(res, 400, 'MISSING_CONFIG');
+				return sendErrorResponse(res, 400, 'MISSING_CONFIG');
 			}
 			const result = await this.userProfileService.updateConfig(userId, config);
-			result.match(
+			return result.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					logToConsole('AuthService', error.message);
@@ -128,7 +133,7 @@ export class UserRoute {
 
 		this.app.delete('/user', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 			const { userId } = req.user;
 			const result = await this.userProfileService.deleteUserProfile(userId);
@@ -137,7 +142,7 @@ export class UserRoute {
 					logToConsole('AuthService', 'Session destroy error:' + err);
 				}
 			});
-			result.match(
+			return result.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(_error) => {
 					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');

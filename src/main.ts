@@ -13,17 +13,8 @@ import { createServer } from 'node:http';
 import { setupWebsockets } from './handlers/websocket/websocket.handler.ts';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
-import { BannerRoute } from './routes/banner/banner.routes.ts';
 import { setupWorkers } from './worker/worker.ts';
 import { dataService } from './services/data.service.ts';
-import { getBannerData } from './utils/bannerIdentifier.ts';
-import { BKTree } from './handlers/dataStructure/BKTree.ts';
-import { optimizedFuzzyLCS } from './utils/fuzzyLCS.ts';
-import { err } from 'neverthrow';
-import { bannerService } from './services/banner.service.ts';
-import { ok } from 'node:assert';
-import { syncUserProfileQueue } from './queues/syncUserProfile.queue.ts';
-import { wishQueue } from './queues/wish.queue.ts';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -57,98 +48,43 @@ app.use((req, res, next) => {
 		authExcludedPaths.some((path) => req.path.startsWith(path)) || req.path === '/';
 
 	if (isExcluded || req.isAuthenticated()) {
-		next();
-		return;
+		return next();
 	}
 
-	sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
+	return sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
 });
 
 const authRoute = new AuthRoute(app);
 const dynamicDataRoute = new DynamicDataRoute(app);
 const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
-const bannerRoute = new BannerRoute(app);
-let serverShouldListen = true;
+
 const getAppStatus = () => {
-	return serverShouldListen && dynamicDataRoute.isInitialized && bannerRoute.isInitialized;
-};
-const openConnections = new Set();
-// middleware to track connections else then '/'
-app.use((req, res, next) => {
-	if (req.path !== '/') {
-		openConnections.add(res);
-	}
-	res.on('finish', () => {
-		if (req.path !== '/') {
-			openConnections.delete(res);
-		}
-	});
-	next();
-});
-const refreshData = async () => {
-	Promise.all([dataService.buildIndex(), getBannerData()]).then(async (result) => {
-		const bannerResult = result[1];
-		if (bannerResult.isErr()) {
-			return err(bannerResult.error);
-		}
-		const newBanners = bannerResult.value;
-		const indexResult = result[0];
-		const newBKTree = new BKTree(optimizedFuzzyLCS);
-		if (indexResult.isErr()) {
-			return err(indexResult.error);
-		}
-		const newIndex = indexResult.value;
-		const indexes = [...Object.keys(newIndex.Character), ...Object.keys(newIndex.Weapon)];
-		indexes.forEach((key) => newBKTree.insert(key));
-		// pause all services and put the server in standby
-		serverShouldListen = false;
-		syncUserProfileQueue.pause();
-		wishQueue.pause();
-		// wait for all services to finish their current jobs
-		while (
-			openConnections.size > 0 &&
-			(await syncUserProfileQueue.getActiveCount()) > 0 &&
-			(await wishQueue.getActiveCount()) > 0
-		) {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-		}
-		// refresh the services with the new data
-		dataService.refresh(newBKTree, newIndex);
-		bannerService.refresh(newBanners);
-
-		// resume the services
-		serverShouldListen = true;
-		syncUserProfileQueue.resume();
-		wishQueue.resume();
-		return ok(undefined);
-	});
+	return dynamicDataRoute.isInitialized;
 };
 
-const initMiddleware = (req: Request, res: Response, next: NextFunction) => {
-	if (!getAppStatus() && req.path !== '/') {
-		sendErrorResponse(res, 503, 'INITIALIZING');
+app.use((_req: Request, res: Response, next: NextFunction) => {
+	if (!getAppStatus()) {
+		return sendErrorResponse(res, 503, 'INITIALIZING');
 	}
 	return next();
-};
-
-app.use(initMiddleware);
+});
 
 app.get('/', (_req, res) => {
 	if (getAppStatus()) {
-		sendSuccessResponse(res, { state: 'RUNNING' });
+		return sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
-		sendSuccessResponse(res, { state: 'INITIALIZING' });
+		return sendSuccessResponse(res, { state: 'INITIALIZING' });
 	}
 });
 
 app.post('/webhook', express.json({ type: 'application/json' }), (req, res) => {
 	const origin = req.headers.origin;
-	if (origin.includes('api.github.com')) {
-		sendErrorResponse(res, 403, 'FORBIDDEN');
+	if (!origin.includes('api.github.com')) {
+		return sendErrorResponse(res, 403, 'FORBIDDEN');
 	} else {
-		refreshData();
-		sendSuccessResponse(res, { state: 'Accepted' });
+		dataService.refreshData();
+		return sendSuccessResponse(res, { state: 'Accepted' });
 	}
 });
 
@@ -156,7 +92,6 @@ authRoute.setupRoutes();
 dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
 wishRoute.setupRoutes();
-bannerRoute.setupRoutes();
 
 setupWorkers();
 

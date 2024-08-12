@@ -8,13 +8,13 @@ export class CharacterRoute {
 	setupRoutes(): void {
 		this.app.post('/character', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const { user, character } = req.body;
 
 			const response = await characterService.saveCharacterForUser(user.id, character);
-			response.match(
+			return response.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					if (error.message === 'Missing parameters') {

@@ -8,6 +8,10 @@ import { join } from 'path';
 import { config } from '../config/config';
 import { BKTree } from '../handlers/dataStructure/BKTree';
 import { optimizedFuzzyLCS } from '../utils/fuzzyLCS';
+import { syncUserProfileQueue } from '../queues/syncUserProfile.queue.ts';
+import { wishQueue } from '../queues/wish.queue.ts';
+import { getBannerData } from '../utils/bannerIdentifier';
+import { Banner, BannerKeyType } from '../types/frontend/banner';
 
 interface FileInfo {
 	name: string;
@@ -17,6 +21,7 @@ interface FileInfo {
 class DataService {
 	private index: Index = { Character: {}, Weapon: {} };
 	private bkTree: BKTree = new BKTree(optimizedFuzzyLCS);
+	private bannerData: Banner[] = undefined;
 
 	async initialize(): Promise<Result<void, Error>> {
 		const indexResult = await this.buildIndex();
@@ -26,7 +31,13 @@ class DataService {
 		this.index = indexResult.value;
 		const indexes = [...Object.keys(this.index.Character), ...Object.keys(this.index.Weapon)];
 		indexes.forEach((key) => this.bkTree.insert(key));
-		return ok(undefined);
+		const dataResult = await getBannerData();
+		if (dataResult.isOk()) {
+			this.bannerData = dataResult.value;
+			return ok(undefined);
+		} else {
+			return err(dataResult.error);
+		}
 	}
 
 	public async buildIndex(): Promise<Result<Index, Error>> {
@@ -44,10 +55,42 @@ class DataService {
 		});
 	}
 
-	refresh(bktree: BKTree, index: Index): void {
-		this.bkTree = bktree;
-		this.index = index;
-	}
+	public refreshData = async () => {
+		Promise.all([this.buildIndex(), getBannerData()]).then(async (result) => {
+			const bannerResult = result[1];
+			if (bannerResult.isErr()) {
+				return err(bannerResult.error);
+			}
+			const newBanners = bannerResult.value;
+			const indexResult = result[0];
+			const newBKTree = new BKTree(optimizedFuzzyLCS);
+			if (indexResult.isErr()) {
+				return err(indexResult.error);
+			}
+			const newIndex = indexResult.value;
+			const indexes = [...Object.keys(newIndex.Character), ...Object.keys(newIndex.Weapon)];
+			indexes.forEach((key) => newBKTree.insert(key));
+			// pause all services and put the server in standby
+			syncUserProfileQueue.pause();
+			wishQueue.pause();
+			// wait for all services to finish their current jobs
+			while (
+				(await syncUserProfileQueue.getActiveCount()) > 0 &&
+				(await wishQueue.getActiveCount()) > 0
+			) {
+				await new Promise((resolve) => setTimeout(resolve, 500));
+			}
+			// refresh the services with the new data
+			this.index = newIndex;
+			this.bkTree = newBKTree;
+			this.bannerData = newBanners;
+
+			// resume the services
+			syncUserProfileQueue.resume();
+			wishQueue.resume();
+			return ok(undefined);
+		});
+	};
 
 	public getBKTree(): BKTree {
 		return this.bkTree;
@@ -153,7 +196,25 @@ class DataService {
 		return tempIndex;
 	}
 
-	getIndex(): Index {
+	public getBanner = (): Banner[] => {
+		return this.bannerData;
+	};
+
+	public getBannerFromTime = (bannerType: BannerKeyType, timestamp: number): Banner => {
+		const found = this.bannerData.find((banner) => {
+			return (
+				banner.type === bannerType &&
+				banner.startDuration.getTime() <= timestamp &&
+				banner.duration.getTime() >= timestamp
+			);
+		});
+
+		if (!found) {
+			return this.bannerData.find((banner) => banner.type === 'Permanent');
+		}
+		return found;
+	};
+	public getIndex(): Index {
 		return this.index;
 	}
 }

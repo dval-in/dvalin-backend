@@ -252,12 +252,12 @@ export class UserProfileService {
 
 		const userInfo = {
 			server: getServer(uid),
-			ar: result.value.playerInfo.level,
+			ar: result.value?.playerInfo.level ?? 0,
 			uid: uid,
-			wl: result.value.playerInfo.worldLevel,
-			name: result.value.playerInfo.nickname,
-			namecard: mapCardName(result.value.playerInfo.nameCardId),
-			signature: result.value.playerInfo.signature
+			wl: result.value?.playerInfo.worldLevel ?? 0,
+			name: result.value?.playerInfo.nickname ?? '',
+			namecard: mapCardName(result.value?.playerInfo.nameCardId) ?? '',
+			signature: result.value?.playerInfo.signature ?? ''
 		};
 		const createAccountResult = await createGenshinAccount({ userId, ...userInfo }, config);
 
