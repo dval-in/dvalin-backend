@@ -65,6 +65,9 @@ model Wish {
   itemType       String         @map("item_type")
   rankType       String         @map("rank_type")
   pity           String
+  bannerId       String
+  isFeatured     Boolean        @default(false)
+  wonFiftyFifty  Boolean        @default(false)
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   wasImported    Boolean        @default(false)
 

@@ -10,7 +10,10 @@ export type IWish = {
 	pity: number;
 	banner: string;
 	rarity: number;
+	bannerId: string;
 	order: number;
+	isFeatured: boolean;
+	wonFiftyFifty: boolean;
 };
 
 export type PaimonWish = {

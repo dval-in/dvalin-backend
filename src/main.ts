@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Response, Request } from 'express';
 import bodyParser from 'body-parser';
 import { config } from './config/config';
 import cors from 'cors';
@@ -13,9 +13,8 @@ import { createServer } from 'node:http';
 import { setupWebsockets } from './handlers/websocket/websocket.handler.ts';
 import { setupSession } from './utils/session';
 import { Server } from 'socket.io';
-import { setupWorkers } from './worker/worker';
-import { BKTree } from './handlers/dataStructure/BKTree';
-import { optimizedFuzzyLCS } from './utils/fuzzyLCS.ts';
+import { setupWorkers } from './worker/worker.ts';
+import { dataService } from './services/data.service.ts';
 
 const port = config.BACKEND_PORT;
 const authExcludedPaths = ['/data', '/auth'];
@@ -49,11 +48,10 @@ app.use((req, res, next) => {
 		authExcludedPaths.some((path) => req.path.startsWith(path)) || req.path === '/';
 
 	if (isExcluded || req.isAuthenticated()) {
-		next();
-		return;
+		return next();
 	}
 
-	sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
+	return sendErrorResponse(res, 401, 'AUTHENTICATION_REQUIRED');
 });
 
 const authRoute = new AuthRoute(app);
@@ -61,11 +59,32 @@ const dynamicDataRoute = new DynamicDataRoute(app);
 const userRoute = new UserRoute(app);
 const wishRoute = new WishRoute(app);
 
+const getAppStatus = () => {
+	return dynamicDataRoute.isInitialized;
+};
+
+app.use((_req: Request, res: Response, next: NextFunction) => {
+	if (!getAppStatus()) {
+		return sendErrorResponse(res, 503, 'INITIALIZING');
+	}
+	return next();
+});
+
 app.get('/', (_req, res) => {
-	if (dynamicDataRoute.isInitialised) {
-		sendSuccessResponse(res, { state: 'RUNNING' });
+	if (getAppStatus()) {
+		return sendSuccessResponse(res, { state: 'RUNNING' });
 	} else {
-		sendSuccessResponse(res, { state: 'INITIALIZING' });
+		return sendSuccessResponse(res, { state: 'INITIALIZING' });
+	}
+});
+
+app.post('/webhook', express.json({ type: 'application/json' }), (req, res) => {
+	const origin = req.headers.origin;
+	if (!origin.includes('api.github.com')) {
+		return sendErrorResponse(res, 403, 'FORBIDDEN');
+	} else {
+		dataService.refreshData();
+		return sendSuccessResponse(res, { state: 'Accepted' });
 	}
 });
 
@@ -74,12 +93,7 @@ dynamicDataRoute.setupRoutes();
 userRoute.setupRoutes();
 wishRoute.setupRoutes();
 
-const bkTree = new BKTree(optimizedFuzzyLCS);
-dynamicDataRoute.getDataIndex().then((data) => {
-	const indexes = [...Object.keys(data.Character), ...Object.keys(data.Weapon)];
-	indexes.forEach((key) => bkTree.insert(key));
-	setupWorkers(bkTree, data);
-});
+setupWorkers();
 
 server.listen(port, () => {
 	logToConsole('Server', `listening on port ${port}`);

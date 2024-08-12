@@ -5,8 +5,6 @@ import { getCharactersByUid, saveCharacters } from '../db/models/character';
 import { deleteWeaponsByUid, getWeaponsByUid, saveWeapons } from '../db/models/weapons';
 import { Achievement, Character, GenshinAccount, Weapon, Wish, Config } from '@prisma/client';
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
-import { Index } from '../types/models/dataIndex';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { handleCharacters } from '../handlers/userProfile/characters.handler.ts';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler.ts';
 import { handleWishes } from '../handlers/userProfile/wishes.handler.ts';
@@ -135,12 +133,10 @@ export class UserProfileService {
 	}
 
 	async syncUserProfile(
-		userProfile: (UserProfile | PaimonFile) & { userId: string },
-		bkTree: BKTree,
-		dataIndex: Index
+		userProfile: (UserProfile | PaimonFile) & { userId: string }
 	): Promise<Result<string, Error>> {
 		if (userProfile.format === 'paimon' && isPaimonData(userProfile)) {
-			return await this.syncPaimonUserProfile(userProfile, bkTree, dataIndex);
+			return await this.syncPaimonUserProfile(userProfile);
 		}
 		if (userProfile.format === 'dvalin' && isDvalinUserProfile(userProfile)) {
 			return await this.syncDvalinUserProfile(userProfile);
@@ -149,16 +145,23 @@ export class UserProfileService {
 	}
 
 	async syncPaimonUserProfile(
-		userProfile: PaimonFile & { userId: string },
-		bkTree: BKTree,
-		dataIndex: Index
+		userProfile: PaimonFile & { userId: string }
 	): Promise<Result<string, Error>> {
 		const uid = userProfile['wish-uid']?.toString();
 		if (!uid) {
 			return err(new Error('User not found'));
 		}
 
-		const wishResult = await handlePaimonWishes(userProfile, uid, bkTree, dataIndex);
+		// make sure uid is the same as the one in the user profile
+		const savedAccounts = await getGenshinAccountsByUser(userProfile.userId);
+		if (savedAccounts.isErr()) {
+			return err(new Error('Failed to fetch user account'));
+		}
+		if (!savedAccounts.value.some((account) => account.uid === uid)) {
+			return err(new Error('Uid not found for this user'));
+		}
+
+		const wishResult = await handlePaimonWishes(userProfile, uid);
 		if (wishResult.isErr()) {
 			return err(new Error('Failed to handle wishes'));
 		}
@@ -249,12 +252,12 @@ export class UserProfileService {
 
 		const userInfo = {
 			server: getServer(uid),
-			ar: result.value.playerInfo.level,
+			ar: result.value?.playerInfo.level ?? 0,
 			uid: uid,
-			wl: result.value.playerInfo.worldLevel,
-			name: result.value.playerInfo.nickname,
-			namecard: mapCardName(result.value.playerInfo.nameCardId),
-			signature: result.value.playerInfo.signature
+			wl: result.value?.playerInfo.worldLevel ?? 0,
+			name: result.value?.playerInfo.nickname ?? '',
+			namecard: mapCardName(result.value?.playerInfo.nameCardId) ?? '',
+			signature: result.value?.playerInfo.signature ?? ''
 		};
 		const createAccountResult = await createGenshinAccount({ userId, ...userInfo }, config);
 
@@ -262,11 +265,11 @@ export class UserProfileService {
 	}
 
 	async updateConfig(userId: string, config: Config): Promise<Result<Config, Error>> {
-		const uidresult = await getGenshinAccountsByUser(userId);
-		if (uidresult.isErr()) {
-			return err(uidresult.error);
+		const uidResult = await getGenshinAccountsByUser(userId);
+		if (uidResult.isErr()) {
+			return err(uidResult.error);
 		}
-		const result = await getConfigFromUid(uidresult.value[0].uid);
+		const result = await getConfigFromUid(uidResult.value[0].uid);
 		if (result.isErr()) {
 			return err(result.error);
 		}
@@ -309,8 +312,11 @@ export class UserProfileService {
 			date: wish.time,
 			pity: Number(wish.pity),
 			rarity: Number(wish.rankType),
-			banner: 'BalladInGoblets1',
-			order: wish.order
+			banner: wish.gachaType,
+			bannerId: wish.bannerId,
+			order: wish.order,
+			isFeatured: wish.isFeatured,
+			wonFiftyFifty: wish.wonFiftyFifty
 		}));
 	}
 }

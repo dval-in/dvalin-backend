@@ -7,10 +7,12 @@ import {
 	getLatestWishByUidAndGachaType
 } from '../db/models/wishes';
 import { Wish } from '@prisma/client';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
 import { fetchWishes, processWish } from '../handlers/wish/wish.handler.ts';
+import { randomDelay } from './time.ts';
+import temporaryBannerCode from '../config/constant.ts';
+import { dataService } from '../services/data.service.ts';
 
 /**
  * Converts a time returned by server into UTC time.
@@ -67,11 +69,10 @@ const serverTimeToUTC = (uid: string, date: string): Date => {
 const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	bkTree: BKTree,
 	uid: string
 ): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
 	try {
-		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, bkTree, uid);
+		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, uid);
 		return ok(wishHistory);
 	} catch (error) {
 		return err(new Error(`Failed to fetch wishes: ${error.message}`));
@@ -81,13 +82,12 @@ const getWishes = async (
 const fetchAllWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
-	bkTree: BKTree,
 	uid: string
 ): Promise<Omit<Wish, 'createdAt'>[]> => {
 	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
 
 	for (const gachaType of gachaTypeList) {
-		await fetchWishesForGachaType(authkey, gachaType, bkTree, wishHistory, uid);
+		await fetchWishesForGachaType(authkey, gachaType, wishHistory, uid);
 	}
 
 	return wishHistory;
@@ -96,13 +96,12 @@ const fetchAllWishes = async (
 const fetchWishesForGachaType = async (
 	authkey: string,
 	gachaType: GachaType,
-	bkTree: BKTree,
 	wishHistory: Omit<Wish, 'createdAt'>[],
 	uid: string
 ) => {
 	let lastNewWishId = '0';
 	let hasMore = true;
-	const wishArray = [];
+	const wishArray: Wish[] = [];
 	const latestSavedWishResult = await getLatestWishByUidAndGachaType(uid, gachaType.key);
 	if (latestSavedWishResult.isErr()) {
 		throw new Error('Failed to retrieve latest saved wish');
@@ -116,7 +115,7 @@ const fetchWishesForGachaType = async (
 		}
 
 		const wishes = wishesResult.value;
-		hasMore = processWishes(wishes, latestSavedWish, bkTree, wishArray);
+		hasMore = processWishes(wishes, latestSavedWish, wishArray);
 		lastNewWishId = wishes[wishes.length - 1]?.id || lastNewWishId;
 
 		if (wishes.length < 20) {
@@ -128,16 +127,20 @@ const fetchWishesForGachaType = async (
 	let order = latestSavedWish?.order ?? 0;
 	let fiveStarPity = 0;
 	let fourStarPity = 0;
+	let prev5StarIsFeatured = false;
+	let prev4StarIsFeatured = false;
 
 	const latestSaved5Star = await getLatest5StarWishByUid(uid);
 	if (latestSaved5Star.isOk()) {
 		const fiveStarOrder = latestSaved5Star.value?.order ?? 0;
+		prev5StarIsFeatured = latestSaved5Star.value?.isFeatured; // NOSONAR: false positive
 		fiveStarPity = order - fiveStarOrder;
 	}
 
 	const latestSaved4Star = await getLatest4StarWishByUid(uid);
 	if (latestSaved4Star.isOk()) {
 		const fourStarOrder = latestSaved4Star.value?.order ?? 0;
+		prev4StarIsFeatured = latestSaved4Star.value?.isFeatured; //NOSONAR: false positive
 		fourStarPity = order - fourStarOrder;
 	}
 
@@ -151,9 +154,19 @@ const fetchWishesForGachaType = async (
 		if (wish.rankType === '5') {
 			wish.pity = fiveStarPity.toString();
 			fiveStarPity = 0;
+			wish.wonFiftyFifty =
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev5StarIsFeatured;
+			prev5StarIsFeatured = wish.isFeatured;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
+			wish.wonFiftyFifty =
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev4StarIsFeatured;
+			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';
 		}
@@ -164,9 +177,9 @@ const fetchWishesForGachaType = async (
 const processWishes = (
 	wishes: GachaItem[],
 	latestSavedWish: Wish | null,
-	bkTree: BKTree,
 	wishHistory: Omit<Wish, 'createdAt'>[]
 ): boolean => {
+	const bkTree = dataService.getBKTree();
 	if (!latestSavedWish) {
 		for (const wish of wishes) {
 			wishHistory.push(processWish(wish, bkTree, 0));
@@ -222,17 +235,6 @@ const getGachaConfigList = async (authkey: string): Promise<Result<HoyoConfigRes
 		logToConsole('Utils', `getGachaConfigList failed for ${authkey}`);
 		return err(new Error('Failed to fetch config list'));
 	}
-};
-
-/**
- * Generates a random delay between min and max milliseconds.
- *
- * @param min Minimum delay in milliseconds.
- * @param max Maximum delay in milliseconds.
- */
-const randomDelay = async (min: number, max: number): Promise<void> => {
-	const duration = Math.floor(Math.random() * (max - min + 1) + min);
-	await new Promise((resolve) => setTimeout(resolve, duration));
 };
 
 const getServer = (uid: string): ServerKey => {

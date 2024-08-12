@@ -33,6 +33,33 @@ const job = new SimpleIntervalJob({ minutes: 5 }, task);
 
 scheduler.addSimpleIntervalJob(job);
 
+const syncUserProfileQueueHasAnActiveJob = async (): Promise<Result<boolean, Error>> => {
+	try {
+		const activeJobs = await syncUserProfileQueue.getActiveCount();
+		return ok(activeJobs > 0);
+	} catch (error) {
+		return err(new Error('Failed to get active jobs count'));
+	}
+};
+
+const pauseSyncUserProfileQueue = async (): Promise<Result<void, Error>> => {
+	try {
+		await syncUserProfileQueue.pause();
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to pause sync user profile queue'));
+	}
+};
+
+const resumeSyncUserProfileQueue = async (): Promise<Result<void, Error>> => {
+	try {
+		await syncUserProfileQueue.resume();
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to resume sync user profile queue'));
+	}
+};
+
 /**
  * Clears completed jobs from the sync user profile queue.
  *

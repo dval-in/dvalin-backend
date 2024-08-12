@@ -7,14 +7,14 @@ import { isDataTypeKey } from '../../types/models/fileReference';
 import { isLanguageKey } from '../../types/models/language';
 
 export class DynamicDataRoute {
-	public isInitialised: boolean = false;
+	public isInitialized: boolean = false;
 
 	constructor(private readonly app: Express) {
 		dataService
 			.initialize()
 			.then(() => {
 				logToConsole('Data', 'initialization complete');
-				this.isInitialised = true;
+				this.isInitialized = true;
 			})
 			.catch((error) => {
 				logToConsole('data', `initialization failed: ${error.message}`);
@@ -23,23 +23,30 @@ export class DynamicDataRoute {
 
 	setupRoutes(): void {
 		this.app.get('/data/:dataType/index', async (req: Request, res: Response) => {
-			if (!this.isInitialised) {
-				sendErrorResponse(res, 503, 'NOT_INITIALIZED');
+			if (!this.isInitialized) {
+				return sendErrorResponse(res, 503, 'NOT_INITIALIZED');
 			}
 
 			const { dataType } = req.params;
 
-			if (dataType !== 'Character' && dataType !== 'Weapon') {
-				sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
+			if (dataType !== 'Character' && dataType !== 'Weapon' && dataType !== 'Banner') {
+				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
-
+			if (dataType === 'Banner') {
+				const bannerData = dataService.getBanner();
+				if (bannerData === undefined) {
+					return sendErrorResponse(res, 404, 'BANNER_DATA_NOT_FOUND');
+				} else {
+					return sendSuccessResponse(res, bannerData);
+				}
+			}
 			const index = dataService.getIndex();
 
 			if (!(dataType in index)) {
-				sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
+				return sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
+			} else {
+				return sendSuccessResponse(res, index[dataType]);
 			}
-
-			sendSuccessResponse(res, index[dataType]);
 		});
 
 		this.app.get('/data/:dataType/:name', async (req: Request, res: Response) => {
@@ -51,21 +58,14 @@ export class DynamicDataRoute {
 			}
 
 			if (!isDataTypeKey(dataType)) {
-				sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
+				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
 			const result = await queryGitHubFile(language, dataType, name);
-			result.match(
+			return result.match(
 				(data) => sendSuccessResponse(res, data),
 				(_error) => sendErrorResponse(res, 404, 'NOT_FOUND')
 			);
 		});
-	}
-
-	async getDataIndex() {
-		while (!this.isInitialised) {
-			await new Promise((resolve) => setTimeout(resolve, 1000));
-		}
-		return dataService.getIndex();
 	}
 }

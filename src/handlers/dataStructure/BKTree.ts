@@ -32,18 +32,6 @@ class BKTree {
 		}
 	}
 
-	showTree(): void {
-		const showRecursive = (node: BKTreeNode, depth: number): void => {
-			Object.keys(node.children)
-				.map(Number)
-				.forEach((dist) => showRecursive(node.children[dist], depth + 1));
-		};
-
-		if (this.root) {
-			showRecursive(this.root, 10);
-		}
-	}
-
 	search(query: string, maxDistancePossible = 5): SearchResult[] {
 		const results: SearchResult[] = [];
 		const betterQuery = toPascalCase(query);

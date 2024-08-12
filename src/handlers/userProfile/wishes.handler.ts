@@ -57,7 +57,10 @@ const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] =
 		pity: wish.pity.toString(),
 		wasImported: true,
 		rankType: wish.rarity.toString(),
-		order: wish.order
+		bannerId: wish.bannerId,
+		order: wish.order,
+		isFeatured: wish.isFeatured,
+		wonFiftyFifty: wish.wonFiftyFifty
 	}));
 };
 

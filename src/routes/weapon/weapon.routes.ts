@@ -8,13 +8,13 @@ export class WeaponRoute {
 	setupRoutes(): void {
 		this.app.post('/weapon', async (req: Request, res: Response) => {
 			if (req.user === undefined) {
-				sendErrorResponse(res, 401, 'UNAUTHORIZED');
+				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 
 			const { user, weapon } = req.body;
 
 			const response = await weaponService.saveWeaponForUser(user.id, weapon);
-			response.match(
+			return response.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					if (error.message === 'Missing parameters') {

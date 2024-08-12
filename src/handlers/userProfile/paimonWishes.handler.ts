@@ -1,23 +1,22 @@
 import { err, ok, Result } from 'neverthrow';
-import { Index } from '../../types/models/dataIndex';
-import { BKTree } from '../dataStructure/BKTree';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
+import { dataService } from '../../services/data.service.ts';
+import { convertGachaType } from '../../utils/bannerIdentifier';
+import temporaryBannerCode from '../../config/constant.ts';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
-	uid: string,
-	bktree: BKTree,
-	dataIndex: Index
+	uid: string
 ): Promise<Result<void, Error>> => {
 	const allWishes = assignGachaType(userProfile);
 	if (allWishes.length === 0) {
 		return ok(undefined);
 	}
 
-	const newlyFormattedWishes = formatWishes(allWishes, uid, bktree, dataIndex);
+	const newlyFormattedWishes = formatWishes(allWishes, uid);
 	const currentWishesResult = await getWishesByUid(uid);
 	if (currentWishesResult.isErr()) {
 		return err(new Error('Failed to retrieve current wishes'));
@@ -86,14 +85,18 @@ const formatWishes = (
 		rate?: number;
 		order: number;
 	}[],
-	uid: string,
-	bktree: BKTree,
-	dataIndex: Index
+	uid: string
 ): Omit<Wish, 'createdAt'>[] => {
 	return wishes.map((wish) => {
+		const bktree = dataService.getBKTree();
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
+		const banner = dataService.getBannerFromTime(
+			convertGachaType(wish.gachaType),
+			new Date(wish.time).getTime()
+		);
+		const isFeatured = banner?.featured.some((key) => key === name);
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
-		const rankType = getRarity(name, itemType, dataIndex);
+		const rankType = getRarity(name, itemType);
 
 		return {
 			uid,
@@ -105,12 +108,16 @@ const formatWishes = (
 			gachaType: wish.gachaType,
 			pity: wish.pity.toString(),
 			wasImported: true,
+			bannerId: banner.id,
+			isFeatured,
+			wonFiftyFifty: false,
 			rankType
 		};
 	});
 };
 
-const getRarity = (key: string, type: 'Character' | 'Weapon', dataIndex: Index): string => {
+const getRarity = (key: string, type: 'Character' | 'Weapon'): string => {
+	const dataIndex = dataService.getIndex();
 	switch (type) {
 		case 'Character':
 			return dataIndex.Character[key].rarity.toString();
@@ -211,16 +218,28 @@ const mergeWishesForBanner = (
 	// Rebuild pity
 	let fiveStarPity = 0;
 	let fourStarPity = 0;
+	let prev5StarIsFeatured = false;
+	let prev4StarIsFeatured = false;
 	// Iterate in order (oldest to newest)
 	for (const wish of currentWishes) {
 		fiveStarPity++;
 		fourStarPity++;
 		if (wish.rankType === '5') {
 			wish.pity = fiveStarPity.toString();
+			wish.wonFiftyFifty =
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev5StarIsFeatured;
+			prev5StarIsFeatured = wish.isFeatured;
 			fiveStarPity = 0;
 		} else if (wish.rankType === '4') {
 			wish.pity = fourStarPity.toString();
 			fourStarPity = 0;
+			wish.wonFiftyFifty =
+				temporaryBannerCode.includes(wish.gachaType) &&
+				wish.isFeatured &&
+				prev4StarIsFeatured;
+			prev4StarIsFeatured = wish.isFeatured;
 		} else {
 			wish.pity = '0';
 		}

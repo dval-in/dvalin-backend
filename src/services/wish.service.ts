@@ -5,7 +5,6 @@ import { WishQueueData } from '../types/models/queue';
 import { WISH_QUEUE_RATE_LIMIT_DURATION, wishQueue } from '../queues/wish.queue.ts';
 import { WebSocketService } from './websocket.service.ts';
 import { createMultipleWishes } from '../db/models/wishes';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
 import { saveCharactersConstellation } from '../db/models/character';
 import { getNonRefinedWeapons, saveWeapons } from '../db/models/weapons';
@@ -100,10 +99,7 @@ class WishService {
 		return ok({ state: 'NO_JOB' });
 	}
 
-	async processWishJob(
-		data: WishQueueData,
-		bkTree: BKTree
-	): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> {
+	async processWishJob(data: WishQueueData): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> {
 		const { authkey } = data;
 		const configResponse = await getGachaConfigList(authkey);
 
@@ -116,7 +112,7 @@ class WishService {
 		}
 		const uid = uidResult.value[0].uid;
 		const gachaTypeList = configResponse.value.data.gacha_type_list;
-		const wishesResult = await getWishes(authkey, gachaTypeList, bkTree, uid);
+		const wishesResult = await getWishes(authkey, gachaTypeList, uid);
 		return wishesResult.isErr() ? err(wishesResult.error) : ok(wishesResult.value);
 	}
 
@@ -124,8 +120,11 @@ class WishService {
 		jobData: WishQueueData,
 		returnvalue: Omit<Wish, 'createdAt'>[]
 	): Promise<Result<void, Error>> {
+		if (returnvalue.length === 0) {
+			return ok(undefined);
+		}
 		const { userId } = jobData;
-		const uid = returnvalue[0].uid;
+		const uid = returnvalue[0]?.uid;
 
 		const accountResult = await this.ensureGenshinAccount(userId, uid);
 		if (accountResult.isErr()) {
