@@ -9,15 +9,14 @@ interface RawBanner extends Omit<Banner, 'startDuration' | 'duration'> {
 
 export const getBannerData = async (): Promise<Result<Banner[], Error>> => {
 	try {
-		const response = await axios.get<RawBanner[]>(
+		const response = await axios.get<{ banner: RawBanner[] }>(
 			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/EN/banners.json`
 		);
-
 		if (response.status !== 200) {
 			return err(new Error(`Failed to get banner data: ${response.status}`));
 		}
 		const banners: Banner[] = [];
-		for (const banner of response.data) {
+		for (const banner of response.data.banner) {
 			banners.push({
 				...banner,
 				startDuration: new Date(banner.startDuration),

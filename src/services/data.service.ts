@@ -144,13 +144,16 @@ class DataService {
 		isDev: boolean
 	): Promise<Result<Index, Error>> {
 		let processResult;
+		const index: Index = { Character: {}, Weapon: {} };
 		for (const file of files.filter((f) => f.name !== 'index.json')) {
 			processResult = await this.processFile(type, file, isDev);
 			if (processResult.isErr()) {
 				return processResult;
 			}
+
+			index[type] = { ...index[type], ...processResult.value[type] };
 		}
-		return ok(processResult.value);
+		return ok(index);
 	}
 
 	private async processFile(
