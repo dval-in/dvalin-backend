@@ -5,7 +5,7 @@ import { GachaItem, HoyoWishResponse } from '../../types/models/wish';
 import { logToConsole } from '../../utils/log';
 import { BKTree } from '../dataStructure/BKTree';
 import { convertGachaType } from '../../utils/bannerIdentifier';
-import { bannerService } from '../../services/banner.service.ts';
+import { dataService } from '../../services/data.service';
 
 const fetchWishes = async (
 	authkey: string,
@@ -36,7 +36,7 @@ const fetchWishes = async (
 
 const processWish = (wish: GachaItem, bkTree: BKTree, order: number): Omit<Wish, 'createdAt'> => {
 	const name = bkTree.search(wish.name)[0].word;
-	const banner = bannerService.getBannerFromTime(
+	const banner = dataService.getBannerFromTime(
 		convertGachaType(wish.gacha_type),
 		new Date(wish.time).getTime()
 	);

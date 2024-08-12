@@ -3,10 +3,9 @@ import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
 import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
-import { bannerService } from '../../services/banner.service.ts';
+import { dataService } from '../../services/data.service.ts';
 import { convertGachaType } from '../../utils/bannerIdentifier';
 import temporaryBannerCode from '../../config/constant.ts';
-import { dataService } from '../../services/data.service.ts';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -91,7 +90,7 @@ const formatWishes = (
 	return wishes.map((wish) => {
 		const bktree = dataService.getBKTree();
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
-		const banner = bannerService.getBannerFromTime(
+		const banner = dataService.getBannerFromTime(
 			convertGachaType(wish.gachaType),
 			new Date(wish.time).getTime()
 		);
