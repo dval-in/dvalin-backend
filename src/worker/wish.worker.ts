@@ -5,7 +5,7 @@ import { WishQueueData } from '../types/models/queue';
 import { WISH_QUEUE_NAME, wishQueue } from '../queues/wish.queue.ts';
 import { connection } from '../config/redis.config.ts';
 import { WebSocketService } from '../services/websocket.service.ts';
-import { Wish } from '@prisma/client';
+import { Wish } from '../types/models/wish.ts';
 import { Result, ok, err } from 'neverthrow';
 
 export const setupWishWorker = () => {
@@ -19,7 +19,7 @@ export const setupWishWorker = () => {
 	}
 	const wss = wssResult.value;
 
-	const worker = new Worker<WishQueueData, Omit<Wish, 'createdAt'>[]>(
+	const worker = new Worker<WishQueueData, Wish[]>(
 		WISH_QUEUE_NAME,
 		async (job) => {
 			const result = await processWishJobWithResult(job.data);
@@ -69,11 +69,9 @@ export const setupWishWorker = () => {
  * Processes the wish job and returns a Result type.
  *
  * @param {WishQueueData} data - The wish queue data.
- * @returns {Promise<Result<Omit<Wish, 'createdAt'>[], Error>>} - The result of the operation.
+ * @returns {Promise<Result<Wish[], Error>>} - The result of the operation.
  */
-const processWishJobWithResult = async (
-	data: WishQueueData
-): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
+const processWishJobWithResult = async (data: WishQueueData): Promise<Result<Wish[], Error>> => {
 	const result = await wishService.processWishJob(data);
 	if (result.isErr()) {
 		return err(result.error);

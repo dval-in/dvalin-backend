@@ -9,3 +9,8 @@ export interface Banner {
 }
 
 export type BannerKeyType = 'Beginner' | 'Permanent' | 'Character' | 'Weapon' | 'Chronicled';
+export type BannerKeyCode = '100' | '200' | '301' | '302' | '500';
+
+export type BannerData = {
+	[key in BannerKeyCode]: Banner[];
+};

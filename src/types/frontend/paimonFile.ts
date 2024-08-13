@@ -1,3 +1,5 @@
+import { WishKeyBanner } from './wish';
+
 export interface PaimonFile {
 	format: 'paimon';
 	achievement?: {
@@ -66,7 +68,7 @@ interface PaimonBanner {
 
 export interface PaimonPulls {
 	type: 'weapon' | 'character';
-	code: string;
+	code: WishKeyBanner;
 	id: string;
 	time: string;
 	pity: number;

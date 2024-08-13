@@ -1,10 +1,10 @@
-import { Wish } from '@prisma/client';
 import { getWishesByUid, createMultipleWishes } from '../../db/models/wishes';
 import { UserProfile } from '../../types/frontend/dvalinFile';
 import { IWish } from '../../types/frontend/wish';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { Result, ok, err } from 'neverthrow';
 import { randomUUID } from 'node:crypto';
+import { Wish } from '../../types/models/wish';
 
 export const handleWishes = async (
 	userProfile: UserProfile & { userId: string },
@@ -46,7 +46,7 @@ export const handleWishes = async (
 	return ok(undefined);
 };
 
-const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] => {
+const formatWishes = (wishes: IWish[], uid: string): Wish[] => {
 	return wishes.map((wish) => ({
 		genshinWishId: wish.number.toString() ?? randomUUID(),
 		uid,
@@ -64,10 +64,7 @@ const formatWishes = (wishes: IWish[], uid: string): Omit<Wish, 'createdAt'>[] =
 	}));
 };
 
-const filterNewWishes = (
-	newWishes: Omit<Wish, 'createdAt'>[],
-	currentWishes: Omit<Wish, 'createdAt'>[]
-) => {
+const filterNewWishes = (newWishes: Wish[], currentWishes: Wish[]) => {
 	const wishSet = new Set<string>(currentWishes.map((wish) => wish.order.toString()));
 
 	return newWishes.filter((wish) => {

@@ -11,7 +11,8 @@ import { optimizedFuzzyLCS } from '../utils/fuzzyLCS';
 import { syncUserProfileQueue } from '../queues/syncUserProfile.queue.ts';
 import { wishQueue } from '../queues/wish.queue.ts';
 import { getBannerData } from '../utils/bannerIdentifier';
-import { Banner, BannerKeyType } from '../types/frontend/banner';
+import { Banner, BannerData } from '../types/models/banner.ts';
+import { WishKeyBanner } from '../types/frontend/wish.ts';
 
 interface FileInfo {
 	name: string;
@@ -21,7 +22,7 @@ interface FileInfo {
 class DataService {
 	private index: Index = { Character: {}, Weapon: {} };
 	private bkTree: BKTree = new BKTree(optimizedFuzzyLCS);
-	private bannerData: Banner[] = undefined;
+	private bannerData: BannerData = undefined;
 
 	async initialize(): Promise<Result<void, Error>> {
 		const indexResult = await this.buildIndex();
@@ -199,23 +200,33 @@ class DataService {
 		return tempIndex;
 	}
 
-	public getBanner = (): Banner[] => {
+	public getBanner = (): BannerData => {
 		return this.bannerData;
 	};
 
-	public getBannerFromTime = (bannerType: BannerKeyType, timestamp: number): Banner => {
-		const found = this.bannerData.find((banner) => {
-			return (
-				banner.type === bannerType &&
-				banner.startDuration.getTime() <= timestamp &&
-				banner.duration.getTime() >= timestamp
-			);
-		});
-
-		if (!found) {
-			return this.bannerData.find((banner) => banner.type === 'Permanent');
+	public getBannerFromTime = (bannerType: WishKeyBanner, timestamp: number): Banner => {
+		switch (bannerType) {
+			case '301':
+			case '400': {
+				const banners = this.bannerData[bannerType].filter((banner) => {
+					return (
+						banner.startDuration.getTime() <= timestamp &&
+						banner.duration.getTime() >= timestamp
+					);
+				});
+				if (bannerType === '400') {
+					return banners[1];
+				}
+				return banners[0];
+			}
+			default:
+				return this.bannerData[bannerType].find((banner) => {
+					return (
+						banner.startDuration.getTime() <= timestamp &&
+						banner.duration.getTime() >= timestamp
+					);
+				});
 		}
-		return found;
 	};
 	public getIndex(): Index {
 		return this.index;

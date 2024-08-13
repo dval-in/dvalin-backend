@@ -10,8 +10,8 @@ import { saveCharactersConstellation } from '../db/models/character';
 import { getNonRefinedWeapons, saveWeapons } from '../db/models/weapons';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
 import { getConfigFromUid } from '../db/models/config';
-import { Wish } from '@prisma/client';
 import { Result, ok, err } from 'neverthrow';
+import { Wish } from '../types/models/wish.ts';
 
 class WishService {
 	private _wss?: Result<WebSocketService, Error>;
@@ -99,7 +99,7 @@ class WishService {
 		return ok({ state: 'NO_JOB' });
 	}
 
-	async processWishJob(data: WishQueueData): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> {
+	async processWishJob(data: WishQueueData): Promise<Result<Wish[], Error>> {
 		const { authkey } = data;
 		const configResponse = await getGachaConfigList(authkey);
 
@@ -118,7 +118,7 @@ class WishService {
 
 	async handleCompletedJob(
 		jobData: WishQueueData,
-		returnvalue: Omit<Wish, 'createdAt'>[]
+		returnvalue: Wish[]
 	): Promise<Result<void, Error>> {
 		if (returnvalue.length === 0) {
 			return ok(undefined);
@@ -164,7 +164,7 @@ class WishService {
 
 	private async updateCharactersAndWeapons(
 		uid: string,
-		wishes: Omit<Wish, 'createdAt'>[]
+		wishes: Wish[]
 	): Promise<Result<void, Error>> {
 		const configResult = await getConfigFromUid(uid);
 		if (configResult.isErr()) {

@@ -1,9 +1,10 @@
-import { Weapon, Wish } from '@prisma/client';
+import { Weapon } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
+import { Wish } from '../../types/models/wish';
 
 const transformWeaponFromWishes = (
 	currentUnrefinedWeapon: Weapon[],
-	wishes: Omit<Wish, 'createdAt'>[],
+	wishes: Wish[],
 	autoRefine3: boolean,
 	autoRefine4: boolean,
 	autoRefine5: boolean
@@ -34,7 +35,7 @@ const transformWeaponFromWishes = (
 	return weapons;
 };
 
-const createNewWeapon = (wish: Omit<Wish, 'createdAt'>): Weapon => ({
+const createNewWeapon = (wish: Wish): Weapon => ({
 	id: randomUUID(),
 	uid: wish.uid,
 	key: wish.name,

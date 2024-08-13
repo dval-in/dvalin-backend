@@ -1,4 +1,4 @@
-import { Wish } from '@prisma/client';
+import { Wish } from '../../types/models/wish';
 
 interface CharacterConstellation {
 	key: string;
@@ -6,10 +6,7 @@ interface CharacterConstellation {
 	uid: string;
 }
 
-const transformCharacterFromWishes = (
-	wishes: Omit<Wish, 'createdAt'>[],
-	uid: string
-): CharacterConstellation[] => {
+const transformCharacterFromWishes = (wishes: Wish[], uid: string): CharacterConstellation[] => {
 	const constellationCountMap: Map<string, number> = new Map();
 
 	for (const wish of wishes) {

@@ -8,7 +8,7 @@ export type IWish = {
 	key: string;
 	date: Date;
 	pity: number;
-	banner: string;
+	banner: WishKeyBanner;
 	rarity: number;
 	bannerId: string;
 	order: number;
@@ -18,9 +18,11 @@ export type IWish = {
 
 export type PaimonWish = {
 	type: 'Character' | 'Weapon';
-	code: string;
+	code: WishKeyBanner;
 	id: string;
 	time: string;
 	pity: number;
 	rate?: string;
 };
+
+export type WishKeyBanner = '100' | '200' | '301' | '302' | '400' | '500';

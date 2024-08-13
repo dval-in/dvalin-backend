@@ -1,12 +1,10 @@
-import { Wish } from '@prisma/client';
 import { DBClient } from '../prismaClient';
 import { err, ok, Result } from 'neverthrow';
+import { Wish } from '../../types/models/wish';
 
 const prisma = DBClient.getInstance();
 
-export async function createMultipleWishes(
-	wishes: Omit<Wish, 'createdAt'>[]
-): Promise<Result<void, Error>> {
+export async function createMultipleWishes(wishes: Wish[]): Promise<Result<void, Error>> {
 	try {
 		await prisma.wish.createMany({
 			data: wishes,
@@ -21,6 +19,9 @@ export async function createMultipleWishes(
 export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>> => {
 	try {
 		const wishes = await prisma.wish.findMany({
+			omit: {
+				createdAt: true
+			},
 			where: {
 				uid
 			},
@@ -28,8 +29,7 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 				order: 'desc'
 			}
 		});
-
-		return ok(wishes);
+		return ok(wishes as Wish[]);
 	} catch (error) {
 		return err(new Error('Failed to retrieve wishes'));
 	}
@@ -41,6 +41,9 @@ export const getLatestWishByUidAndGachaType = async (
 ): Promise<Result<Wish | undefined, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
+			omit: {
+				createdAt: true
+			},
 			where: {
 				uid,
 				gachaType: gachaType
@@ -54,7 +57,7 @@ export const getLatestWishByUidAndGachaType = async (
 			return ok(undefined);
 		}
 
-		return ok(wish);
+		return ok(wish as Wish);
 	} catch (error) {
 		return err(new Error('Failed to retrieve latest wish'));
 	}
@@ -63,6 +66,9 @@ export const getLatestWishByUidAndGachaType = async (
 export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
+			omit: {
+				createdAt: true
+			},
 			where: {
 				uid,
 				rankType: '4'
@@ -76,7 +82,7 @@ export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish 
 			return ok(null);
 		}
 
-		return ok(wish);
+		return ok(wish as Wish);
 	} catch (error) {
 		return err(new Error('Failed to retrieve latest 4 star wish'));
 	}
@@ -85,6 +91,9 @@ export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish 
 export const getLatest5StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
+			omit: {
+				createdAt: true
+			},
 			where: {
 				uid,
 				rankType: '5'
@@ -98,7 +107,7 @@ export const getLatest5StarWishByUid = async (uid: string): Promise<Result<Wish 
 			return ok(null);
 		}
 
-		return ok(wish);
+		return ok(wish as Wish);
 	} catch (error) {
 		return err(new Error('Failed to retrieve latest 5 star wish'));
 	}

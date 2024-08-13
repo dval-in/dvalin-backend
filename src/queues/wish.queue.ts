@@ -8,12 +8,9 @@ import { Result, ok, err } from 'neverthrow';
 
 export const WISH_QUEUE_NAME = 'wish';
 export const WISH_QUEUE_RATE_LIMIT_DURATION = 60 * 60 * 1000;
-export const wishQueue = new Queue<WishQueueData, Omit<Wish, 'createdAt'>[], 'FETCH_WISH'>(
-	WISH_QUEUE_NAME,
-	{
-		connection
-	}
-);
+export const wishQueue = new Queue<WishQueueData, Wish[], 'FETCH_WISH'>(WISH_QUEUE_NAME, {
+	connection
+});
 
 const scheduler = new ToadScheduler();
 

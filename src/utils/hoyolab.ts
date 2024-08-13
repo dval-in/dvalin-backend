@@ -1,12 +1,17 @@
 import axios from 'axios';
-import { GachaItem, GachaType, GachaTypeList, HoyoConfigResponse } from '../types/models/wish';
+import {
+	GachaItem,
+	GachaType,
+	GachaTypeList,
+	HoyoConfigResponse,
+	Wish
+} from '../types/models/wish';
 import { logToConsole } from './log';
 import {
 	getLatest4StarWishByUid,
 	getLatest5StarWishByUid,
 	getLatestWishByUidAndGachaType
 } from '../db/models/wishes';
-import { Wish } from '@prisma/client';
 import { err, ok, Result } from 'neverthrow';
 import { ServerKey } from '../types/frontend/user';
 import { fetchWishes, processWish } from '../handlers/wish/wish.handler.ts';
@@ -70,7 +75,7 @@ const getWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	uid: string
-): Promise<Result<Omit<Wish, 'createdAt'>[], Error>> => {
+): Promise<Result<Wish[], Error>> => {
 	try {
 		const wishHistory = await fetchAllWishes(authkey, gachaTypeList, uid);
 		return ok(wishHistory);
@@ -83,8 +88,8 @@ const fetchAllWishes = async (
 	authkey: string,
 	gachaTypeList: GachaTypeList,
 	uid: string
-): Promise<Omit<Wish, 'createdAt'>[]> => {
-	const wishHistory: Omit<Wish, 'createdAt'>[] = [];
+): Promise<Wish[]> => {
+	const wishHistory: Wish[] = [];
 
 	for (const gachaType of gachaTypeList) {
 		await fetchWishesForGachaType(authkey, gachaType, wishHistory, uid);
@@ -96,7 +101,7 @@ const fetchAllWishes = async (
 const fetchWishesForGachaType = async (
 	authkey: string,
 	gachaType: GachaType,
-	wishHistory: Omit<Wish, 'createdAt'>[],
+	wishHistory: Wish[],
 	uid: string
 ) => {
 	let lastNewWishId = '0';
@@ -177,7 +182,7 @@ const fetchWishesForGachaType = async (
 const processWishes = (
 	wishes: GachaItem[],
 	latestSavedWish: Wish | null,
-	wishHistory: Omit<Wish, 'createdAt'>[]
+	wishHistory: Wish[]
 ): boolean => {
 	const bkTree = dataService.getBKTree();
 	if (!latestSavedWish) {

@@ -1,11 +1,11 @@
 import { err, ok, Result } from 'neverthrow';
 import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { createMultipleWishes, deleteWishesByUid, getWishesByUid } from '../../db/models/wishes';
-import { Wish } from '@prisma/client';
 import { PaimonFile } from '../../types/frontend/paimonFile';
 import { dataService } from '../../services/data.service.ts';
-import { convertGachaType } from '../../utils/bannerIdentifier';
 import temporaryBannerCode from '../../config/constant.ts';
+import { WishKeyBanner } from '../../types/frontend/wish.ts';
+import { Wish } from '../../types/models/wish.ts';
 
 export const handlePaimonWishes = async (
 	userProfile: PaimonFile & { userId: string },
@@ -43,31 +43,42 @@ export const handlePaimonWishes = async (
 	return ok(undefined);
 };
 
-const assignGachaType = (userProfile: PaimonFile & { userId: string }) => {
+const assignGachaType = (
+	userProfile: PaimonFile & { userId: string }
+): {
+	gachaType: WishKeyBanner;
+	order: number;
+	type: 'weapon' | 'character';
+	code: string;
+	id: string;
+	time: string;
+	pity: number;
+	rate?: number;
+}[] => {
 	const allWishesWithType = [
 		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '301',
+			gachaType: pull.code,
 			order: index + 1
 		})),
 		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '302',
+			gachaType: '302' as WishKeyBanner,
 			order: index + 1
 		})),
 		...(userProfile['wish-counter-standard']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '200',
+			gachaType: '200' as WishKeyBanner,
 			order: index + 1
 		})),
 		...(userProfile['wish-counter-beginners']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '100',
+			gachaType: '100' as WishKeyBanner,
 			order: index + 1
 		})),
 		...(userProfile['wish-counter-chronicled']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: '500',
+			gachaType: '500' as WishKeyBanner,
 			order: index + 1
 		}))
 	];
@@ -76,7 +87,7 @@ const assignGachaType = (userProfile: PaimonFile & { userId: string }) => {
 
 const formatWishes = (
 	wishes: {
-		gachaType: string;
+		gachaType: WishKeyBanner;
 		type: 'weapon' | 'character';
 		code: string;
 		id: string;
@@ -86,14 +97,11 @@ const formatWishes = (
 		order: number;
 	}[],
 	uid: string
-): Omit<Wish, 'createdAt'>[] => {
+) => {
 	return wishes.map((wish) => {
 		const bktree = dataService.getBKTree();
 		const name = bktree.search(wish.id.replace(/_/g, ''))[0].word;
-		const banner = dataService.getBannerFromTime(
-			convertGachaType(wish.gachaType),
-			new Date(wish.time).getTime()
-		);
+		const banner = dataService.getBannerFromTime(wish.gachaType, new Date(wish.time).getTime());
 		const isFeatured = banner?.featured.some((key) => key === name);
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
 		const rankType = getRarity(name, itemType);
@@ -128,19 +136,14 @@ const getRarity = (key: string, type: 'Character' | 'Weapon'): string => {
 	}
 };
 
-type WishWithoutCreatedAt = Omit<Wish, 'createdAt'>;
-
 type WishesByBanner = {
-	[gachaType: string]: [WishWithoutCreatedAt[], WishWithoutCreatedAt[]];
+	[gachaType: string]: [Wish[], Wish[]];
 };
 
-const mergeWishes = (
-	currentWishes: WishWithoutCreatedAt[],
-	newWishes: WishWithoutCreatedAt[]
-): WishWithoutCreatedAt[] => {
+const mergeWishes = (currentWishes: Wish[], newWishes: Wish[]): Wish[] => {
 	// group every wish by gachaType
 	const wishesByBanner = groupWishesByBanner(newWishes, currentWishes);
-	const mergedWishes: WishWithoutCreatedAt[] = [];
+	const mergedWishes: Wish[] = [];
 	for (const [newW, currentW] of Object.values(wishesByBanner)) {
 		const merged = mergeWishesForBanner(newW.toReversed(), currentW); // reverse to get the latest wish first
 		mergedWishes.push(...merged);
@@ -148,10 +151,7 @@ const mergeWishes = (
 	return mergedWishes;
 };
 
-const groupWishesByBanner = (
-	newWishes: WishWithoutCreatedAt[],
-	currWishes: WishWithoutCreatedAt[]
-): WishesByBanner => {
+const groupWishesByBanner = (newWishes: Wish[], currWishes: Wish[]): WishesByBanner => {
 	const result: WishesByBanner = {};
 	// Helper function to ensure each gachaType has an entry
 	const ensureGachaTypeEntry = (gachaType: string) => {
@@ -175,10 +175,7 @@ const groupWishesByBanner = (
 	return result;
 };
 
-const mergeWishesForBanner = (
-	newWishes: WishWithoutCreatedAt[],
-	currentWishes: WishWithoutCreatedAt[]
-) => {
+const mergeWishesForBanner = (newWishes: Wish[], currentWishes: Wish[]) => {
 	if (!newWishes) {
 		return currentWishes;
 	}

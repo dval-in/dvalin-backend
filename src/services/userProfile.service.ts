@@ -3,7 +3,7 @@ import { getWishesByUid } from '../db/models/wishes';
 import { getAchievementsByUid } from '../db/models/achievements';
 import { getCharactersByUid, saveCharacters } from '../db/models/character';
 import { deleteWeaponsByUid, getWeaponsByUid, saveWeapons } from '../db/models/weapons';
-import { Achievement, Character, GenshinAccount, Weapon, Wish, Config } from '@prisma/client';
+import { Achievement, Character, GenshinAccount, Weapon, Config } from '@prisma/client';
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
 import { handleCharacters } from '../handlers/userProfile/characters.handler.ts';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler.ts';
@@ -25,6 +25,7 @@ import { IWish } from '../types/frontend/wish.ts';
 import { IAchievements } from '../types/frontend/achievement.ts';
 import { ICharacters } from '../types/frontend/character.ts';
 import { IUser } from '../types/frontend/user.ts';
+import { Wish } from '../types/models/wish.ts';
 
 export class UserProfileService {
 	async deleteUserProfile(userId: string): Promise<Result<void, Error>> {
