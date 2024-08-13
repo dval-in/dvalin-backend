@@ -204,30 +204,60 @@ class DataService {
 		return this.bannerData;
 	};
 
-	public getBannerFromTime = (bannerType: WishKeyBanner, timestamp: number): Banner => {
-		switch (bannerType) {
-			case '301':
-			case '400': {
-				const banners = this.bannerData[bannerType].filter((banner) => {
-					return (
-						banner.startDuration.getTime() <= timestamp &&
-						banner.duration.getTime() >= timestamp
-					);
-				});
-				if (bannerType === '400') {
-					return banners[1];
+	public getBannerFromTime = (
+		bannerType: WishKeyBanner,
+		timestamp: number
+	): Banner | undefined => {
+		const searchBanner = (ignoreTime: boolean = false) => {
+			switch (bannerType) {
+				case '301':
+				case '400': {
+					const banners = this.bannerData['301'].filter((banner) => {
+						const startTime = ignoreTime
+							? this.stripTime(banner.startDuration.getTime())
+							: banner.startDuration.getTime();
+						const endTime = ignoreTime
+							? this.stripTime(banner.duration.getTime())
+							: banner.duration.getTime();
+						const searchTime = ignoreTime ? this.stripTime(timestamp) : timestamp;
+						return startTime <= searchTime && endTime >= searchTime;
+					});
+					if (bannerType === '400') {
+						return banners[1];
+					}
+					return banners[0];
 				}
-				return banners[0];
+				default:
+					return this.bannerData[bannerType].find((banner) => {
+						const startTime = ignoreTime
+							? this.stripTime(banner.startDuration.getTime())
+							: banner.startDuration.getTime();
+						const endTime = ignoreTime
+							? this.stripTime(banner.duration.getTime())
+							: banner.duration.getTime();
+						const searchTime = ignoreTime ? this.stripTime(timestamp) : timestamp;
+						return startTime <= searchTime && endTime >= searchTime;
+					});
 			}
-			default:
-				return this.bannerData[bannerType].find((banner) => {
-					return (
-						banner.startDuration.getTime() <= timestamp &&
-						banner.duration.getTime() >= timestamp
-					);
-				});
+		};
+
+		// First attempt with exact time
+		let result = searchBanner(false);
+
+		// If no banner found, try again ignoring the time
+		if (!result) {
+			result = searchBanner(true);
 		}
+
+		return result;
 	};
+
+	// Helper function to strip time from a timestamp
+	private stripTime = (timestamp: number): number => {
+		const date = new Date(timestamp);
+		return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+	};
+
 	public getIndex(): Index {
 		return this.index;
 	}

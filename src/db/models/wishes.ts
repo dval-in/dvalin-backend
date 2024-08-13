@@ -1,6 +1,7 @@
 import { DBClient } from '../prismaClient';
 import { err, ok, Result } from 'neverthrow';
 import { Wish } from '../../types/models/wish';
+import { WishKeyBanner } from 'types/frontend/wish';
 
 const prisma = DBClient.getInstance();
 
@@ -37,7 +38,7 @@ export const getWishesByUid = async (uid: string): Promise<Result<Wish[], Error>
 
 export const getLatestWishByUidAndGachaType = async (
 	uid: string,
-	gachaType: string
+	gachaType: WishKeyBanner
 ): Promise<Result<Wish | undefined, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
@@ -46,7 +47,8 @@ export const getLatestWishByUidAndGachaType = async (
 			},
 			where: {
 				uid,
-				gachaType: gachaType
+				gachaType:
+					gachaType === '400' || gachaType === '301' ? { in: ['301', '400'] } : gachaType
 			},
 			orderBy: {
 				order: 'desc'
@@ -59,11 +61,14 @@ export const getLatestWishByUidAndGachaType = async (
 
 		return ok(wish as Wish);
 	} catch (error) {
-		return err(new Error('Failed to retrieve latest wish'));
+		return err(new Error('Failed to retrieve latest wish', error));
 	}
 };
 
-export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
+export const getLatest4StarWishByUid = async (
+	uid: string,
+	gachaType: WishKeyBanner
+): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			omit: {
@@ -71,7 +76,9 @@ export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish 
 			},
 			where: {
 				uid,
-				rankType: '4'
+				rankType: '4',
+				gachaType:
+					gachaType === '400' || gachaType === '301' ? { in: ['301', '400'] } : gachaType
 			},
 			orderBy: {
 				order: 'desc'
@@ -88,7 +95,10 @@ export const getLatest4StarWishByUid = async (uid: string): Promise<Result<Wish 
 	}
 };
 
-export const getLatest5StarWishByUid = async (uid: string): Promise<Result<Wish | null, Error>> => {
+export const getLatest5StarWishByUid = async (
+	uid: string,
+	gachaType: WishKeyBanner
+): Promise<Result<Wish | null, Error>> => {
 	try {
 		const wish = await prisma.wish.findFirst({
 			omit: {
@@ -96,7 +106,9 @@ export const getLatest5StarWishByUid = async (uid: string): Promise<Result<Wish 
 			},
 			where: {
 				uid,
-				rankType: '5'
+				rankType: '5',
+				gachaType:
+					gachaType === '400' || gachaType === '301' ? { in: ['301', '400'] } : gachaType
 			},
 			orderBy: {
 				order: 'desc'

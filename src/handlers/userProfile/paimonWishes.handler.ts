@@ -31,7 +31,25 @@ export const handlePaimonWishes = async (
 			...wish,
 			order: index + 1
 		}));
-		await createMultipleWishes(finalWishes);
+		const wishByBanner: { [key in '100' | '200' | '301' | '302' | '500']: Wish[] } = {
+			100: [],
+			200: [],
+			301: [],
+			302: [],
+			500: []
+		};
+		for (const wish of finalWishes) {
+			wishByBanner[wish.gachaType === '400' ? '301' : wish.gachaType].push(wish);
+		}
+		// rebuild order
+		for (const wishes of Object.values(wishByBanner)) {
+			wishes.forEach((wish, i) => {
+				wish.order = i + 1;
+			});
+		}
+		// rebuild pity + wonFiftyFifty
+		const finalWishesWithPity = rebuildPity(finalWishes);
+		await createMultipleWishes(finalWishesWithPity);
 	} else {
 		const newWishes = mergeWishes(currentWishes, newlyFormattedWishes);
 		await deleteWishesByUid(uid);
@@ -105,7 +123,6 @@ const formatWishes = (
 		const isFeatured = banner?.featured.some((key) => key === name);
 		const itemType = wish.type === 'character' ? 'Character' : 'Weapon';
 		const rankType = getRarity(name, itemType);
-
 		return {
 			uid,
 			genshinWishId: null,
@@ -155,70 +172,35 @@ const groupWishesByBanner = (newWishes: Wish[], currWishes: Wish[]): WishesByBan
 	const result: WishesByBanner = {};
 	// Helper function to ensure each gachaType has an entry
 	const ensureGachaTypeEntry = (gachaType: string) => {
-		if (!result[gachaType]) {
-			result[gachaType] = [[], []];
+		const actualType = gachaType === '400' ? '301' : gachaType;
+		if (!result[actualType]) {
+			result[actualType] = [[], []];
 		}
 	};
 
 	// Process new wishes
 	for (const wish of newWishes) {
 		ensureGachaTypeEntry(wish.gachaType);
-		result[wish.gachaType][0].push(wish);
+		result[wish.gachaType === '400' ? '301' : wish.gachaType][0].push(wish);
 	}
 
 	// Process current wishes
 	for (const wish of currWishes) {
 		ensureGachaTypeEntry(wish.gachaType);
-		result[wish.gachaType][1].push(wish);
+		result[wish.gachaType === '400' ? '301' : wish.gachaType][1].push(wish);
 	}
 
 	return result;
 };
 
-const mergeWishesForBanner = (newWishes: Wish[], currentWishes: Wish[]) => {
-	if (!newWishes) {
-		return currentWishes;
-	}
-	if (!currentWishes) {
-		return newWishes;
-	}
-
-	const oldestWishSaved = currentWishes.at(-1);
-	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
-	let wishToAdd = [];
-	if (oldestWishSaved.time > newWishes[index].time) {
-		// gap between wishes
-		wishToAdd = newWishes.slice(index);
-		currentWishes.push(...wishToAdd);
-		return currentWishes;
-	}
-	while (
-		index < newWishes.length &&
-		oldestWishSaved.time.getTime() === newWishes[index].time.getTime()
-	) {
-		if (
-			oldestWishSaved.name === newWishes[index].name &&
-			currentWishes.length > 1 &&
-			currentWishes.at(-2).name === newWishes[index - 1]?.name
-		) {
-			// Found the exact match, break the loop
-			break;
-		}
-		index++;
-	}
-	wishToAdd = newWishes.slice(index + 1);
-	currentWishes.push(...wishToAdd);
-	currentWishes.reverse();
-	currentWishes.forEach((wish, i) => {
-		wish.order = i + 1;
-	});
-	// Rebuild pity
+const rebuildPity = (wishes: Wish[]): Wish[] => {
 	let fiveStarPity = 0;
 	let fourStarPity = 0;
 	let prev5StarIsFeatured = false;
 	let prev4StarIsFeatured = false;
+
 	// Iterate in order (oldest to newest)
-	for (const wish of currentWishes) {
+	for (const wish of wishes) {
 		fiveStarPity++;
 		fourStarPity++;
 		if (wish.rankType === '5') {
@@ -241,5 +223,48 @@ const mergeWishesForBanner = (newWishes: Wish[], currentWishes: Wish[]) => {
 			wish.pity = '0';
 		}
 	}
-	return currentWishes;
+
+	return wishes;
+};
+
+const mergeWishesForBanner = (newWishes: Wish[], currentWishes: Wish[]): Wish[] => {
+	if (!newWishes || newWishes.length === 0) {
+		return rebuildPity(currentWishes);
+	}
+	if (!currentWishes || currentWishes.length === 0) {
+		return rebuildPity(newWishes);
+	}
+
+	const oldestWishSaved = currentWishes.at(-1);
+	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
+	let wishToAdd = [];
+
+	if (oldestWishSaved.time > newWishes[index].time) {
+		// gap between wishes
+		wishToAdd = newWishes.slice(index);
+		currentWishes.push(...wishToAdd);
+		return rebuildPity(currentWishes);
+	}
+	while (
+		index < newWishes.length &&
+		oldestWishSaved.time.getTime() === newWishes[index].time.getTime()
+	) {
+		if (
+			oldestWishSaved.name === newWishes[index].name &&
+			currentWishes.length > 1 &&
+			currentWishes.at(-2).name === newWishes[index - 1]?.name
+		) {
+			// Found the exact match, break the loop
+			break;
+		}
+		index++;
+	}
+	wishToAdd = newWishes.slice(index + 1);
+	currentWishes.push(...wishToAdd);
+	currentWishes.reverse();
+	currentWishes.forEach((wish, i) => {
+		wish.order = i + 1;
+	});
+
+	return rebuildPity(currentWishes);
 };

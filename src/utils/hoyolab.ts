@@ -134,15 +134,17 @@ const fetchWishesForGachaType = async (
 	let fourStarPity = 0;
 	let prev5StarIsFeatured = false;
 	let prev4StarIsFeatured = false;
-
-	const latestSaved5Star = await getLatest5StarWishByUid(uid);
+	if (wishArray.length === 0) {
+		return;
+	}
+	const latestSaved5Star = await getLatest5StarWishByUid(uid, wishArray[0].gachaType);
 	if (latestSaved5Star.isOk()) {
 		const fiveStarOrder = latestSaved5Star.value?.order ?? 0;
 		prev5StarIsFeatured = latestSaved5Star.value?.isFeatured; // NOSONAR: false positive
 		fiveStarPity = order - fiveStarOrder;
 	}
 
-	const latestSaved4Star = await getLatest4StarWishByUid(uid);
+	const latestSaved4Star = await getLatest4StarWishByUid(uid, wishArray[0].gachaType);
 	if (latestSaved4Star.isOk()) {
 		const fourStarOrder = latestSaved4Star.value?.order ?? 0;
 		prev4StarIsFeatured = latestSaved4Star.value?.isFeatured; //NOSONAR: false positive
@@ -276,7 +278,7 @@ const getServer = (uid: string): ServerKey => {
  * @returns The difference in seconds between the two dates.
  * */
 function compareGachaItemDate(item: GachaItem, compareDate: Date): number {
-	const itemDate = new Date(item.time);
+	const itemDate = new Date(item.time + 'Z');
 	return Math.floor(itemDate.getTime() / 1000) - Math.floor(compareDate.getTime() / 1000);
 }
 

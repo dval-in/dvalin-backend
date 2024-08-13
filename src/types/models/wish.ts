@@ -22,7 +22,7 @@ export type GachaTypeList = GachaType[];
 
 export interface GachaType {
 	id: string;
-	key: string;
+	key: WishKeyBanner;
 	name: GachaTypeName;
 }
 

@@ -34,7 +34,10 @@ const fetchWishes = async (
 
 const processWish = (wish: GachaItem, bkTree: BKTree, order: number): Wish => {
 	const name = bkTree.search(wish.name)[0].word;
-	const banner = dataService.getBannerFromTime(wish.gacha_type, new Date(wish.time).getTime());
+	const banner = dataService.getBannerFromTime(
+		wish.gacha_type,
+		new Date(wish.time + 'Z').getTime()
+	);
 	const isFeatured = banner?.featured.some((key) => key === name);
 	const processedWish: Wish = {
 		gachaType: wish.gacha_type,
