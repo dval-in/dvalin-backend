@@ -80,12 +80,10 @@ export interface PaimonCharacters {
 }
 
 export const isPaimonData = (object: unknown): object is PaimonFile => {
-	const hasRequiredProps = (obj): boolean =>
-		'ar' in obj && 'converted' in obj && 'update-time' in obj && 'wl' in obj;
+	const hasRequiredProps = (obj): boolean => 'ar' in obj && 'update-time' in obj && 'wl' in obj;
 
 	const hasCorrectTypes = (obj): boolean =>
 		typeof obj.ar === 'number' &&
-		typeof obj.converted === 'string' &&
 		typeof obj['update-time'] === 'string' &&
 		typeof obj.wl === 'number';
 
