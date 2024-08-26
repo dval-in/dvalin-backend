@@ -31,7 +31,7 @@ export const handlePaimonWishes = async (
 			...wish,
 			order: index + 1
 		}));
-		const wishByBanner: { [key in '100' | '200' | '301' | '302' | '500']: Wish[] } = {
+		const wishByBanner: { [key: string]: Wish[] } = {
 			100: [],
 			200: [],
 			301: [],
@@ -76,7 +76,7 @@ const assignGachaType = (
 	const allWishesWithType = [
 		...(userProfile['wish-counter-character-event']?.pulls || []).map((pull, index) => ({
 			...pull,
-			gachaType: pull.code,
+			gachaType: pull.code ?? '301',
 			order: index + 1
 		})),
 		...(userProfile['wish-counter-weapon-event']?.pulls || []).map((pull, index) => ({
@@ -232,13 +232,20 @@ const mergeWishesForBanner = (newWishes: Wish[], currentWishes: Wish[]): Wish[] 
 		return rebuildPity(currentWishes);
 	}
 	if (!currentWishes || currentWishes.length === 0) {
+		newWishes.reverse();
+		newWishes.forEach((wish, i) => {
+			wish.order = i + 1;
+		});
 		return rebuildPity(newWishes);
 	}
 
 	const oldestWishSaved = currentWishes.at(-1);
 	let index = newWishes.findIndex((wish) => wish.time <= oldestWishSaved.time);
 	let wishToAdd = [];
-
+	if (index === -1) {
+		// most likely an overlap due to timezone shift, all wiishes will most likely already be saved if this occure
+		return rebuildPity(currentWishes);
+	}
 	if (oldestWishSaved.time > newWishes[index].time) {
 		// gap between wishes
 		wishToAdd = newWishes.slice(index);
