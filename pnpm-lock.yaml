@@ -42,8 +42,8 @@ importers:
         specifier: ^1.18.0
         version: 1.18.0
       neverthrow:
-        specifier: ^7.0.1
-        version: 7.0.1
+        specifier: ^7.1.0
+        version: 7.1.0
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1565,8 +1565,8 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  neverthrow@7.0.1:
-    resolution: {integrity: sha512-NY1sD1wZn6dwwzV9/5KZ4wRIpH4xC7ARy3fGmnEi2Pi8CHDTWlp+WSF+if8cudrwuCWGrk2y2BE/dnGh070iuA==}
+  neverthrow@7.1.0:
+    resolution: {integrity: sha512-TQ+ucrkixq0lUL+KYcGBjiuyHKvJ/Vb7i6QsaPdTLjlqmHq8WuoWGg17VQnmcx23hKi5w0OTQuHP4HD9cyO0Vg==}
     engines: {node: '>=18'}
 
   node-abort-controller@3.1.1:
@@ -3602,7 +3602,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  neverthrow@7.0.1: {}
+  neverthrow@7.1.0: {}
 
   node-abort-controller@3.1.1: {}
 
