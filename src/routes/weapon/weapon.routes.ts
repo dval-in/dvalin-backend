@@ -14,7 +14,7 @@ export class WeaponRoute {
 			const { user, weapon } = req.body;
 
 			const response = await weaponService.saveWeaponForUser(user.id, weapon);
-			response.match(
+			return response.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					if (error.message === 'Missing parameters') {

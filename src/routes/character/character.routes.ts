@@ -14,7 +14,7 @@ export class CharacterRoute {
 			const { user, character } = req.body;
 
 			const response = await characterService.saveCharacterForUser(user.id, character);
-			response.match(
+			return response.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					if (error.message === 'Missing parameters') {

@@ -2,19 +2,17 @@ import { Worker } from 'bullmq';
 import { logToConsole } from '../utils/log';
 import { connection } from '../config/redis.config.ts';
 import { WebSocketService } from '../services/websocket.service.ts';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import {
 	SYNC_USER_PROFILE_QUEUE_NAME,
 	syncUserProfileQueue
 } from '../queues/syncUserProfile.queue.ts';
 import { UserProfileService } from '../services/userProfile.service.ts';
-import { Index } from '../types/models/dataIndex';
-import { PaimonFile } from '../types/frontend/paimonFIle';
+import { PaimonFile } from '../types/frontend/paimonFile.ts';
 
 const userProfileService = new UserProfileService();
 
-export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => {
+export const setupUserProfileSyncWorker = () => {
 	const wssResult = WebSocketService.getInstance();
 	if (wssResult.isErr()) {
 		logToConsole(
@@ -29,7 +27,7 @@ export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => 
 		SYNC_USER_PROFILE_QUEUE_NAME,
 		async (job) => {
 			const userProfile = job.data;
-			const result = await userProfileService.syncUserProfile(userProfile, bkTree, dataIndex);
+			const result = await userProfileService.syncUserProfile(userProfile);
 			return result.match(
 				(data) => data,
 				(error) => {
@@ -52,7 +50,7 @@ export const setupUserProfileSyncWorker = (bkTree: BKTree, dataIndex: Index) => 
 		wss.invalidateQuery(job.data.userId, 'userSyncStatus');
 	});
 
-	worker.on('completed', async (job, returnvalue) => {
+	worker.on('completed', async (job, _returnvalue) => {
 		logToConsole(
 			'UserProfileSyncWorker',
 			`completed: ${job.id}, remaining: ${await syncUserProfileQueue.getWaitingCount()}`

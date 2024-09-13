@@ -4,7 +4,7 @@ import { AsyncTask, SimpleIntervalJob, ToadScheduler } from 'toad-scheduler';
 import { connection } from '../config/redis.config.ts';
 import { UserProfile } from '../types/frontend/dvalinFile';
 import { Result, ok, err } from 'neverthrow';
-import { PaimonFile } from '../types/frontend/paimonFIle';
+import { PaimonFile } from '../types/frontend/paimonFile.ts';
 
 export const SYNC_USER_PROFILE_QUEUE_NAME = 'syncUserProfile';
 
@@ -32,6 +32,33 @@ const task = new AsyncTask('clear sync user profile queue', async () => {
 const job = new SimpleIntervalJob({ minutes: 5 }, task);
 
 scheduler.addSimpleIntervalJob(job);
+
+const syncUserProfileQueueHasAnActiveJob = async (): Promise<Result<boolean, Error>> => {
+	try {
+		const activeJobs = await syncUserProfileQueue.getActiveCount();
+		return ok(activeJobs > 0);
+	} catch (error) {
+		return err(new Error('Failed to get active jobs count'));
+	}
+};
+
+const pauseSyncUserProfileQueue = async (): Promise<Result<void, Error>> => {
+	try {
+		await syncUserProfileQueue.pause();
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to pause sync user profile queue'));
+	}
+};
+
+const resumeSyncUserProfileQueue = async (): Promise<Result<void, Error>> => {
+	try {
+		await syncUserProfileQueue.resume();
+		return ok(undefined);
+	} catch (error) {
+		return err(new Error('Failed to resume sync user profile queue'));
+	}
+};
 
 /**
  * Clears completed jobs from the sync user profile queue.

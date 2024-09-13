@@ -2,12 +2,13 @@ import { type Express, type Request, type Response } from 'express';
 import { sendErrorResponse, sendSuccessResponse } from '../../handlers/response.handler.ts';
 import { UserProfileService } from '../../services/userProfile.service.ts';
 import { syncUserProfileQueue } from '../../queues/syncUserProfile.queue.ts';
-import { createGenshinAccount, getGenshinAccountByUid } from '../../db/models/genshinAccount';
-import { config } from '../../config/config';
+import { getGenshinAccountByUid } from '../../db/models/genshinAccount';
 import { logToConsole } from '../../utils/log';
+import { Character } from '@prisma/client';
+import { saveCharacters } from '../../db/models/character';
 
 export class UserRoute {
-	private userProfileService = new UserProfileService();
+	private readonly userProfileService = new UserProfileService();
 
 	constructor(private readonly app: Express) {}
 
@@ -17,14 +18,15 @@ export class UserRoute {
 				return sendErrorResponse(res, 401, 'UNAUTHORIZED');
 			}
 			const userProfileResult = await this.userProfileService.getUserProfile(req.user.userId);
-			userProfileResult.match(
+			return userProfileResult.match(
 				(userProfile) => sendSuccessResponse(res, { state: 'SUCCESS', data: userProfile }),
 				(error) => {
 					if (error.message.includes('No Genshin accounts')) {
-						return sendErrorResponse(res, 404, 'NO_GENSHIN_ACCOUNTS');
+						sendErrorResponse(res, 404, 'NO_GENSHIN_ACCOUNTS');
+					} else {
+						logToConsole('AuthService', error.message);
+						sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 					}
-					logToConsole('AuthService', error.message);
-					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);
 		});
@@ -46,11 +48,30 @@ export class UserRoute {
 			}
 			const config = data.config;
 			const result = await this.userProfileService.createNewUser(uid, config, userId);
-			result.match(
-				(genshinAccount) =>
-					sendSuccessResponse(res, { state: 'SUCCESS', data: genshinAccount }),
-				(error) => {
-					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+			return result.match(
+				async (genshinAccount) => {
+					const alreadyExistingCharacter: (Partial<Character> & {
+						key: string;
+						uid: string;
+					})[] = [
+						{ key: 'Amber', uid: genshinAccount.uid },
+						{ key: 'Kaeya', uid: genshinAccount.uid },
+						{ key: 'Lisa', uid: genshinAccount.uid }
+					];
+					await saveCharacters(alreadyExistingCharacter).then(
+						() => {
+							return sendSuccessResponse(res, {
+								state: 'SUCCESS',
+								data: genshinAccount
+							});
+						},
+						(_error) => {
+							return;
+						}
+					);
+				},
+				async (_error) => {
+					return sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);
 		});
@@ -84,9 +105,9 @@ export class UserRoute {
 					}
 				);
 
-				sendSuccessResponse(res, { state: 'SYNC_STARTED' });
+				return sendSuccessResponse(res, { state: 'SYNC_STARTED' });
 			} catch (error) {
-				sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
+				return sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 			}
 		});
 
@@ -101,7 +122,7 @@ export class UserRoute {
 				return sendErrorResponse(res, 400, 'MISSING_CONFIG');
 			}
 			const result = await this.userProfileService.updateConfig(userId, config);
-			result.match(
+			return result.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
 				(error) => {
 					logToConsole('AuthService', error.message);
@@ -116,14 +137,14 @@ export class UserRoute {
 			}
 			const { userId } = req.user;
 			const result = await this.userProfileService.deleteUserProfile(userId);
-			req.session.destroy((err: any) => {
+			req.session.destroy((err) => {
 				if (err) {
 					logToConsole('AuthService', 'Session destroy error:' + err);
 				}
 			});
-			result.match(
+			return result.match(
 				() => sendSuccessResponse(res, { state: 'SUCCESS' }),
-				(error) => {
+				(_error) => {
 					sendErrorResponse(res, 500, 'INTERNAL_SERVER_ERROR');
 				}
 			);

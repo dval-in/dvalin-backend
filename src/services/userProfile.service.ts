@@ -3,10 +3,8 @@ import { getWishesByUid } from '../db/models/wishes';
 import { getAchievementsByUid } from '../db/models/achievements';
 import { getCharactersByUid, saveCharacters } from '../db/models/character';
 import { deleteWeaponsByUid, getWeaponsByUid, saveWeapons } from '../db/models/weapons';
-import { Achievement, Character, GenshinAccount, Weapon, Wish } from '@prisma/client';
+import { Achievement, Character, GenshinAccount, Weapon, Config } from '@prisma/client';
 import { isDvalinUserProfile, UserProfile } from '../types/frontend/dvalinFile';
-import { Index } from '../types/models/dataIndex';
-import { BKTree } from '../handlers/dataStructure/BKTree';
 import { handleCharacters } from '../handlers/userProfile/characters.handler.ts';
 import { handleWeapons } from '../handlers/userProfile/weapons.handler.ts';
 import { handleWishes } from '../handlers/userProfile/wishes.handler.ts';
@@ -15,15 +13,19 @@ import { Result, ok, err } from 'neverthrow';
 import { mapCardName, queryUserInfoEnka } from '../utils/enka';
 import { getServer } from '../utils/hoyolab';
 import { isLangKey } from '../types/frontend/config';
-import { Config } from '@prisma/client';
 import { getConfigFromUid, updateConfig } from '../db/models/config';
 import { getAuthsByUser } from '../db/models/auth';
 import { deleteUserById } from '../db/models/user';
-import { isPaimonData, PaimonFile } from '../types/frontend/paimonFIle';
+import { isPaimonData, PaimonFile } from '../types/frontend/paimonFile.ts';
 import { handlePaimonWishes } from '../handlers/userProfile/paimonWishes.handler.ts';
 import { handlePaimonAchievements } from '../handlers/userProfile/paimonAchievements.handler.ts';
 import { transformCharacterFromWishes } from '../handlers/wish/characters.handler.ts';
 import { transformWeaponFromWishes } from '../handlers/wish/weapons.handler.ts';
+import { IWish } from '../types/frontend/wish.ts';
+import { IAchievements } from '../types/frontend/achievement.ts';
+import { ICharacters } from '../types/frontend/character.ts';
+import { IUser } from '../types/frontend/user.ts';
+import { Wish } from '../types/models/wish.ts';
 
 export class UserProfileService {
 	async deleteUserProfile(userId: string): Promise<Result<void, Error>> {
@@ -44,7 +46,9 @@ export class UserProfileService {
 		const auth = authResult.value.map((a) => a.provider);
 
 		const genshinAccounts = genshinAccountsResult.value;
-		if (!genshinAccounts?.length) return ok({});
+		if (!genshinAccounts?.length) {
+			return ok({});
+		}
 		const account = genshinAccounts[0];
 		const allWishesResult = await getWishesByUid(account.uid);
 		let allWishes: Wish[] = [];
@@ -63,19 +67,41 @@ export class UserProfileService {
 		if (!achievementsResult.isErr()) {
 			achievements = achievementsResult.value;
 		}
+		const mappedAchievements: IAchievements = achievements.reduce((acc, achievement) => {
+			acc[achievement.key] = achievement.achieved;
+			return acc;
+		}, {} as IAchievements);
 		const charactersResult = await getCharactersByUid(account.uid);
 		let charactersArray: Character[] = [];
 		if (!charactersResult.isErr()) {
 			charactersArray = charactersResult.value;
 		}
-		const characters = charactersArray.reduce<Record<string, Omit<Character, 'key'>>>(
-			(acc, c) => {
-				const { key, ...otherProps } = c;
-				acc[key] = otherProps;
-				return acc;
-			},
-			{}
-		);
+		const characters: ICharacters = charactersArray.reduce((acc, char) => {
+			const {
+				key,
+				level,
+				constellation,
+				ascension,
+				talentAuto,
+				talentSkill,
+				talentBurst,
+				manualConstellations
+			} = char;
+
+			acc[key] = {
+				level,
+				constellation,
+				ascension,
+				talent: {
+					auto: talentAuto,
+					skill: talentSkill,
+					burst: talentBurst
+				},
+				manualConstellations
+			};
+
+			return acc;
+		}, {} as ICharacters);
 
 		const weaponsResult = await getWeaponsByUid(account.uid);
 		let weapons: Weapon[] = [];
@@ -83,102 +109,132 @@ export class UserProfileService {
 			weapons = weaponsResult.value;
 		}
 
-		return ok({
+		const user: IUser = {
+			uid: Number(account.uid),
+			server: account.server,
+			ar: account.ar,
+			wl: account.wl,
+			name: account.name,
+			namecard: account.namecard,
+			signature: account.signature
+		};
+
+		const userProfile: UserProfile = {
 			format: 'dvalin',
-			version: 1,
-			account,
+			version: 1.1,
+			account: user,
 			wishes,
 			auth,
 			config: config.value,
-			achievements: achievements,
+			achievements: mappedAchievements,
 			characters: characters,
 			weapons: weapons
-		});
+		};
+		return ok(userProfile);
 	}
 
 	async syncUserProfile(
-		userProfile: (UserProfile | PaimonFile) & { userId: string },
-		bkTree: BKTree,
-		dataIndex: Index
+		userProfile: (UserProfile | PaimonFile) & { userId: string }
 	): Promise<Result<string, Error>> {
 		if (userProfile.format === 'paimon' && isPaimonData(userProfile)) {
-			const uid = userProfile['wish-uid']?.toString();
-			if (!uid) {
-				return err(new Error('User not found'));
-			}
-
-			const wishResult = await handlePaimonWishes(userProfile, uid, bkTree, dataIndex);
-			if (wishResult.isErr()) {
-				return err(new Error('Failed to handle wishes'));
-			}
-
-			const achievementResult = await handlePaimonAchievements(userProfile, uid);
-			if (achievementResult.isErr()) {
-				return err(new Error('Failed to handle achievements'));
-			}
-
-			const configResult = await getConfigFromUid(uid);
-			if (configResult.isErr()) {
-				return err(new Error('Failed to fetch config'));
-			}
-			const config = configResult.value;
-
-			const wishes = await getWishesByUid(uid);
-			if (wishes.isErr()) {
-				return err(new Error('Failed to fetch wishes'));
-			}
-			const charWishes = wishes.value.filter((wish) => wish.itemType === 'Character');
-			const weaponWishes = wishes.value.filter((wish) => wish.itemType === 'Weapon');
-			const transformedCharacters = transformCharacterFromWishes(charWishes, uid);
-			const transformedWeapons = transformWeaponFromWishes(
-				[],
-				weaponWishes,
-				config.autoRefine3,
-				config.autoRefine4,
-				config.autoRefine5
-			);
-			const saveChar = await saveCharacters(transformedCharacters);
-			if (saveChar.isErr()) {
-				return err(new Error('Failed to save characters'));
-			}
-			const deleteWeapons = await deleteWeaponsByUid(uid);
-			if (deleteWeapons.isErr()) {
-				return err(new Error('Failed to delete weapons'));
-			}
-			const saveWeapon = await saveWeapons(transformedWeapons);
-			if (saveWeapon.isErr()) {
-				return err(new Error('Failed to save weapons'));
-			}
-			return ok(userProfile.userId);
+			return await this.syncPaimonUserProfile(userProfile);
 		}
 		if (userProfile.format === 'dvalin' && isDvalinUserProfile(userProfile)) {
-			if (!userProfile.account) {
-				return err(new Error('User not found'));
-			}
-			const uid = userProfile.account.uid.toString();
-
-			const wishResult = await handleWishes(userProfile, uid);
-			if (wishResult.isErr()) {
-				return err(new Error('Failed to handle wishes'));
-			}
-
-			const achievementResult = await handleAchievements(userProfile, uid);
-			if (achievementResult.isErr()) {
-				return err(new Error('Failed to handle achievements'));
-			}
-
-			const characterResult = await handleCharacters(userProfile, uid);
-			if (characterResult.isErr()) {
-				return err(new Error('Failed to handle characters'));
-			}
-
-			const weaponResult = await handleWeapons(userProfile, uid);
-			if (weaponResult.isErr()) {
-				return err(new Error('Failed to handle weapons'));
-			}
-			return ok(userProfile.userId);
+			return await this.syncDvalinUserProfile(userProfile);
 		}
 		return err(new Error('Invalid user profile format'));
+	}
+
+	async syncPaimonUserProfile(
+		userProfile: PaimonFile & { userId: string }
+	): Promise<Result<string, Error>> {
+		const uid = userProfile['wish-uid']?.toString();
+		if (!uid) {
+			return err(new Error('User not found'));
+		}
+
+		// make sure uid is the same as the one in the user profile
+		const savedAccounts = await getGenshinAccountsByUser(userProfile.userId);
+		if (savedAccounts.isErr()) {
+			return err(new Error('Failed to fetch user account'));
+		}
+		if (!savedAccounts.value.some((account) => account.uid === uid)) {
+			return err(new Error('Uid not found for this user'));
+		}
+
+		const wishResult = await handlePaimonWishes(userProfile, uid);
+		if (wishResult.isErr()) {
+			return err(new Error('Failed to handle wishes'));
+		}
+
+		const achievementResult = await handlePaimonAchievements(userProfile, uid);
+		if (achievementResult.isErr()) {
+			return err(new Error('Failed to handle achievements'));
+		}
+
+		const configResult = await getConfigFromUid(uid);
+		if (configResult.isErr()) {
+			return err(new Error('Failed to fetch config'));
+		}
+		const config = configResult.value;
+
+		const wishes = await getWishesByUid(uid);
+		if (wishes.isErr()) {
+			return err(new Error('Failed to fetch wishes'));
+		}
+		const charWishes = wishes.value.filter((wish) => wish.itemType === 'Character');
+		const weaponWishes = wishes.value.filter((wish) => wish.itemType === 'Weapon');
+		const transformedCharacters = transformCharacterFromWishes(charWishes, uid);
+		const transformedWeapons = transformWeaponFromWishes(
+			[],
+			weaponWishes,
+			config.autoRefine3,
+			config.autoRefine4,
+			config.autoRefine5
+		);
+		const saveChar = await saveCharacters(transformedCharacters);
+		if (saveChar.isErr()) {
+			return err(new Error('Failed to save characters'));
+		}
+		const deleteWeapons = await deleteWeaponsByUid(uid);
+		if (deleteWeapons.isErr()) {
+			return err(new Error('Failed to delete weapons'));
+		}
+		const saveWeapon = await saveWeapons(transformedWeapons);
+		if (saveWeapon.isErr()) {
+			return err(new Error('Failed to save weapons'));
+		}
+		return ok(userProfile.userId);
+	}
+
+	async syncDvalinUserProfile(
+		userProfile: UserProfile & { userId: string }
+	): Promise<Result<string, Error>> {
+		if (!userProfile.account) {
+			return err(new Error('User not found'));
+		}
+		const uid = userProfile.account.uid.toString();
+
+		const wishResult = await handleWishes(userProfile, uid);
+		if (wishResult.isErr()) {
+			return err(new Error('Failed to handle wishes'));
+		}
+
+		const achievementResult = await handleAchievements(userProfile, uid);
+		if (achievementResult.isErr()) {
+			return err(new Error('Failed to handle achievements'));
+		}
+
+		const characterResult = await handleCharacters(userProfile, uid);
+		if (characterResult.isErr()) {
+			return err(new Error('Failed to handle characters'));
+		}
+
+		const weaponResult = await handleWeapons(userProfile, uid);
+		if (weaponResult.isErr()) {
+			return err(new Error('Failed to handle weapons'));
+		}
+		return ok(userProfile.userId);
 	}
 
 	async createNewUser(
@@ -197,12 +253,12 @@ export class UserProfileService {
 
 		const userInfo = {
 			server: getServer(uid),
-			ar: result.value.playerInfo.level,
+			ar: result.value?.playerInfo.level ?? 0,
 			uid: uid,
-			wl: result.value.playerInfo.worldLevel,
-			name: result.value.playerInfo.nickname,
-			namecard: mapCardName(result.value.playerInfo.nameCardId),
-			signature: result.value.playerInfo.signature
+			wl: result.value?.playerInfo.worldLevel ?? 0,
+			name: result.value?.playerInfo.nickname ?? '',
+			namecard: mapCardName(result.value?.playerInfo.nameCardId) ?? '',
+			signature: result.value?.playerInfo.signature ?? ''
 		};
 		const createAccountResult = await createGenshinAccount({ userId, ...userInfo }, config);
 
@@ -210,11 +266,11 @@ export class UserProfileService {
 	}
 
 	async updateConfig(userId: string, config: Config): Promise<Result<Config, Error>> {
-		const uidresult = await getGenshinAccountsByUser(userId);
-		if (uidresult.isErr()) {
-			return err(uidresult.error);
+		const uidResult = await getGenshinAccountsByUser(userId);
+		if (uidResult.isErr()) {
+			return err(uidResult.error);
 		}
-		const result = await getConfigFromUid(uidresult.value[0].uid);
+		const result = await getConfigFromUid(uidResult.value[0].uid);
 		if (result.isErr()) {
 			return err(result.error);
 		}
@@ -232,8 +288,10 @@ export class UserProfileService {
 		return resultUpdate;
 	}
 
-	private formatWishesByType(allWishes: Wish[] | undefined) {
-		if (!allWishes) return {};
+	private formatWishesByType(allWishes: Wish[] | undefined): Record<string, IWish[]> {
+		if (!allWishes) {
+			return {};
+		}
 
 		const filterAndConvert = (type: string) =>
 			this.convertToFrontendWishes(allWishes.filter((w) => w.gachaType === type));
@@ -247,15 +305,19 @@ export class UserProfileService {
 		};
 	}
 
-	private convertToFrontendWishes(wishes: Wish[]) {
+	private convertToFrontendWishes(wishes: Wish[]): IWish[] {
 		return wishes.map((wish) => ({
-			type: wish.itemType,
-			number: wish.id,
+			type: wish.itemType === 'Character' ? 'Character' : 'Weapon',
+			number: Number(wish.genshinWishId),
 			key: wish.name,
 			date: wish.time,
-			pity: wish.pity,
-			rarity: wish.rankType,
-			banner: 'BalladInGoblets1'
+			pity: Number(wish.pity),
+			rarity: Number(wish.rankType),
+			banner: wish.gachaType,
+			bannerId: wish.bannerId,
+			order: wish.order,
+			isFeatured: wish.isFeatured,
+			wonFiftyFifty: wish.wonFiftyFifty
 		}));
 	}
 }

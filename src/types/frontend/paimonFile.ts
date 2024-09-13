@@ -1,3 +1,5 @@
+import { WishKeyBanner } from './wish';
+
 export interface PaimonFile {
 	format: 'paimon';
 	achievement?: {
@@ -24,7 +26,7 @@ export interface PaimonFile {
 		actions: { [key: string]: number };
 	}[];
 	todos?: unknown[];
-	'update-time': string;
+	'update-time': string; // NOSONAR
 	weapons?: {
 		[key: string]: {
 			default: number;
@@ -66,7 +68,7 @@ interface PaimonBanner {
 
 export interface PaimonPulls {
 	type: 'weapon' | 'character';
-	code: string;
+	code: WishKeyBanner;
 	id: string;
 	time: string;
 	pity: number;
@@ -78,17 +80,20 @@ export interface PaimonCharacters {
 }
 
 export const isPaimonData = (object: unknown): object is PaimonFile => {
-	if (typeof object === 'object' && object !== null) {
-		if ('ar' in object && 'converted' in object && 'update-time' in object && 'wl' in object) {
-			if (
-				typeof object.ar === 'number' &&
-				typeof object.converted === 'string' &&
-				typeof object['update-time'] === 'string' &&
-				typeof object.wl === 'number'
-			) {
-				return true;
-			}
-		}
+	const hasRequiredProps = (obj): boolean => 'ar' in obj && 'update-time' in obj && 'wl' in obj;
+
+	const hasCorrectTypes = (obj): boolean =>
+		typeof obj.ar === 'number' &&
+		typeof obj['update-time'] === 'string' &&
+		typeof obj.wl === 'number';
+
+	if (
+		typeof object === 'object' &&
+		object !== null &&
+		hasRequiredProps(object) &&
+		hasCorrectTypes(object)
+	) {
+		return true;
 	}
 	return false;
 };

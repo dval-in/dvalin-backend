@@ -176,7 +176,7 @@ export const queryUserInfoEnka = async (uid: string): Promise<Result<PlayerInfo,
 	try {
 		const response = await axios.get<PlayerInfo>(url);
 		if (response.status !== 200) {
-			return err(new Error(`Failed to fetch user info: ${response.statusText}`));
+			return ok(undefined);
 		}
 		return ok(response.data);
 	} catch (error) {

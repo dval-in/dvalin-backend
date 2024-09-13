@@ -6,7 +6,9 @@ export const handleWeapons = async (
 	userProfile: UserProfile & { userId: string },
 	uid: string
 ): Promise<Result<void, Error>> => {
-	if (!userProfile.weapons) return ok(undefined);
+	if (!userProfile.weapons) {
+		return ok(undefined);
+	}
 
 	const transformedWeapons = Object.entries(userProfile.weapons).map(([key, weapon]) => ({
 		id: weapon.id,

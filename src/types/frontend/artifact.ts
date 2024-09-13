@@ -4,7 +4,7 @@ export type IArtifact = {
 	level: number; // 0-20 inclusive
 	rarity: number; // 1-5 inclusive
 	mainStatKey: StatKey;
-	characterKey: string | ''; // Where "" means not equipped.
+	characterKey: string; // Where "" means not equipped.
 	lock: boolean; // Whether the artifact is locked in game.
 	substats: ISubstat[];
 };

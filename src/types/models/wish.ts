@@ -1,3 +1,6 @@
+import { WishKeyBanner } from '../../types/frontend/wish';
+import { Wish as PrismaWish } from '@prisma/client';
+
 export interface HoyoConfigResponse {
 	retcode: number;
 	message: string;
@@ -19,7 +22,7 @@ export type GachaTypeList = GachaType[];
 
 export interface GachaType {
 	id: string;
-	key: string;
+	key: WishKeyBanner;
 	name: GachaTypeName;
 }
 
@@ -32,13 +35,13 @@ export type GachaTypeName =
 
 export interface GachaItem {
 	uid: string;
-	gacha_type: string;
+	gacha_type: WishKeyBanner; // banner
 	count: string;
 	time: string; // "YYYY-MM-DD HH:mm:ss"
 	name: string;
 	lang: string;
-	item_type: string;
-	rank_type: string;
+	item_type: string; // char/weapon
+	rank_type: string; // rarity
 	id: string;
 }
 
@@ -51,3 +54,11 @@ export interface GachaResponse {
 	list: GachaList;
 	region: string;
 }
+
+export interface Wish extends Omit<PrismaWish, 'createdAt' | 'gachaType'> {
+	gachaType: WishKeyBanner;
+}
+
+export const assertIsWish = (wish: Omit<PrismaWish, 'createdAt'>): wish is Wish => {
+	return 'gachaType' in wish;
+};

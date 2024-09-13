@@ -3,15 +3,15 @@ version: '3.8'
 services:
     backend:
         build:
-            context: https://github.com/dval-in/dvalin-backend.git#main
+            context: .
             dockerfile: Dockerfile
             args:
                 CACHEBUST: ${CACHEBUST:-1}
         ports:
             - '3000:3000'
         environment:
-            - GITHUB_CLIENT_ID=fake
-            - GITHUB_CLIENT_SECRET=fake
+            - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+            - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
             - GOOGLE_CLIENT_ID=fake
             - GOOGLE_CLIENT_SECRET=fake
             - MICROSOFT_CLIENT_ID=fake
@@ -28,6 +28,8 @@ services:
             - REDIS_PASSWORD=
             - DEBUG=false
         command: sh -c "pnpm prisma db push --accept-data-loss && pnpm start"
+        env_file:
+            - .env
         depends_on:
             postgres:
                 condition: service_healthy
@@ -61,6 +63,8 @@ services:
             - postgres_data:/var/lib/postgresql/data
         networks:
             - dvalin
+        ports:
+            - '5432:5432'
         healthcheck:
             test: ['CMD-SHELL', 'pg_isready -U dvalin -d dvalindb']
             interval: 5s
