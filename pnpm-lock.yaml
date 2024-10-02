@@ -24,8 +24,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       bullmq:
-        specifier: ^5.13.2
-        version: 5.13.2
+        specifier: ^5.14.0
+        version: 5.14.0
       chalk:
         specifier: ^5.3.0
         version: 5.3.0
@@ -811,8 +811,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bullmq@5.13.2:
-    resolution: {integrity: sha512-McGE8k3mrCvdUHdU0sHkTKDS1xr4pff+hbEKBY51wk5S6Za0gkuejYA620VQTo3Zz37E/NVWMgumwiXPQ3yZcA==}
+  bullmq@5.14.0:
+    resolution: {integrity: sha512-qxZHtRuGEp0oHM1aNokuZ4gA0xr6vcZQPe1OLuQoDTuhaEXB4faxApUoo85v/PHnzrniAAqNT9kqD+UBbmECDQ==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -2467,7 +2467,7 @@ snapshots:
   '@types/eslint-scope@3.7.7':
     dependencies:
       '@types/eslint': 8.56.10
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
 
   '@types/eslint-utils@3.0.5':
     dependencies:
@@ -2831,7 +2831,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bullmq@5.13.2:
+  bullmq@5.14.0:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.4.1
@@ -4024,7 +4024,7 @@ snapshots:
   webpack@5.91.0:
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.5
+      '@types/estree': 1.0.6
       '@webassemblyjs/ast': 1.12.1
       '@webassemblyjs/wasm-edit': 1.12.1
       '@webassemblyjs/wasm-parser': 1.12.1
