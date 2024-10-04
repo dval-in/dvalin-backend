@@ -13,8 +13,10 @@ import { wishQueue } from '../queues/wish.queue.ts';
 import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner, BannerData } from '../types/models/banner.ts';
 import { WishKeyBanner } from '../types/frontend/wish.ts';
+import { LanguageKey } from 'types/models/language.ts';
+import { getAchievementCategories, mergedAchievements } from 'utils/achievementBuilder.ts';
 
-interface FileInfo {
+export interface FileInfo {
 	name: string;
 	download_url: string;
 }
@@ -23,8 +25,10 @@ class DataService {
 	private index: Index = { Character: {}, Weapon: {} };
 	private bkTree: BKTree = new BKTree(optimizedFuzzyLCS);
 	private bannerData: BannerData = undefined;
+	private achievementData: { [key: LanguageKey]: Record<string, mergedAchievements> } = {};
 
 	async initialize(): Promise<Result<void, Error>> {
+		//*********************************CHAR & WEAPON INDEX PART ************************************** */
 		const indexResult = await this.buildIndex();
 		if (indexResult.isErr()) {
 			return err(indexResult.error);
@@ -32,13 +36,21 @@ class DataService {
 		this.index = indexResult.value;
 		const indexes = [...Object.keys(this.index.Character), ...Object.keys(this.index.Weapon)];
 		indexes.forEach((key) => this.bkTree.insert(key));
+
+		//*********************************BANNER PART ************************************** */
 		const dataResult = await getBannerData();
-		if (dataResult.isOk()) {
-			this.bannerData = dataResult.value;
-			return ok(undefined);
-		} else {
+		if (dataResult.isErr()) {
 			return err(dataResult.error);
 		}
+		this.bannerData = dataResult.value;
+
+		//*********************************ACHIEVEMENT PART ************************************** */
+		const achievementResult = await getAchievementCategories();
+		if (achievementResult.isErr()) {
+			return err(achievementResult.error);
+		}
+		this.achievementData = achievementResult.value;
+		return ok(undefined);
 	}
 
 	public async buildIndex(): Promise<Result<Index, Error>> {
@@ -202,6 +214,14 @@ class DataService {
 
 	public getBanner = (): BannerData => {
 		return this.bannerData;
+	};
+
+	public getAchievementCategoryList = () => {
+		return Object.keys(this.achievementData['EN']);
+	};
+
+	public getAchievement = (language: LanguageKey, category: string): mergedAchievements => {
+		return this.achievementData[language][category];
 	};
 
 	public getBannerFromTime = (

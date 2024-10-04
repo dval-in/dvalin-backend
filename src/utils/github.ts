@@ -10,7 +10,8 @@ import { err, ok, Result } from 'neverthrow';
  * excluding a specific file named "index.json".
  *
  * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
- * @param {DataTypeKey} folder - The name of the folder whose contents are being queried.
+ * @par
+am {DataTypeKey} folder - The name of the folder whose contents are being queried.
  * @returns {Promise<Result<GithubFile[], Error>>} - A promise that resolves to a result object containing either the data or an error message.
  */
 export const queryGitHubFolder = async (
@@ -45,11 +46,11 @@ export const queryGitHubFolder = async (
  * @param {DataTypeKey} fileName - The name of the file to query, without the `.json` extension.
  * @returns {Promise<Result<object, Error>>} - A promise that resolves to a result object containing either the data or an error message.
  */
-export const queryGitHubFile = async (
+export const queryGitHubFile = async <T>(
 	language: LanguageKey,
 	folder: string,
 	fileName: DataTypeKey
-): Promise<Result<object, Error>> => {
+): Promise<Result<T, Error>> => {
 	const url = `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`;
 
 	try {
@@ -69,5 +70,50 @@ export const queryGitHubFile = async (
 			`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${error}`
 		);
 		return err(new Error('Failed to fetch file'));
+	}
+};
+
+/**
+ * Pulls all files from a specified folder within a GitHub repository.
+ *
+ * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
+ * @param {DataTypeKey} folder - The name of the folder whose contents are being queried.
+ * @returns {Promise<Result<Record<string, T>, Error>>} - A promise that resolves to a result object containing either an object with filenames as keys and file contents as values, or an error message.
+ */
+export const pullAllFilesFromFolder = async <T>(
+	language: LanguageKey,
+	folder: DataTypeKey
+): Promise<Result<Record<string, T>, Error>> => {
+	const folderContentsResult = await queryGitHubFolder(language, folder);
+
+	if (folderContentsResult.isErr()) {
+		return err(folderContentsResult.error);
+	}
+
+	const folderContents = folderContentsResult.value;
+	const filePromises = folderContents.map((file) => ({
+		name: file.name,
+		promise: queryGitHubFile<T>(language, folder, file.name.replace('.json', '') as DataTypeKey)
+	}));
+
+	try {
+		const results = await Promise.all(filePromises.map(({ promise }) => promise));
+		const fileContents: Record<string, T> = {};
+
+		for (let i = 0; i < results.length; i++) {
+			const result = results[i];
+			const fileName = filePromises[i].name;
+			if (result.isOk()) {
+				fileContents[fileName.replace('.json', '')] = result.value;
+			}
+		}
+
+		if (Object.keys(fileContents).length === 0) {
+			return err(new Error('No files were successfully fetched'));
+		}
+
+		return ok(fileContents);
+	} catch (error) {
+		return err(new Error(`Failed to fetch all files: ${error}`));
 	}
 };
