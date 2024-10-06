@@ -3,26 +3,8 @@ import { logToConsole } from './log';
 import { pullAllFilesFromFolder } from './github';
 import { LanguageKey, languageList } from '../types/models/language';
 import { AchievementCategory, AchievementExtraData } from 'dvalin-data';
+import { mergedAchievements } from 'types/models/achievements';
 
-export type mergedAchievements = {
-	achievements: {
-		requirements: string;
-		requirementQuestLink: string;
-		hidden: string;
-		type: string;
-		version: string;
-		steps: string | string[];
-		id: number;
-		name: string;
-		desc: string;
-		reward: number;
-		order: number;
-	}[];
-	id: string;
-	name: string;
-	order: number;
-	version: string;
-};
 /**
  * lang -> achievement file -> file content
  * @returns {Promise<Result<{ [key: LanguageKey]: Record<string, mergedAchievements> }, Error>>} - A promise that resolves to a result object containing either the data or an error message.

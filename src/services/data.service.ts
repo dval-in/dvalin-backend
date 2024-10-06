@@ -14,12 +14,9 @@ import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner, BannerData } from '../types/models/banner.ts';
 import { WishKeyBanner } from '../types/frontend/wish.ts';
 import { LanguageKey } from 'types/models/language.ts';
-import { getAchievementCategories, mergedAchievements } from 'utils/achievementBuilder.ts';
-
-export interface FileInfo {
-	name: string;
-	download_url: string;
-}
+import { getAchievementCategories } from 'utils/achievementBuilder.ts';
+import { mergedAchievements } from 'types/models/achievements.ts';
+import { GithubFile } from 'types/models/github.ts';
 
 class DataService {
 	private index: Index = { Character: {}, Weapon: {} };
@@ -129,7 +126,7 @@ class DataService {
 		}
 	}
 
-	private async getDevFiles(type: 'Character' | 'Weapon'): Promise<Result<FileInfo[], Error>> {
+	private async getDevFiles(type: 'Character' | 'Weapon'): Promise<Result<GithubFile[], Error>> {
 		const dirPath = join('../dvalin-data/data/EN', type);
 		try {
 			const files = await readdir(dirPath);
@@ -143,7 +140,7 @@ class DataService {
 		}
 	}
 
-	private async getProdFiles(type: 'Character' | 'Weapon'): Promise<Result<FileInfo[], Error>> {
+	private async getProdFiles(type: 'Character' | 'Weapon'): Promise<Result<GithubFile[], Error>> {
 		const filesResult = await queryGitHubFolder('EN', type);
 		if (filesResult.isErr()) {
 			return err(new Error(`Cannot query GitHub folder for ${type}`));
@@ -153,7 +150,7 @@ class DataService {
 
 	private async processFiles(
 		type: 'Character' | 'Weapon',
-		files: FileInfo[],
+		files: GithubFile[],
 		isDev: boolean
 	): Promise<Result<Index, Error>> {
 		let processResult;
@@ -171,7 +168,7 @@ class DataService {
 
 	private async processFile(
 		type: 'Character' | 'Weapon',
-		file: FileInfo,
+		file: GithubFile,
 		isDev: boolean
 	): Promise<Result<Index, Error>> {
 		try {
@@ -187,7 +184,10 @@ class DataService {
 		}
 	}
 
-	private async getFileData(file: FileInfo, isDev: boolean): Promise<CharacterItem | WeaponItem> {
+	private async getFileData(
+		file: GithubFile,
+		isDev: boolean
+	): Promise<CharacterItem | WeaponItem> {
 		if (isDev) {
 			const fileContent = await readFile(file.download_url, 'utf-8');
 			return JSON.parse(fileContent) as CharacterItem | WeaponItem;
