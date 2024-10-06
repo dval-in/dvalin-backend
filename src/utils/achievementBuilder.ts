@@ -73,21 +73,19 @@ export const getAchievementCategories = async () => {
 };
 
 function mergeAchievementData(file1: AchievementCategory, extra: AchievementExtraData) {
-	const mergedAchievements = file1.achievements.map((achievement) => {
-		const matchingData = extra.find((data) => data.id === achievement.id);
-		return {
-			...achievement,
-			requirements: matchingData?.requirements ?? '',
-			requirementQuestLink: matchingData?.requirementQuestLink ?? '',
-			hidden: matchingData?.hidden ?? '',
-			type: matchingData?.type ?? '',
-			version: matchingData?.version ?? '',
-			steps: matchingData?.steps ?? ''
-		};
-	});
-
 	return {
 		...file1,
-		achievements: mergedAchievements
+		achievements: file1.achievements.map((achievement) => {
+			const matchingData = extra.find((data) => data.id === achievement.id);
+			return {
+				...achievement,
+				requirements: matchingData?.requirements ?? '',
+				requirementQuestLink: matchingData?.requirementQuestLink ?? '',
+				hidden: matchingData?.hidden ?? '',
+				type: matchingData?.type ?? '',
+				version: matchingData?.version ?? '',
+				steps: matchingData?.steps ?? ''
+			};
+		})
 	};
 }
