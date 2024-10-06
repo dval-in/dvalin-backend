@@ -29,7 +29,12 @@ export class DynamicDataRoute {
 
 			const { dataType } = req.params;
 
-			if (dataType !== 'Character' && dataType !== 'Weapon' && dataType !== 'Banner') {
+			if (
+				dataType !== 'Character' &&
+				dataType !== 'Weapon' &&
+				dataType !== 'Banner' &&
+				dataType !== 'Achievement'
+			) {
 				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 			if (dataType === 'Banner') {
@@ -38,6 +43,15 @@ export class DynamicDataRoute {
 					return sendErrorResponse(res, 404, 'BANNER_DATA_NOT_FOUND');
 				} else {
 					return sendSuccessResponse(res, bannerData);
+				}
+			}
+
+			if (dataType === 'Achievement') {
+				const achievementData = dataService.getAchievementCategoryList();
+				if (achievementData === undefined) {
+					return sendErrorResponse(res, 404, 'ACHIEVEMENT_DATA_NOT_FOUND');
+				} else {
+					return sendSuccessResponse(res, achievementData);
 				}
 			}
 			const index = dataService.getIndex();
@@ -61,7 +75,16 @@ export class DynamicDataRoute {
 				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
-			const result = await queryGitHubFile(language, dataType, name);
+			if (dataType === 'Achievement') {
+				// check if name is a valid achievement category
+				const validNameList = dataService.getAchievementCategoryList();
+				if (!validNameList.includes(name)) {
+					return sendErrorResponse(res, 404, 'INVALID_ACHIEVEMENT_CATEGORY');
+				}
+				return sendSuccessResponse(res, dataService.getAchievement(language, name));
+			}
+
+			const result = await queryGitHubFile<object>(language, dataType, name);
 			return result.match(
 				(data) => sendSuccessResponse(res, data),
 				(_error) => sendErrorResponse(res, 404, 'NOT_FOUND')
