@@ -63,38 +63,51 @@ export const setupWebsockets = (io: Server): void => {
 			logToConsole('WS', 'anonymous user connected');
 		}
 
-		socket.on('addAchievement', async (data) => {
-			const user = socket.user;
-
-			if (!user) {
-				socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
-				return;
-			}
-
-			const accountsResult = await getGenshinAccountsByUser(user.userId);
-
-			await accountsResult.match(
-				async (accounts) => {
-					if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
-						socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
-						return;
-					}
-
-					const achievementResult = await handleAchievements(data);
-					await achievementResult.match(
-						async () => {
-							socket.emit('achievementAdded', { success: true });
-						},
-						async (error) => {
-							socket.emit('error', { code: 500, message: error.message });
-						}
-					);
-				},
-				async (error) => {
-					socket.emit('error', { code: 500, message: error.message });
+		socket.on(
+			'updateAchievements',
+			async (data: {
+				achievements: {
+					[key: number]: {
+						achieved: boolean;
+						progression: string;
+					};
+				};
+				uid: string;
+			}) => {
+				const user = socket.user;
+				if (!user) {
+					socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+					return;
 				}
-			);
-		});
+
+				const accountsResult = await getGenshinAccountsByUser(user.userId);
+
+				await accountsResult.match(
+					async (accounts) => {
+						if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
+							socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+							return;
+						}
+
+						const achievementResult = await handleAchievements(
+							data.achievements,
+							data.uid
+						);
+						await achievementResult.match(
+							async () => {
+								socket.emit('achievementAdded', { success: true });
+							},
+							async (error) => {
+								socket.emit('error', { code: 500, message: error.message });
+							}
+						);
+					},
+					async (error) => {
+						socket.emit('error', { code: 500, message: error.message });
+					}
+				);
+			}
+		);
 
 		socket.on('disconnect', () => {
 			if (socket.user) {

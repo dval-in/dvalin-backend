@@ -31,7 +31,8 @@ export const saveAchievements = async (
 					}
 				},
 				update: {
-					achieved: achievement.achieved
+					achieved: achievement.achieved,
+					progression: achievement.progression
 				},
 				create: achievement
 			})

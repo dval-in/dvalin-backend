@@ -10,10 +10,11 @@ export const handleAchievements = async (
 		return ok(undefined);
 	}
 
-	const newAchievements = Object.entries(userProfile.achievements).map(([key, achieved]) => ({
+	const newAchievements = Object.entries(userProfile.achievements).map(([key, achievement]) => ({
 		key: Number(key),
 		uid,
-		achieved
+		achieved: achievement.achieved,
+		progression: achievement.progression
 	}));
 
 	const saveResult = await saveAchievements(newAchievements);

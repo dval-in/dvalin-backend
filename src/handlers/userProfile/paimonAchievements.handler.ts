@@ -15,7 +15,8 @@ export const handlePaimonAchievements = async (
 			Object.entries(achievements).map(([key, achieved]) => ({
 				key: Number(key),
 				uid,
-				achieved
+				achieved,
+				progression: achieved ? '-1' : '0'
 			}))
 	);
 
