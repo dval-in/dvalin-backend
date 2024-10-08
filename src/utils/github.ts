@@ -1,47 +1,73 @@
 import axios from 'axios';
+import fs from 'fs/promises';
+import path from 'path';
 import { GithubFile } from '../types/models/github';
 import { LanguageKey } from '../types/models/language';
 import { DataTypeKey } from '../types/models/fileReference';
 import { logToConsole } from './log';
 import { err, ok, Result } from 'neverthrow';
+import { config } from '../config/config';
+const __dirname = path.resolve();
 
 /**
- * Queries a specified folder within a GitHub repository for its contents,
+ * Queries a specified folder for its contents, either from a local directory or GitHub repository,
  * excluding a specific file named "index.json".
  *
- * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
- * @par
-am {DataTypeKey} folder - The name of the folder whose contents are being queried.
+ * @param {LanguageKey} language - The subdirectory within the repository or local folder, often used to specify a language or category.
+ * @param {DataTypeKey} folder - The name of the folder whose contents are being queried.
  * @returns {Promise<Result<GithubFile[], Error>>} - A promise that resolves to a result object containing either the data or an error message.
  */
 export const queryGitHubFolder = async (
 	language: LanguageKey,
 	folder: DataTypeKey
 ): Promise<Result<GithubFile[], Error>> => {
-	const url = `https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`;
+	const isDev = config.DEBUG;
 
-	try {
-		const response = await axios.get<GithubFile[]>(url);
-		if (response.status !== 200) {
-			logToConsole(
-				'Utils',
-				`queryGitHubFolder failed for ${language}/${folder}: ${response.statusText}`
+	if (isDev) {
+		const localPath = path.join(__dirname, '..', 'dvalin-data', 'data', language, folder);
+		try {
+			const files = await fs.readdir(localPath);
+			const fileStats = await Promise.all(
+				files.map(async (file) => {
+					return {
+						name: file,
+						download_url: `${language}/${folder}/${file}`
+					};
+				})
 			);
-			return err(new Error(`Failed to fetch folder contents: ${response.statusText}`));
+			const filteredData = fileStats.filter((file) => file.name !== 'index.json');
+			return ok(filteredData);
+		} catch (error) {
+			logToConsole('Utils', `queryGitHubFolder failed for local path ${localPath}: ${error}`);
+			return err(new Error('Failed to fetch folder contents from local directory'));
 		}
+	} else {
+		const url = `https://api.github.com/repos/dval-in/dvalin-data/contents/data/${language}/${folder}`;
+		try {
+			const response = await axios.get<GithubFile[]>(url);
+			if (response.status !== 200) {
+				logToConsole(
+					'Utils',
+					`queryGitHubFolder failed for ${language}/${folder}: ${response.statusText}`
+				);
+				return err(new Error(`Failed to fetch folder contents: ${response.statusText}`));
+			}
 
-		const filteredData = response.data.filter((file: GithubFile) => file.name !== 'index.json');
-		return ok(filteredData);
-	} catch (error) {
-		logToConsole('Utils', `queryGitHubFolder failed for ${language}/${folder}: ${error}`);
-		return err(new Error('Failed to fetch folder contents'));
+			const filteredData = response.data.filter(
+				(file: GithubFile) => file.name !== 'index.json'
+			);
+			return ok(filteredData);
+		} catch (error) {
+			logToConsole('Utils', `queryGitHubFolder failed for ${language}/${folder}: ${error}`);
+			return err(new Error('Failed to fetch folder contents from GitHub'));
+		}
 	}
 };
 
 /**
- * Queries for a specific file within a GitHub repository.
+ * Queries for a specific file, either from a local directory or GitHub repository.
  *
- * @param {LanguageKey} language - The subdirectory within the repository, often used to specify a language or category.
+ * @param {LanguageKey} language - The subdirectory within the repository or local folder, often used to specify a language or category.
  * @param {string} folder - The name of the folder where the file is located.
  * @param {DataTypeKey} fileName - The name of the file to query, without the `.json` extension.
  * @returns {Promise<Result<object, Error>>} - A promise that resolves to a result object containing either the data or an error message.
@@ -49,27 +75,62 @@ export const queryGitHubFolder = async (
 export const queryGitHubFile = async <T>(
 	language: LanguageKey,
 	folder: string,
-	fileName: DataTypeKey
+	fileName?: DataTypeKey
 ): Promise<Result<T, Error>> => {
-	const url = `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`;
+	const isDev = config.DEBUG;
 
-	try {
-		const response = await axios.get(url);
-		if (response.status !== 200) {
+	if (isDev) {
+		let localPath: string;
+		if (fileName) {
+			localPath = path.join(
+				__dirname,
+				'..',
+				'dvalin-data',
+				'data',
+				language,
+				folder,
+				`${fileName}.json`
+			);
+		} else {
+			localPath = path.join(
+				__dirname,
+				'..',
+				'dvalin-data',
+				'data',
+				language,
+				`${folder}.json`
+			);
+		}
+		try {
+			const data = await fs.readFile(localPath, 'utf-8');
+			return ok(JSON.parse(data));
+		} catch (error) {
+			logToConsole('Utils', `queryGitHubFile failed for local path ${localPath}: ${error}`);
+			return err(new Error('Failed to fetch file from local directory'));
+		}
+	} else {
+		const url = !!fileName
+			? `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}/${fileName}.json`
+			: `https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/${language}/${folder}.json`;
+
+		try {
+			const response = await axios.get(url);
+			if (response.status !== 200) {
+				logToConsole(
+					'Utils',
+					`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${response.statusText}`
+				);
+				return err(new Error(`Failed to fetch file: ${response.statusText}`));
+			}
+
+			return ok(response.data);
+		} catch (error) {
 			logToConsole(
 				'Utils',
-				`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${response.statusText}`
+				`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${error}`
 			);
-			return err(new Error(`Failed to fetch file: ${response.statusText}`));
+			return err(new Error('Failed to fetch file from GitHub'));
 		}
-
-		return ok(response.data);
-	} catch (error) {
-		logToConsole(
-			'Utils',
-			`queryGitHubFile failed for ${language}/${folder}/${fileName}: ${error}`
-		);
-		return err(new Error('Failed to fetch file'));
 	}
 };
 

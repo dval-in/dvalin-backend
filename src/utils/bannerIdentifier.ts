@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { Banner, BannerData } from '../types/models/banner';
 import { err, ok, Result } from 'neverthrow';
+import { queryGitHubFile } from './github';
 interface RawBanner extends Omit<Banner, 'startDuration' | 'duration'> {
 	startDuration: string;
 	duration: string;
@@ -9,8 +10,9 @@ interface RawBanner extends Omit<Banner, 'startDuration' | 'duration'> {
 export const getBannerData = async (): Promise<Result<BannerData, Error>> => {
 	try {
 		const response = await axios.get<{ banner: RawBanner[] }>(
-			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/EN/banners.json`
+			`https://raw.githubusercontent.com/dval-in/dvalin-data/main/data/EN/Banners.json`
 		);
+		const fileData = queryGitHubFile<{ banner: RawBanner[] }>('EN', 'Banners');
 		if (response.status !== 200) {
 			return err(new Error(`Failed to get banner data: ${response.status}`));
 		}
@@ -40,6 +42,6 @@ export const getBannerData = async (): Promise<Result<BannerData, Error>> => {
 
 		return ok(bannerData);
 	} catch (e) {
-		return err(new Error('Failed to get banner data'));
+		return err(new Error('Failed to get banner data' + e));
 	}
 };

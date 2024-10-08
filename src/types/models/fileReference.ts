@@ -1,5 +1,5 @@
 export const dataTypeList = [
-	'AchievementCategory',
+	'Achievement',
 	'Artifact',
 	'Bait',
 	'Character',

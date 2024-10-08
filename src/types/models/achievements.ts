@@ -11,6 +11,7 @@ export type mergedAchievements = {
 		desc: string;
 		reward: number;
 		order: number;
+		preStage?: number;
 	}[];
 	id: string;
 	name: string;

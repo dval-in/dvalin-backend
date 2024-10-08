@@ -1,3 +1,6 @@
 export type IAchievements = {
-	[key in number]: boolean;
+	[key in number]: {
+		achieved: boolean;
+		progression: string;
+	};
 };

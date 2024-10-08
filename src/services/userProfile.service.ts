@@ -68,7 +68,10 @@ export class UserProfileService {
 			achievements = achievementsResult.value;
 		}
 		const mappedAchievements: IAchievements = achievements.reduce((acc, achievement) => {
-			acc[achievement.key] = achievement.achieved;
+			acc[achievement.key] = {
+				achieved: achievement.achieved,
+				progression: achievement.progression
+			};
 			return acc;
 		}, {} as IAchievements);
 		const charactersResult = await getCharactersByUid(account.uid);

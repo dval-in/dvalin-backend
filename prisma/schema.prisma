@@ -78,6 +78,7 @@ model Wish {
 model Achievement {
   key            Int
   achieved       Boolean
+  progression    String?
   genshinAccount GenshinAccount @relation(fields: [uid], references: [uid], onDelete: Cascade)
   uid            String
 
