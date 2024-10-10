@@ -27,10 +27,6 @@ export class DynamicDataRoute {
 	setupRoutes(): void {
 		this.app.get('/data/:dataType/index', async (req: Request, res: Response) => {
 			if (!this.isInitialized) return;
-			let language = typeof req.query.lang === 'string' ? req.query.lang : 'EN';
-			if (!isLanguageKey(language)) {
-				language = 'EN';
-			}
 
 			const { dataType } = req.params;
 
@@ -52,7 +48,7 @@ export class DynamicDataRoute {
 					: sendErrorResponse(res, 404, 'ACHIEVEMENT_DATA_NOT_FOUND');
 			}
 
-			const index = dataService.getIndex(language);
+			const index = dataService.getIndex();
 			return dataType in index
 				? sendSuccessResponse(res, index[dataType])
 				: sendErrorResponse(res, 404, 'DATA_TYPE_NOT_FOUND_IN_INDEX');
