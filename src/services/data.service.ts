@@ -13,13 +13,13 @@ import { wishQueue } from '../queues/wish.queue.ts';
 import { getBannerData } from '../utils/bannerIdentifier';
 import { Banner, BannerData } from '../types/models/banner.ts';
 import { WishKeyBanner } from '../types/frontend/wish.ts';
-import { LanguageKey } from 'types/models/language.ts';
+import { LanguageKey, languageList } from 'types/models/language.ts';
 import { getAchievementCategories } from 'utils/achievementBuilder.ts';
 import { mergedAchievements } from 'types/models/achievements.ts';
 import { GithubFile } from 'types/models/github.ts';
 
 class DataService {
-	private index: Index = { Character: {}, Weapon: {} };
+	private index: { [lang: string]: Index } = { EN: { Character: {}, Weapon: {} } };
 	private bkTree: BKTree = new BKTree(optimizedFuzzyLCS);
 	private bannerData: BannerData = undefined;
 	private achievementData: { [key: LanguageKey]: Record<string, mergedAchievements> } = {};
@@ -31,7 +31,10 @@ class DataService {
 			return err(indexResult.error);
 		}
 		this.index = indexResult.value;
-		const indexes = [...Object.keys(this.index.Character), ...Object.keys(this.index.Weapon)];
+		const indexes = [
+			...Object.keys(this.index['EN'].Character),
+			...Object.keys(this.index['EN'].Weapon)
+		];
 		indexes.forEach((key) => this.bkTree.insert(key));
 
 		//*********************************BANNER PART ************************************** */
@@ -50,19 +53,44 @@ class DataService {
 		return ok(undefined);
 	}
 
-	public async buildIndex(): Promise<Result<Index, Error>> {
-		const characterResult = await this.tryFetchData('Character', config.DEBUG);
-		if (characterResult.isErr()) {
-			return err(new Error('Failed to initialize Character data'));
+	public async buildIndex(): Promise<Result<{ [lang: string]: Index }, Error>> {
+		try {
+			const index: { [lang: string]: Index } = {};
+
+			for (const lang of languageList) {
+				const cleanLang = lang.replace('-', '');
+				const characterResult = await this.tryFetchData(
+					'Character',
+					config.DEBUG,
+					cleanLang
+				);
+				if (characterResult.isErr()) {
+					return err(
+						new Error(`Failed to initialize Character data for language: ${cleanLang}`)
+					);
+				}
+
+				const weaponResult = await this.tryFetchData('Weapon', config.DEBUG, cleanLang);
+				if (weaponResult.isErr()) {
+					return err(
+						new Error(`Failed to initialize Weapon data for language: ${cleanLang}`)
+					);
+				}
+
+				index[cleanLang] = {
+					Character: characterResult.value.Character,
+					Weapon: weaponResult.value.Weapon
+				};
+			}
+
+			return ok(index);
+		} catch (error) {
+			return err(
+				new Error(
+					`Unexpected error building index: ${error instanceof Error ? error.message : String(error)}`
+				)
+			);
 		}
-		const weaponResult = await this.tryFetchData('Weapon', config.DEBUG);
-		if (weaponResult.isErr()) {
-			return err(new Error('Failed to initialize Weapon data'));
-		}
-		return ok({
-			Character: characterResult.value.Character,
-			Weapon: weaponResult.value.Weapon
-		});
 	}
 
 	public refreshData = async () => {
@@ -108,10 +136,13 @@ class DataService {
 
 	private async tryFetchData(
 		type: 'Character' | 'Weapon',
-		isDev: boolean
+		isDev: boolean,
+		lang = 'EN'
 	): Promise<Result<Index, Error>> {
 		try {
-			const files = isDev ? await this.getDevFiles(type) : await this.getProdFiles(type);
+			const files = isDev
+				? await this.getDevFiles(type, lang)
+				: await this.getProdFiles(type, lang);
 			if (files.isErr()) {
 				return err(files.error);
 			}
@@ -126,8 +157,11 @@ class DataService {
 		}
 	}
 
-	private async getDevFiles(type: 'Character' | 'Weapon'): Promise<Result<GithubFile[], Error>> {
-		const dirPath = join('../dvalin-data/data/EN', type);
+	private async getDevFiles(
+		type: 'Character' | 'Weapon',
+		lang = 'EN'
+	): Promise<Result<GithubFile[], Error>> {
+		const dirPath = join('../dvalin-data/data/' + lang, type);
 		try {
 			const files = await readdir(dirPath);
 			return ok(files.map((name) => ({ name, download_url: join(dirPath, name) })));
@@ -140,8 +174,11 @@ class DataService {
 		}
 	}
 
-	private async getProdFiles(type: 'Character' | 'Weapon'): Promise<Result<GithubFile[], Error>> {
-		const filesResult = await queryGitHubFolder('EN', type);
+	private async getProdFiles(
+		type: 'Character' | 'Weapon',
+		lang = 'EN'
+	): Promise<Result<GithubFile[], Error>> {
+		const filesResult = await queryGitHubFolder(lang, type);
 		if (filesResult.isErr()) {
 			return err(new Error(`Cannot query GitHub folder for ${type}`));
 		}
@@ -278,8 +315,8 @@ class DataService {
 		return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 	};
 
-	public getIndex(): Index {
-		return this.index;
+	public getIndex(lang = 'EN'): Index {
+		return this.index[lang];
 	}
 }
 
