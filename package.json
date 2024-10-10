@@ -25,7 +25,7 @@
 		"dotenv": "^16.4.5",
 		"dvalin-data": "^1.0.3",
 		"express": "^4.21.1",
-		"express-session": "^1.18.0",
+		"express-session": "^1.18.1",
 		"neverthrow": "^8.0.0",
 		"passport": "^0.7.0",
 		"passport-github": "^1.1.0",
