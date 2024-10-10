@@ -16,7 +16,7 @@ importers:
         version: 5.20.0(prisma@5.20.0)
       '@quixo3/prisma-session-store':
         specifier: ^3.1.13
-        version: 3.1.13(@prisma/client@5.20.0(prisma@5.20.0))(express-session@1.18.0)
+        version: 3.1.13(@prisma/client@5.20.0(prisma@5.20.0))(express-session@1.18.1)
       axios:
         specifier: ^1.7.7
         version: 1.7.7
@@ -42,8 +42,8 @@ importers:
         specifier: ^4.21.1
         version: 4.21.1
       express-session:
-        specifier: ^1.18.0
-        version: 1.18.0
+        specifier: ^1.18.1
+        version: 1.18.1
       neverthrow:
         specifier: ^8.0.0
         version: 8.0.0
@@ -958,12 +958,12 @@ packages:
     resolution: {integrity: sha512-aSWTXFzaKWkvHO1Ny/s+ePFpvKsPnjc551iI41v3ny/ow6tBG5Vd+FuqGNhh1LxOmVzOlGUriIlOaokOvhaStA==}
     engines: {node: '>= 0.6'}
 
-  cookie@0.6.0:
-    resolution: {integrity: sha512-U71cyTamuh1CRNCfpGY6to28lxvNwPG4Guz/EVjgf3Jmzv0vlDp1atT9eS5dDjMYHucpHbWns6Lwf3BKz6svdw==}
-    engines: {node: '>= 0.6'}
-
   cookie@0.7.1:
     resolution: {integrity: sha512-6DnInpx7SJ2AK3+CTUE/ZM0vWTUboZCegxhC2xiIydHR9jNuTAASBrfEpHhiGOZw/nX51bHt6YQl8jsGo4y/0w==}
+    engines: {node: '>= 0.6'}
+
+  cookie@0.7.2:
+    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
     engines: {node: '>= 0.6'}
 
   cors@2.8.5:
@@ -1238,8 +1238,8 @@ packages:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
 
-  express-session@1.18.0:
-    resolution: {integrity: sha512-m93QLWr0ju+rOwApSsyso838LQwgfs44QtOP/WBiwtAgPIo/SAh1a5c6nn2BR6mFNZehTpqKDESzP+fRHVbxwQ==}
+  express-session@1.18.1:
+    resolution: {integrity: sha512-a5mtTqEaZvBCL9A9aqkrtfz+3SMDhOVUnjafjo+s7A9Txkq+SVX2DLvSp1Zrv4uCXa3lMSK3viWnh9Gg07PBUA==}
     engines: {node: '>= 0.8.0'}
 
   express@4.21.1:
@@ -2756,11 +2756,11 @@ snapshots:
     dependencies:
       '@prisma/debug': 5.20.0
 
-  '@quixo3/prisma-session-store@3.1.13(@prisma/client@5.20.0(prisma@5.20.0))(express-session@1.18.0)':
+  '@quixo3/prisma-session-store@3.1.13(@prisma/client@5.20.0(prisma@5.20.0))(express-session@1.18.1)':
     dependencies:
       '@paralleldrive/cuid2': 2.2.2
       '@prisma/client': 5.20.0(prisma@5.20.0)
-      express-session: 1.18.0
+      express-session: 1.18.1
       ts-dedent: 2.2.0
       type-fest: 2.19.0
 
@@ -3287,9 +3287,9 @@ snapshots:
 
   cookie@0.4.2: {}
 
-  cookie@0.6.0: {}
-
   cookie@0.7.1: {}
+
+  cookie@0.7.2: {}
 
   cors@2.8.5:
     dependencies:
@@ -3581,9 +3581,9 @@ snapshots:
 
   events@3.3.0: {}
 
-  express-session@1.18.0:
+  express-session@1.18.1:
     dependencies:
-      cookie: 0.6.0
+      cookie: 0.7.2
       cookie-signature: 1.0.7
       debug: 2.6.9
       depd: 2.0.0
