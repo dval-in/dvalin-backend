@@ -26,7 +26,7 @@
 		"dvalin-data": "^1.0.3",
 		"express": "^4.21.1",
 		"express-session": "^1.18.1",
-		"neverthrow": "^8.0.0",
+		"neverthrow": "^8.1.0",
 		"passport": "^0.7.0",
 		"passport-github": "^1.1.0",
 		"passport-google-oauth20": "^2.0.0",
