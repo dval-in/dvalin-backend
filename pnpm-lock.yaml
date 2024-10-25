@@ -45,8 +45,8 @@ importers:
         specifier: ^1.18.1
         version: 1.18.1
       neverthrow:
-        specifier: ^8.0.0
-        version: 8.0.0
+        specifier: ^8.1.1
+        version: 8.1.1
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -540,6 +540,11 @@ packages:
     peerDependencies:
       '@prisma/client': '>=2.16.1'
       express-session: '>=1.17.1'
+
+  '@rollup/rollup-linux-x64-gnu@4.24.0':
+    resolution: {integrity: sha512-ZXFk7M72R0YYFN5q13niV0B7G8/5dcQ9JDp8keJSfr3GoZeXEoMHP/HlvqROA3OMbMdfr19IjCeNAnPUG93b6A==}
+    cpu: [x64]
+    os: [linux]
 
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
@@ -1714,8 +1719,8 @@ packages:
   neo-async@2.6.2:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
 
-  neverthrow@8.0.0:
-    resolution: {integrity: sha512-SX2Z50+U27I+CF3NwHE9J8MB6+bYRRub3U+1nAKxnL6c+2vW2l/WsYEC0e3Wqg8DwiJvrquqE0YhxlVTzGJGsg==}
+  neverthrow@8.1.1:
+    resolution: {integrity: sha512-DpbZ/UDI0B+TxJB1JysXSfi1++3YK2xLBqQLTlRN0b4zxlZ2MoiB+dKKV8dMRzt1fAFjRKDknXOVJgpl+a4Amw==}
     engines: {node: '>=18'}
 
   node-abort-controller@3.1.1:
@@ -2763,6 +2768,9 @@ snapshots:
       express-session: 1.18.1
       ts-dedent: 2.2.0
       type-fest: 2.19.0
+
+  '@rollup/rollup-linux-x64-gnu@4.24.0':
+    optional: true
 
   '@socket.io/component-emitter@3.1.2': {}
 
@@ -4073,7 +4081,9 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  neverthrow@8.0.0: {}
+  neverthrow@8.1.1:
+    optionalDependencies:
+      '@rollup/rollup-linux-x64-gnu': 4.24.0
 
   node-abort-controller@3.1.1: {}
 
