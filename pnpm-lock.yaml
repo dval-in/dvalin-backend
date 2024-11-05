@@ -24,8 +24,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       bullmq:
-        specifier: ^5.23.0
-        version: 5.23.0
+        specifier: ^5.23.1
+        version: 5.23.1
       chalk:
         specifier: ^5.3.0
         version: 5.3.0
@@ -776,11 +776,6 @@ packages:
     peerDependencies:
       acorn: ^6.0.0 || ^7.0.0 || ^8.0.0
 
-  acorn@8.12.0:
-    resolution: {integrity: sha512-RTvkC4w+KNXrM39/lWCUaG0IbRkWdCv7W/IOW9oU6SawyxulvkQy5HQPVTKxEjczcUvapcrw3cFx/60VN/NRNw==}
-    engines: {node: '>=0.4.0'}
-    hasBin: true
-
   acorn@8.14.0:
     resolution: {integrity: sha512-cl669nCJTZBsL97OF4kUQm5g5hC2uihk0NxY3WENAC0TYdILVkAyHymAntgxGkl7K+t0cXIrH5siy5S4XkFycA==}
     engines: {node: '>=0.4.0'}
@@ -869,8 +864,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bullmq@5.23.0:
-    resolution: {integrity: sha512-VILKTIOwo9AopMyVqvDhQ1qyLrOtBSfu+G2bntgauQfxYzT7ETj+h2HeUe7a9i9AU/+OXJGYYm49NHJedEz7VQ==}
+  bullmq@5.23.1:
+    resolution: {integrity: sha512-WSN+EjtjjZ6n7f7YNdovc0nwVYRofhDSGjtBW4/+TjBiUwG0tv2L8FKWaLI9qVCgNI3kLra2CxrnDV0OWqTZPA==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -1719,8 +1714,8 @@ packages:
     resolution: {integrity: sha512-SdzXp4kD/Qf8agZ9+iTu6eql0m3kWm1A2y1hkpTeVNENutaB0BwHlSvAIaMxwntmRUAUjon2V4L8Z/njd0Ct8A==}
     hasBin: true
 
-  msgpackr@1.10.1:
-    resolution: {integrity: sha512-r5VRLv9qouXuLiIBrLpl2d5ZvPt8svdQTl5/vMvE4nzDMyEX4sgW5yWhuBBj5UmgwOTWj8CIdSXn5sAfsHAWIQ==}
+  msgpackr@1.11.2:
+    resolution: {integrity: sha512-F9UngXRlPyWCDEASDpTf6c9uNhGPTqnTeLVt7bN+bU1eajoR/8V9ys2BRaV5C/e5ihE6sJ9uPIKaYt6bFuO32g==}
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -3096,15 +3091,13 @@ snapshots:
       mime-types: 2.1.35
       negotiator: 0.6.3
 
-  acorn-import-assertions@1.9.0(acorn@8.12.0):
+  acorn-import-assertions@1.9.0(acorn@8.14.0):
     dependencies:
-      acorn: 8.12.0
+      acorn: 8.14.0
 
   acorn-jsx@5.3.2(acorn@8.14.0):
     dependencies:
       acorn: 8.14.0
-
-  acorn@8.12.0: {}
 
   acorn@8.14.0: {}
 
@@ -3207,11 +3200,11 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bullmq@5.23.0:
+  bullmq@5.23.1:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.4.1
-      msgpackr: 1.10.1
+      msgpackr: 1.11.2
       node-abort-controller: 3.1.1
       semver: 7.6.0
       tslib: 2.6.2
@@ -4090,7 +4083,7 @@ snapshots:
       '@msgpackr-extract/msgpackr-extract-win32-x64': 3.0.2
     optional: true
 
-  msgpackr@1.10.1:
+  msgpackr@1.11.2:
     optionalDependencies:
       msgpackr-extract: 3.0.2
 
@@ -4508,7 +4501,7 @@ snapshots:
   terser@5.31.0:
     dependencies:
       '@jridgewell/source-map': 0.3.6
-      acorn: 8.12.0
+      acorn: 8.14.0
       commander: 2.20.3
       source-map-support: 0.5.21
 
@@ -4661,8 +4654,8 @@ snapshots:
       '@webassemblyjs/ast': 1.12.1
       '@webassemblyjs/wasm-edit': 1.12.1
       '@webassemblyjs/wasm-parser': 1.12.1
-      acorn: 8.12.0
-      acorn-import-assertions: 1.9.0(acorn@8.12.0)
+      acorn: 8.14.0
+      acorn-import-assertions: 1.9.0(acorn@8.14.0)
       browserslist: 4.23.0
       chrome-trace-event: 1.0.3
       enhanced-resolve: 5.16.0
