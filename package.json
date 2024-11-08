@@ -19,7 +19,7 @@
 		"@quixo3/prisma-session-store": "^3.1.13",
 		"axios": "^1.7.7",
 		"body-parser": "^1.20.3",
-		"bullmq": "^5.25.1",
+		"bullmq": "^5.25.2",
 		"chalk": "^5.3.0",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",
