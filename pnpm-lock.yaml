@@ -24,8 +24,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       bullmq:
-        specifier: ^5.26.2
-        version: 5.26.2
+        specifier: ^5.27.0
+        version: 5.27.0
       chalk:
         specifier: ^5.3.0
         version: 5.3.0
@@ -861,8 +861,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bullmq@5.26.2:
-    resolution: {integrity: sha512-UdHBrJoRkpXoF8b/FVEkuRBnaUZoA7+qHQNyTx1n2oNVZ4iWxqGqss+M9xAwXOpBmSNvOSlaBdHpf+5QJTU8GQ==}
+  bullmq@5.27.0:
+    resolution: {integrity: sha512-DZWrjDLkecZZ1/43h/SkG6CxU8nO/Lq/0svVoQdw33ksUCGfccgjbvCa/cuxHP/OvhxlTAA0cO3dBOoaT7sRFQ==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -3196,7 +3196,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bullmq@5.26.2:
+  bullmq@5.27.0:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.4.1
