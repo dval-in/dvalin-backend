@@ -32,26 +32,32 @@ export const getAchievementCategories = async () => {
 			const baseName = filename.replace('Extra', '');
 			extraCategories[baseName] = category as AchievementExtraData;
 		} else {
-			const baseName = filename;
-			baseCategoriesEN[baseName] = category as AchievementCategory;
+			baseCategoriesEN[filename] = category as AchievementCategory;
 		}
 	}
+
 	const mergedCategoriesEN: Record<string, mergedAchievements> = {};
+
 	for (const [baseName, baseCategory] of Object.entries(baseCategoriesEN)) {
 		const extraData = extraCategories[baseName];
+
 		mergedCategoriesEN[baseName] = mergeAchievementData(baseCategory, extraData);
 	}
+
 	const achievementCategories: { [key: LanguageKey]: Record<string, mergedAchievements> } = {
 		EN: mergedCategoriesEN
 	};
+
 	for (const language of languageList) {
 		if (language === 'EN') {
 			continue;
 		}
+
 		const baseCategories = await pullAllFilesFromFolder<AchievementCategory>(
 			language.replace('-', ''),
 			'AchievementCategory'
 		);
+
 		if (baseCategories.isErr()) {
 			logToConsole(
 				'Utils',
@@ -63,20 +69,27 @@ export const getAchievementCategories = async () => {
 
 		const baseCategoriesData = baseCategories.value;
 		const mergedCategories: Record<string, mergedAchievements> = {};
+
 		for (const [baseName, baseCategory] of Object.entries(baseCategoriesData)) {
 			const extraData = extraCategories[baseName];
 			mergedCategories[baseName] = mergeAchievementData(baseCategory, extraData);
 		}
+
 		achievementCategories[language] = mergedCategories;
 	}
 	return ok(achievementCategories);
 };
 
-function mergeAchievementData(file1: AchievementCategory, extra: AchievementExtraData) {
+function mergeAchievementData(file1: AchievementCategory, extra?: AchievementExtraData) {
 	return {
 		...file1,
 		achievements: file1.achievements.map((achievement) => {
-			const matchingData = extra.find((data) => data.id === achievement.id);
+			let matchingData = undefined;
+
+			if (extra !== undefined) {
+				matchingData = extra.find((data) => data.id === achievement.id);
+			}
+
 			return {
 				...achievement,
 				requirements: matchingData?.requirements ?? '',
