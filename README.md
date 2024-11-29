@@ -4,14 +4,14 @@
 
 ### Requirements
 
--   [Node 20](https://nodejs.org/)
--   [Pnpm 9](https://pnpm.io/)
--   [PostgreSQL](https://www.postgresql.org/)
--   [Redis](https://www.redis.io/)
--   Oauth Tokens: (Redirect URL needs to match BACKEND_URL in .env)
-    -   [Github](https://github.com/settings/developers)
-    -   Optional: Google
-    -   Optional: Microsoft
+- [Node 20](https://nodejs.org/)
+- [Pnpm 9](https://pnpm.io/)
+- [PostgreSQL](https://www.postgresql.org/)
+- [Redis](https://www.redis.io/)
+- Oauth Tokens: (Redirect URL needs to match BACKEND_URL in .env)
+    - [Github](https://github.com/settings/developers)
+    - Optional: Google
+    - Optional: Microsoft
 
 ### Steps
 
