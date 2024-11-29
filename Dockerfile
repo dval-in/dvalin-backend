@@ -1,4 +1,4 @@
-FROM node:lts-bookworm
+FROM node:22-bookworm
 
 COPY . /
 WORKDIR /
