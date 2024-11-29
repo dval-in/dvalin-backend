@@ -146,72 +146,72 @@ This directory includes all database-related files and models.
 
 Contains Prisma models representing the various entities in the application, such as users, characters, achievements, and more.
 
--   **`prismaClient.ts`**: Initializes and exports the Prisma client to be used across the application for database operations.
--   **`global.d.ts`**: Contains global TypeScript declarations that can be accessed throughout the application.
+- **`prismaClient.ts`**: Initializes and exports the Prisma client to be used across the application for database operations.
+- **`global.d.ts`**: Contains global TypeScript declarations that can be accessed throughout the application.
 
 ### `handlers`
 
 This directory contains handlers responsible for processing specific functionalities and data operations.
 
--   **`user`**: Handlers for user-related operations like achievements, characters, weapons, and wishes.
--   **`userProfile`**: Handlers for user profile-related operations.
--   **`websocket`**: Handlers for WebSocket events and operations.
--   **`wish`**: Handlers for wish-related operations.
--   **`main.ts`**: The main entry point of the application, where the Express app is configured and started.
+- **`user`**: Handlers for user-related operations like achievements, characters, weapons, and wishes.
+- **`userProfile`**: Handlers for user profile-related operations.
+- **`websocket`**: Handlers for WebSocket events and operations.
+- **`wish`**: Handlers for wish-related operations.
+- **`main.ts`**: The main entry point of the application, where the Express app is configured and started.
 
 ### `queues`
 
 Contains queue configurations and implementations using BullMQ. Queues are used for managing background tasks and operations.
 
--   **`syncUserProfile.queue.ts`**: Queue for syncing user profiles.
--   **`wish.queue.ts`**: Queue for handling wish-related tasks.
+- **`syncUserProfile.queue.ts`**: Queue for syncing user profiles.
+- **`wish.queue.ts`**: Queue for handling wish-related tasks.
 
 ### `routes`
 
 Defines the application's API routes. Each subdirectory corresponds to a specific feature or entity.
 
--   **`auth`**: Routes for authentication, including OAuth handlers for GitHub, Google, and Microsoft.
--   **`character`**: Routes related to character operations.
--   **`data`**: Routes for fetching dynamic data.
--   **`user`**: Routes related to user operations.
--   **`weapon`**: Routes related to weapon operations.
--   **`wish`**: Routes related to wish operations.
+- **`auth`**: Routes for authentication, including OAuth handlers for GitHub, Google, and Microsoft.
+- **`character`**: Routes related to character operations.
+- **`data`**: Routes for fetching dynamic data.
+- **`user`**: Routes related to user operations.
+- **`weapon`**: Routes related to weapon operations.
+- **`wish`**: Routes related to wish operations.
 
 ### `services`
 
 Contains business logic and service classes. These services are responsible for the core functionality of the application, interacting with the database, and processing data.
 
--   **`auth.service.ts`**: Handles authentication logic.
--   **`character.service.ts`**: Manages character-related logic.
--   **`data.service.ts`**: Handles operations related to dynamic data.
--   **`userProfile.service.ts`**: Manages user profile operations.
--   **`weapon.service.ts`**: Manages weapon-related logic.
--   **`websocket.service.ts`**: Handles WebSocket connections and events.
--   **`wish.service.ts`**: Manages wish-related logic.
+- **`auth.service.ts`**: Handles authentication logic.
+- **`character.service.ts`**: Manages character-related logic.
+- **`data.service.ts`**: Handles operations related to dynamic data.
+- **`userProfile.service.ts`**: Manages user profile operations.
+- **`weapon.service.ts`**: Manages weapon-related logic.
+- **`websocket.service.ts`**: Handles WebSocket connections and events.
+- **`wish.service.ts`**: Manages wish-related logic.
 
 ### `types`
 
 Contains TypeScript type definitions used throughout the application.
 
--   **`frontend`**: Types used in the frontend interactions.
--   **`models`**: Types representing various data models and structures, such as authentication, data index, file references, GitHub data, languages, queues, response formats, WebSocket events, and wishes.
+- **`frontend`**: Types used in the frontend interactions.
+- **`models`**: Types representing various data models and structures, such as authentication, data index, file references, GitHub data, languages, queues, response formats, WebSocket events, and wishes.
 
 ### `utils`
 
 Utility functions and helpers used across the application.
 
--   **`errors.ts`**: Custom error classes and utilities.
--   **`github.ts`**: Functions for interacting with GitHub APIs.
--   **`hoyolab.ts`**: Functions for interacting with Hoyolab API.
--   **`levenshteinDistance.ts`**: Implementation of the Levenshtein distance algorithm.
--   **`log.ts`**: Logging utilities.
--   **`passport.ts`**: Passport.js setup for authentication.
--   **`session.ts`**: Session management setup using Express session and Prisma session store.
+- **`errors.ts`**: Custom error classes and utilities.
+- **`github.ts`**: Functions for interacting with GitHub APIs.
+- **`hoyolab.ts`**: Functions for interacting with Hoyolab API.
+- **`levenshteinDistance.ts`**: Implementation of the Levenshtein distance algorithm.
+- **`log.ts`**: Logging utilities.
+- **`passport.ts`**: Passport.js setup for authentication.
+- **`session.ts`**: Session management setup using Express session and Prisma session store.
 
 ### `worker`
 
 Worker processes for background tasks. These are scripts that run independently to handle long-running tasks or operations that don't need to be executed immediately.
 
--   **`userProfileSync.worker.ts`**: Worker for syncing user profiles.
--   **`wish.worker.ts`**: Worker for processing wish-related tasks.
--   **`worker.ts`**: General worker setup and initialization.
+- **`userProfileSync.worker.ts`**: Worker for syncing user profiles.
+- **`wish.worker.ts`**: Worker for processing wish-related tasks.
+- **`worker.ts`**: General worker setup and initialization.
