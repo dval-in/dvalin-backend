@@ -54,7 +54,7 @@
 		"eslint-plugin-prettier": "^5.2.1",
 		"husky": "^9.1.7",
 		"prettier": "^3.4.2",
-		"prisma": "^5.22.0",
+		"prisma": "^6.1.0",
 		"ts-loader": "^9.5.1",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.2",
