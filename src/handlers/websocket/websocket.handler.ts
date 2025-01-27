@@ -47,7 +47,11 @@ const socketAuthMiddleware = (socket: Socket, next: (err?: Error) => void) => {
  * @param {Server} io - The Socket.IO server instance.
  */
 export const setupWebsockets = (io: Server): void => {
-	WebSocketService.setupInstance(io);
+	const wss = WebSocketService.setupInstance(io);
+	if (wss.isErr()) {
+		return;
+	}
+
 	io.engine.use(onlyForHandshake(session));
 	io.engine.use(onlyForHandshake(passport.session()));
 
@@ -65,17 +69,24 @@ export const setupWebsockets = (io: Server): void => {
 
 		socket.on(
 			'updateAchievements',
-			async (data: {
-				achievements: {
-					[key: number]: {
-						achieved: boolean;
-						progression: string;
+			async (
+				data: {
+					achievements: {
+						[key: number]: {
+							achieved: boolean;
+							progression: string;
+						};
 					};
-				};
-				uid: string;
-			}) => {
+					uid: string;
+				},
+				cb
+			) => {
 				const user = socket.user;
+
+				cb({ status: 'error' });
+
 				if (!user) {
+					cb({ status: 'error' });
 					socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
 					return;
 				}
@@ -86,6 +97,7 @@ export const setupWebsockets = (io: Server): void => {
 					async (accounts) => {
 						if (!accounts || accounts.filter((e) => e.uid === data.uid).length === 0) {
 							socket.emit('error', { code: 403, message: 'UNAUTHORIZED' });
+							cb({ status: 'error' });
 							return;
 						}
 
@@ -93,17 +105,19 @@ export const setupWebsockets = (io: Server): void => {
 							data.achievements,
 							data.uid
 						);
+
 						await achievementResult.match(
 							async () => {
-								socket.emit('achievementAdded', { success: true });
+								wss.value.invalidateQuery(user.userId, 'fetchUserProfile');
+								cb({ status: 'success' });
 							},
-							async (error) => {
-								socket.emit('error', { code: 500, message: error.message });
+							async (_error) => {
+								cb({ status: 'error' });
 							}
 						);
 					},
 					async (error) => {
-						socket.emit('error', { code: 500, message: error.message });
+						cb({ status: 'error', message: error.message });
 					}
 				);
 			}

@@ -30,7 +30,7 @@ export class DynamicDataRoute {
 
 			const { dataType } = req.params;
 
-			if (!['Character', 'Weapon', 'Banner', 'Achievement'].includes(dataType)) {
+			if (!['Character', 'Weapon', 'Banner', 'AchievementCategory'].includes(dataType)) {
 				return sendErrorResponse(res, 400, 'INVALID_DATA_TYPE');
 			}
 
@@ -39,13 +39,6 @@ export class DynamicDataRoute {
 				return bannerData
 					? sendSuccessResponse(res, bannerData)
 					: sendErrorResponse(res, 404, 'BANNER_DATA_NOT_FOUND');
-			}
-
-			if (dataType === 'Achievement') {
-				const achievementData = dataService.getAchievementCategoryList();
-				return achievementData
-					? sendSuccessResponse(res, achievementData)
-					: sendErrorResponse(res, 404, 'ACHIEVEMENT_DATA_NOT_FOUND');
 			}
 
 			const index = dataService.getIndex();

@@ -10,10 +10,10 @@ export class WebSocketService {
 		this.io = io;
 	}
 
-	public static setupInstance(io?: Server): Result<void, Error> {
+	public static setupInstance(io?: Server): Result<WebSocketService, Error> {
 		if (!this.instance && io !== undefined) {
 			this.instance = new WebSocketService(io);
-			return ok(undefined);
+			return ok(this.instance);
 		} else {
 			return err(new Error('Websocket requires Socket.IO Server'));
 		}
