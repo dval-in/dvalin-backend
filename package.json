@@ -15,7 +15,7 @@
 	"type": "module",
 	"dependencies": {
 		"@oauth-everything/passport-discord": "^1.0.2",
-		"@prisma/client": "^5.22.0",
+		"@prisma/client": "^6.3.0",
 		"@quixo3/prisma-session-store": "^3.1.13",
 		"axios": "^1.7.9",
 		"body-parser": "^1.20.3",
