@@ -24,8 +24,8 @@ importers:
         specifier: ^1.20.3
         version: 1.20.3
       bullmq:
-        specifier: ^5.35.0
-        version: 5.35.0
+        specifier: ^5.37.0
+        version: 5.37.0
       chalk:
         specifier: ^5.4.1
         version: 5.4.1
@@ -616,6 +616,9 @@ packages:
   '@types/node@22.10.10':
     resolution: {integrity: sha512-X47y/mPNzxviAGY5TcYPtYL8JsY3kAq2n8fMmKoRCxq/c4v4pyGNCzM2R6+M5/umG4ZfHuT+sgqDYqWc9rJ6ww==}
 
+  '@types/node@22.12.0':
+    resolution: {integrity: sha512-Fll2FZ1riMjNmlmJOdAyY5pUbkftXslB5DgEzlIuNaiWhXd00FhWxVC/r4yV/4wBb9JfImTu+jiSvXTkJ7F/gA==}
+
   '@types/oauth@0.9.4':
     resolution: {integrity: sha512-qk9orhti499fq5XxKCCEbd0OzdPZuancneyse3KtR+vgMiHRbh+mn8M4G6t64ob/Fg+GZGpa565MF/2dKWY32A==}
 
@@ -867,8 +870,8 @@ packages:
   buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
-  bullmq@5.35.0:
-    resolution: {integrity: sha512-4wOFPv5oVkcK5A11cwsk5Zzc7Hz7xFe2rHIQfsg0UmWjtwTj/nc7+vPjcMGML6jdl7WejuHXnMeop4uxxo/3WA==}
+  bullmq@5.37.0:
+    resolution: {integrity: sha512-h/wf979+9uROyYpB8oTE44Py6JERCluCSd+ZFpCZlPsYh+wxAkqrfHsHHHKBgsNJp9odWLIY4SG+280EXzXiCQ==}
 
   bytes@3.1.2:
     resolution: {integrity: sha512-/Nf7TyzTx6S3yRJObOAV7956r8cr2+Oj8AC5dt8wSP3BQAoeX58NoHyCU8P8zGkNXStjTSi6fzO6F0pBdcYbEg==}
@@ -2891,6 +2894,10 @@ snapshots:
     dependencies:
       undici-types: 6.20.0
 
+  '@types/node@22.12.0':
+    dependencies:
+      undici-types: 6.20.0
+
   '@types/oauth@0.9.4':
     dependencies:
       '@types/node': 22.10.10
@@ -3226,7 +3233,7 @@ snapshots:
 
   buffer-from@1.1.2: {}
 
-  bullmq@5.35.0:
+  bullmq@5.37.0:
     dependencies:
       cron-parser: 4.9.0
       ioredis: 5.4.2
@@ -3949,7 +3956,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.10.10
+      '@types/node': 22.12.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
