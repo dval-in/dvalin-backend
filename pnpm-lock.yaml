@@ -12,11 +12,11 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@prisma/client':
-        specifier: ^5.22.0
-        version: 5.22.0(prisma@5.22.0)
+        specifier: ^6.3.1
+        version: 6.3.1(prisma@5.22.0)(typescript@5.7.3)
       '@quixo3/prisma-session-store':
         specifier: ^3.1.13
-        version: 3.1.13(@prisma/client@5.22.0(prisma@5.22.0))(express-session@1.18.1)
+        version: 3.1.13(@prisma/client@6.3.1(prisma@5.22.0)(typescript@5.7.3))(express-session@1.18.1)
       axios:
         specifier: ^1.7.9
         version: 1.7.9
@@ -514,13 +514,16 @@ packages:
     resolution: {integrity: sha512-cq8o4cWH0ibXh9VGi5P20Tu9XF/0fFXl9EUinr9QfTM7a7p0oTA4iJRCQWppXR1Pg8dSM0UCItCkPwsk9qWWYA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@prisma/client@5.22.0':
-    resolution: {integrity: sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==}
-    engines: {node: '>=16.13'}
+  '@prisma/client@6.3.1':
+    resolution: {integrity: sha512-ARAJaPs+eBkemdky/XU3cvGRl+mIPHCN2lCXsl5Vlb0E2gV+R6IN7aCI8CisRGszEZondwIsW9Iz8EJkTdykyA==}
+    engines: {node: '>=18.18'}
     peerDependencies:
       prisma: '*'
+      typescript: '>=5.1.0'
     peerDependenciesMeta:
       prisma:
+        optional: true
+      typescript:
         optional: true
 
   '@prisma/debug@5.22.0':
@@ -2773,9 +2776,10 @@ snapshots:
 
   '@pkgr/core@0.1.1': {}
 
-  '@prisma/client@5.22.0(prisma@5.22.0)':
+  '@prisma/client@6.3.1(prisma@5.22.0)(typescript@5.7.3)':
     optionalDependencies:
       prisma: 5.22.0
+      typescript: 5.7.3
 
   '@prisma/debug@5.22.0': {}
 
@@ -2798,10 +2802,10 @@ snapshots:
     dependencies:
       '@prisma/debug': 5.22.0
 
-  '@quixo3/prisma-session-store@3.1.13(@prisma/client@5.22.0(prisma@5.22.0))(express-session@1.18.1)':
+  '@quixo3/prisma-session-store@3.1.13(@prisma/client@6.3.1(prisma@5.22.0)(typescript@5.7.3))(express-session@1.18.1)':
     dependencies:
       '@paralleldrive/cuid2': 2.2.2
-      '@prisma/client': 5.22.0(prisma@5.22.0)
+      '@prisma/client': 6.3.1(prisma@5.22.0)(typescript@5.7.3)
       express-session: 1.18.1
       ts-dedent: 2.2.0
       type-fest: 2.19.0
