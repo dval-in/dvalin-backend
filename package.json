@@ -7,7 +7,7 @@
 		"dev": "tsx watch src/main.ts",
 		"lint": "prettier --check . && eslint .",
 		"start": "tsx src/main.ts",
-		"prepare": "node .husky/install.mjs",
+		"prepare": "husky || true",
 		"db:generate": "prisma generate"
 	},
 	"keywords": [],
