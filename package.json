@@ -15,11 +15,11 @@
 	"type": "module",
 	"dependencies": {
 		"@oauth-everything/passport-discord": "^1.0.2",
-		"@prisma/client": "^5.22.0",
+		"@prisma/client": "^6.3.1",
 		"@quixo3/prisma-session-store": "^3.1.13",
 		"axios": "^1.7.9",
 		"body-parser": "^1.20.3",
-		"bullmq": "^5.35.0",
+		"bullmq": "^5.40.2",
 		"chalk": "^5.4.1",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.7",
@@ -36,13 +36,13 @@
 		"zod": "^3.24.1"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^19.6.1",
-		"@commitlint/config-conventional": "^19.6.0",
+		"@commitlint/cli": "^19.7.1",
+		"@commitlint/config-conventional": "^19.7.1",
 		"@types/body-parser": "^1.19.5",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.0",
 		"@types/express-session": "^1.18.1",
-		"@types/node": "^22.10.10",
+		"@types/node": "^22.13.1",
 		"@types/passport": "^1.0.16",
 		"@types/passport-github": "^1.1.12",
 		"@types/passport-google-oauth": "^1.0.45",
@@ -54,11 +54,11 @@
 		"eslint-plugin-prettier": "^5.2.3",
 		"husky": "^9.1.7",
 		"prettier": "^3.4.2",
-		"prisma": "^5.22.0",
+		"prisma": "^6.3.1",
 		"ts-loader": "^9.5.2",
 		"tsx": "^4.19.2",
 		"typescript": "^5.7.3",
-		"typescript-eslint": "^8.21.0"
+		"typescript-eslint": "^8.23.0"
 	},
 	"engines": {
 		"node": ">=22.0.0",
