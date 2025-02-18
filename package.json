@@ -34,7 +34,7 @@
 		"passport-microsoft": "^2.1.0",
 		"socket.io": "^4.8.1",
 		"toad-scheduler": "^3.0.1",
-		"zod": "^3.24.1"
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^19.7.1",
