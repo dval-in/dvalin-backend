@@ -18,7 +18,7 @@
 		"@oauth-everything/passport-discord": "^1.0.2",
 		"@prisma/client": "^6.4.1",
 		"@quixo3/prisma-session-store": "^3.1.13",
-		"axios": "^1.7.9",
+		"axios": "^1.8.1",
 		"body-parser": "^1.20.3",
 		"bullmq": "^5.41.7",
 		"chalk": "^5.4.1",
