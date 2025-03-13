@@ -37,7 +37,7 @@
 		"zod": "^3.24.2"
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^19.7.1",
+		"@commitlint/cli": "^19.8.0",
 		"@commitlint/config-conventional": "^19.7.1",
 		"@types/body-parser": "^1.19.5",
 		"@types/cors": "^2.8.17",
