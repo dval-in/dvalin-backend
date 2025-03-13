@@ -38,7 +38,7 @@
 	},
 	"devDependencies": {
 		"@commitlint/cli": "^19.8.0",
-		"@commitlint/config-conventional": "^19.7.1",
+		"@commitlint/config-conventional": "^19.8.0",
 		"@types/body-parser": "^1.19.5",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^5.0.0",
