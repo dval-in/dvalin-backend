@@ -40,7 +40,7 @@
 		"@commitlint/cli": "^19.8.0",
 		"@commitlint/config-conventional": "^19.8.1",
 		"@types/body-parser": "^1.19.5",
-		"@types/cors": "^2.8.17",
+		"@types/cors": "^2.8.19",
 		"@types/express": "^5.0.0",
 		"@types/express-session": "^1.18.1",
 		"@types/node": "^22.15.21",
