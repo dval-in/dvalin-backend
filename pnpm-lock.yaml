@@ -103,8 +103,8 @@ importers:
         specifier: ^2.0.16
         version: 2.0.16
       '@types/passport-microsoft':
-        specifier: ^1.0.3
-        version: 1.0.3
+        specifier: ^2.1.0
+        version: 2.1.0
       eslint:
         specifier: ^9.22.0
         version: 9.22.0(jiti@2.5.1)
@@ -635,11 +635,14 @@ packages:
   '@types/node@22.15.30':
     resolution: {integrity: sha512-6Q7lr06bEHdlfplU6YRbgG1SFBdlsfNC4/lX+SkhiTs0cpJkOElmWls8PxDFv4yY/xKb8Y6SO0OmSX4wgqTZbA==}
 
-  '@types/node@22.17.2':
-    resolution: {integrity: sha512-gL6z5N9Jm9mhY+U2KXZpteb+09zyffliRkZyZOHODGATyC5B1Jt/7TzuuiLkFsSUMLbS1OLmlj/E+/3KF4Q/4w==}
+  '@types/node@22.18.0':
+    resolution: {integrity: sha512-m5ObIqwsUp6BZzyiy4RdZpzWGub9bqLJMvZDD0QMXhxjqMHMENlj+SqF5QxoUwaQNFe+8kz8XM8ZQhqkQPTgMQ==}
 
   '@types/oauth@0.9.4':
     resolution: {integrity: sha512-qk9orhti499fq5XxKCCEbd0OzdPZuancneyse3KtR+vgMiHRbh+mn8M4G6t64ob/Fg+GZGpa565MF/2dKWY32A==}
+
+  '@types/oauth@0.9.6':
+    resolution: {integrity: sha512-H9TRCVKBNOhZZmyHLqFt9drPM9l+ShWiqqJijU1B8P3DX3ub84NjxDuy+Hjrz+fEca5Kwip3qPMKNyiLgNJtIA==}
 
   '@types/passport-github@1.1.12':
     resolution: {integrity: sha512-VJpMEIH+cOoXB694QgcxuvWy2wPd1Oq3gqrg2Y9DMVBYs9TmH9L14qnqPDZsNMZKBDH+SvqRsGZj9SgHYeDgcA==}
@@ -650,11 +653,14 @@ packages:
   '@types/passport-google-oauth@1.0.45':
     resolution: {integrity: sha512-O3Y3DDKnf9lR8+DSaUOCEGF6aFjVYdI8TLhQYtySZ3Sq75c5tGYJ0KJRDZw0GsyLD/Que0nqFkP/GnDVwZZL9w==}
 
-  '@types/passport-microsoft@1.0.3':
-    resolution: {integrity: sha512-Mqm/iTWEhnlS7RcgVlQMyMcXoqt51NbHtXZFAqcjSCZj4iUBu1MTlpw65X3xZ974K2WrlLQhOm3UMmLoUkMaMA==}
+  '@types/passport-microsoft@2.1.0':
+    resolution: {integrity: sha512-wAhVpA7MosymqLkT9SeX9qKS1LNJjxRm20Z4/fE9NCRcnznzoqPnPEwNwM6UIa+UhngNCRsCRZyz4HjPgsRpBA==}
 
   '@types/passport-oauth2@1.4.15':
     resolution: {integrity: sha512-9cUTP/HStNSZmhxXGuRrBJfEWzIEJRub2eyJu3CvkA+8HAMc9W3aKdFhVq+Qz1hi42qn+GvSAnz3zwacDSYWpw==}
+
+  '@types/passport-oauth2@1.8.0':
+    resolution: {integrity: sha512-6//z+4orIOy/g3zx17HyQ71GSRK4bs7Sb+zFasRoc2xzlv7ZCJ+vkDBYFci8U6HY+or6Zy7ajf4mz4rK7nsWJQ==}
 
   '@types/passport@1.0.16':
     resolution: {integrity: sha512-FD0qD5hbPWQzaM0wHUnJ/T0BBCJBxCeemtnCwc/ThhTg3x9jfrAcRUmj5Dopza+MfFS9acTe3wk7rcVnRIp/0A==}
@@ -2869,7 +2875,7 @@ snapshots:
   '@oauth-everything/oauth2-types@1.0.2':
     dependencies:
       '@types/express': 4.17.21
-      '@types/passport-oauth2': 1.4.15
+      '@types/passport-oauth2': 1.8.0
 
   '@oauth-everything/passport-discord@1.0.2':
     dependencies:
@@ -3030,13 +3036,17 @@ snapshots:
     dependencies:
       undici-types: 6.21.0
 
-  '@types/node@22.17.2':
+  '@types/node@22.18.0':
     dependencies:
       undici-types: 6.21.0
 
   '@types/oauth@0.9.4':
     dependencies:
       '@types/node': 22.15.30
+
+  '@types/oauth@0.9.6':
+    dependencies:
+      '@types/node': 22.18.0
 
   '@types/passport-github@1.1.12':
     dependencies:
@@ -3055,14 +3065,20 @@ snapshots:
       '@types/express': 4.17.21
       '@types/passport': 1.0.16
 
-  '@types/passport-microsoft@1.0.3':
+  '@types/passport-microsoft@2.1.0':
     dependencies:
-      '@types/passport-oauth2': 1.4.15
+      '@types/passport-oauth2': 1.8.0
 
   '@types/passport-oauth2@1.4.15':
     dependencies:
       '@types/express': 5.0.0
       '@types/oauth': 0.9.4
+      '@types/passport': 1.0.16
+
+  '@types/passport-oauth2@1.8.0':
+    dependencies:
+      '@types/express': 5.0.0
+      '@types/oauth': 0.9.6
       '@types/passport': 1.0.16
 
   '@types/passport@1.0.16':
@@ -4156,7 +4172,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 22.17.2
+      '@types/node': 22.18.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
